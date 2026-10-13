@@ -114,8 +114,8 @@ Run the complete multi-service stack with a single command:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/rezaxr14/WhatToCook-AI-Powered-Recipe-Generator.git
-cd WhatToCook-AI-Powered-Recipe-Generator
+git clone https://github.com/rezaxr14/WhatToCook_Smart_Kitchen_OS.git
+cd WhatToCook_Smart_Kitchen_OS
 
 # 2. Configure environment variables
 cp .env.example .env
