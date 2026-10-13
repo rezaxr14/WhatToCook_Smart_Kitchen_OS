@@ -10,6 +10,76 @@
 
 ---
 
+## 🖼️ Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/landing-hero.png" alt="WhatToCook landing page — 'You already have dinner.' 3D kitchen hero" width="100%">
+  <br>
+  <em>Cinematic 3D landing page — "You already have dinner."</em>
+</p>
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/recipes-catalog.png" alt="Kitchen dashboard and recipe catalog with search, filters and cook-time slider">
+      <br><sub><b>Kitchen Dashboard &amp; Recipe Catalog</b> — search, category filters and a max-cook-time slider</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/pantry-shelf.png" alt="My Pantry Shelf with stocked ingredients, fridge photo scanner and ingredient catalog">
+      <br><sub><b>My Pantry Shelf</b> — stocked ingredients, fridge-photo scanner and a 73-item catalog</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/can-cook.png" alt="What You Can Cook Right Now — zero-waste recipe matching with missing ingredients">
+      <br><sub><b>What You Can Cook Right Now</b> — 100% matches and "missing 1 or 2 items" recipes</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/ai-chef-studio.png" alt="AI Chef Studio — pick pantry ingredients and generate chef recipes">
+      <br><sub><b>AI Chef Studio</b> — pick ingredients and generate recipes with Cloud or Local AI</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/sign-in.png" alt="Sign-in page with one-click guest demo">
+      <br><sub><b>Sign In</b> — with an instant 1-click guest demo</sub>
+    </td>
+    <td width="50%" align="center">
+      <img src="docs/screenshots/landing-mobile.png" alt="WhatToCook landing page on a mobile viewport" height="320">
+      <br><sub><b>Mobile</b> — fully responsive layout</sub>
+    </td>
+  </tr>
+</table>
+
+### 🎬 The 3D Landing Journey
+
+Scrolling the landing page tells the whole story in eight chapters: open the fridge, let the AI connect the dots, and watch dinner get discovered.
+
+<table>
+  <tr>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/01-arrival.png" alt="Chapter 1 — Arrival"><br><sub>1 · Arrival</sub></td>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/02-fridge-door.png" alt="Chapter 2 — Fridge door"><br><sub>2 · Fridge door</sub></td>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/03-ai-awakens.png" alt="Chapter 3 — AI awakens"><br><sub>3 · AI awakens</sub></td>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/04-galaxy.png" alt="Chapter 4 — Galaxy of possibilities"><br><sub>4 · Galaxy</sub></td>
+  </tr>
+  <tr>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/05-cooking.png" alt="Chapter 5 — Cooking"><br><sub>5 · Cooking</sub></td>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/06-dish.png" alt="Chapter 6 — The dish"><br><sub>6 · The dish</sub></td>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/07-homecoming.png" alt="Chapter 7 — Homecoming"><br><sub>7 · Homecoming</sub></td>
+    <td width="25%" align="center"><img src="docs/screenshots/journey/08-finale.png" alt="Chapter 8 — Finale"><br><sub>8 · Finale</sub></td>
+  </tr>
+</table>
+
+<details>
+<summary>📜 Full-length landing page</summary>
+<br>
+<p align="center">
+  <img src="docs/screenshots/landing-full.png" alt="Full-length WhatToCook landing page" width="60%">
+</p>
+</details>
+
+---
+
 ## 🌟 Architecture & Key Features
 
 ```
