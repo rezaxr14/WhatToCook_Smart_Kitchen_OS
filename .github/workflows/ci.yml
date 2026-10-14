@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main, frontend_added, django-only]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (Django tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Same as the README testing instructions: bare-metal SQLite, hermetic
+      # in-memory cache. No Postgres / Redis / RabbitMQ needed for the suite.
+      USE_POSTGRES: "false"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11" # matches the Dockerfile
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Django system check
+        run: python manage.py check
+      - name: Migrations are in sync with the models
+        run: python manage.py makemigrations --check --dry-run
+      - name: Test suite
+        run: python manage.py test GetFood tests --verbosity 2
+
+  frontend:
+    name: Frontend (typecheck + build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20 # matches frontend/Dockerfile
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Typecheck and build
+        run: npm run build
+
+  deploy-config:
+    name: Compose + Kubernetes manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - name: docker compose config (base + proxy override)
+        run: |
+          cp .env.example .env
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.yml -f docker-compose.proxy.yml config --quiet
+      - name: Render Kubernetes manifests
+        run: kubectl kustomize k8s > rendered.yaml
+      - name: Validate against Kubernetes schemas
+        run: |
+          curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+            | tar xz kubeconform
+          ./kubeconform -strict -summary -kubernetes-version 1.30.0 rendered.yaml k8s/optional/hpa.yaml k8s/secret.example.yaml
+
+  docker:
+    name: Docker images build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: whattocook-backend:ci
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: false
+          tags: whattocook-frontend:ci
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
