@@ -9,6 +9,7 @@ except ImportError:
 
 from django.utils import timezone
 from .models import AISuggestionCache
+from . import ai_cache
 from .ai_service import generate_recipe_suggestions
 
 
@@ -29,6 +30,8 @@ def generate_ai_suggestions_task(self, ingredients_list, ingredients_hash, provi
                 "created_at": timezone.now()
             }
         )
+
+        ai_cache.set_suggestions(ingredients_hash, recipes)
 
         return {"status": "ok", "count": len(recipes)}
 

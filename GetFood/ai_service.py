@@ -5,6 +5,7 @@ import os
 import re
 import requests
 from django.conf import settings
+from . import ai_cache
 from .utils import find_best_image
 
 logger = logging.getLogger(__name__)
@@ -482,6 +483,11 @@ def generate_recipe_detail_meta(recipe_name: str, provider: str = None, model: s
     if not provider:
         provider = DEFAULT_AI_PROVIDER
 
+    cache_key = ai_cache.detail_key(recipe_name, provider, model, normalize_language(language))
+    cached = ai_cache.get_detail(cache_key)
+    if cached:
+        return cached, cached.get("model_used") or model, cached.get("rate_limited_models") or []
+
     prompt = (
         f"You are a Michelin-star master chef. Provide a comprehensive cooking recipe for '{recipe_name}'. "
         "Return valid JSON with the following exact keys:\n"
@@ -530,8 +536,10 @@ def generate_recipe_detail_meta(recipe_name: str, provider: str = None, model: s
             except Exception:
                 recipe_data = None
 
+    used_fallback = False
     if not recipe_data or not isinstance(recipe_data, dict) or "ingredients" not in recipe_data:
         # Fallback recipe detail
+        used_fallback = True
         recipe_data = {
             "name": recipe_name,
             "description": f"A delightful and flavorful chef-crafted recipe for {recipe_name}, balanced with fresh aromatics and rich seasonings.",
@@ -579,6 +587,8 @@ def generate_recipe_detail_meta(recipe_name: str, provider: str = None, model: s
     recipe_data["provider"] = provider
     recipe_data["model_used"] = model_used
     recipe_data["rate_limited_models"] = rate_limited_models
+    if not used_fallback:  # never pin a degraded answer in Redis for 24h
+        ai_cache.set_detail(cache_key, recipe_data)
     return recipe_data, model_used, rate_limited_models
 
 

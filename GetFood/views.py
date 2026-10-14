@@ -52,6 +52,7 @@ from .serializers import (
     UserPantrySerializer,
     UserSerializer,
 )
+from . import ai_cache
 from .tasks import generate_ai_suggestions_task
 from .utils import find_best_image
 
@@ -109,7 +110,7 @@ def api_stats(request):
 @permission_classes([AllowAny])
 def api_health(request):
     """Liveness/readiness probe used by Docker healthchecks and load balancers."""
-    checks = {"database": "down", "cache": "down"}
+    checks = {"database": "down", "cache": "down", "broker": "skipped"}
     try:
         from django.db import connection
 
@@ -132,6 +133,18 @@ def api_health(request):
         # Redis/cache is optional at runtime (Celery has fallbacks); stay healthy without it.
         checks["cache"] = "degraded"
         logger.warning("Health check cache failure: %s", e)
+
+    if getattr(settings, "HEALTH_CHECK_BROKER", False):
+        try:
+            from WhatToCook.celery import app as celery_app
+
+            with celery_app.connection_for_read() as conn:
+                conn.ensure_connection(max_retries=1, timeout=2)
+            checks["broker"] = "ok"
+        except Exception as e:
+            # Queue outage degrades async fallbacks only; keep the pod serving.
+            checks["broker"] = "degraded"
+            logger.warning("Health check broker failure: %s", e)
 
     healthy = checks["database"] == "ok"
     payload = {"status": "ok" if healthy else "error", "checks": checks}
@@ -760,23 +773,32 @@ def ai_suggestions_api(request):
         f"{ingredients_str}:{provider or 'default'}:{model or 'default'}:{lang_code}".encode()
     ).hexdigest()
 
-    # Check 24h cache unless force_refresh requested
+    def _cached_response(recipes):
+        return Response({
+            "status": "done",
+            "recipes": recipes,
+            "cached": True,
+            "provider": provider or DEFAULT_AI_PROVIDER,
+            "model": model,
+            "model_used": model or getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash"),
+            "rate_limited_models": [],
+        })
+
+    # Check 24h cache unless force_refresh requested:
+    # Redis hot layer first, then the durable DB table (re-warming Redis).
     if not force_refresh:
+        hot = ai_cache.get_suggestions(ingredients_hash)
+        if hot:
+            return _cached_response(hot)
+
         cache_entry = AISuggestionCache.objects.filter(
             ingredients_hash=ingredients_hash,
             created_at__gte=timezone.now() - timedelta(days=1)
         ).first()
 
         if cache_entry and isinstance(cache_entry.ai_response, list) and len(cache_entry.ai_response) > 0:
-            return Response({
-                "status": "done",
-                "recipes": cache_entry.ai_response,
-                "cached": True,
-                "provider": provider or DEFAULT_AI_PROVIDER,
-                "model": model,
-                "model_used": model or getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash"),
-                "rate_limited_models": [],
-            })
+            ai_cache.set_suggestions(ingredients_hash, cache_entry.ai_response)
+            return _cached_response(cache_entry.ai_response)
 
     # Generate suggestions directly with metadata
     try:
@@ -786,6 +808,7 @@ def ai_suggestions_api(request):
             ingredients_hash=ingredients_hash,
             defaults={"ai_response": recipes, "created_at": timezone.now()}
         )
+        ai_cache.set_suggestions(ingredients_hash, recipes)
         return Response({
             "status": "done",
             "recipes": recipes,
@@ -799,6 +822,7 @@ def ai_suggestions_api(request):
         # Fallback to Celery background task if direct call is slow or fails
         try:
             task = generate_ai_suggestions_task.delay(ingredients, ingredients_hash, provider, language)
+            ai_cache.remember_task(task.id, ingredients_hash)
             return Response({"status": "processing", "task_id": task.id})
         except Exception:
             # Return safe fallback recipes
@@ -1055,10 +1079,21 @@ def ai_task_status(request, task_id):
     if not res.ready():
         return Response({"status": "pending"})
 
-    # Check cache for recent results
-    cache_entry = AISuggestionCache.objects.filter(
+    # Resolve *this* task's result: task id -> ingredient hash -> Redis/DB.
+    ingredients_hash = ai_cache.task_hash(task_id)
+    if ingredients_hash:
+        hot = ai_cache.get_suggestions(ingredients_hash)
+        if hot:
+            return Response({"status": "done", "recipes": hot})
+
+    # Fallback (task id unknown to Redis, e.g. after a flush): newest recent
+    # entry, narrowed to this task's hash when we know it.
+    qs = AISuggestionCache.objects.filter(
         created_at__gte=timezone.now() - timedelta(minutes=15)
-    ).order_by("-created_at").first()
+    )
+    if ingredients_hash:
+        qs = qs.filter(ingredients_hash=ingredients_hash)
+    cache_entry = qs.order_by("-created_at").first()
 
     if cache_entry and isinstance(cache_entry.ai_response, list):
         return Response({"status": "done", "recipes": cache_entry.ai_response})

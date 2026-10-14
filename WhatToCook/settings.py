@@ -339,6 +339,8 @@ CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_ACKS_LATE = True
+# /api/health/ also reports broker reachability (informational: never fails the probe).
+HEALTH_CHECK_BROKER = not _IS_TESTING and _env_bool("HEALTH_CHECK_BROKER", "true")
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
