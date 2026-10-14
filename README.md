@@ -2,6 +2,7 @@
 
 > **Zero Food Waste AI Recipe Engine**, visual camera ingredient scanner powered by **Generative AI**, real-time culinary generation streaming, interactive Telegram bot assistant, smart grocery lists with 1-click WhatsApp & Telegram exports, dynamic portion scaling, an offline Progressive Web App (PWA), and a **5-language interface (English, Türkçe, فارسی, العربية, Español)** with full RTL support.
 
+[![CI](https://github.com/rezaxr14/WhatToCook_Smart_Kitchen_OS/actions/workflows/ci.yml/badge.svg)](https://github.com/rezaxr14/WhatToCook_Smart_Kitchen_OS/actions/workflows/ci.yml)
 [![Django 5.2](https://img.shields.io/badge/Django-5.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://djangoproject.com/)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -92,7 +93,9 @@ WhatToCook Ecosystem
 ├── 💬 Telegram Bot Webhook & Interactive Pantry Handshake
 ├── 📱 Smart Grocery Exporter (WhatsApp, Telegram, Markdown, Print)
 ├── 🗄️ PostgreSQL 15 (Docker) / SQLite3 (Auto-fallback local dev)
-└── 🚀 Redis 7 → Celery task queue + Django cache (stats, health probes)
+├── 📨 RabbitMQ 4.2 → Celery message broker (async AI recipe generation)
+├── 🚀 Redis 7 → Celery results + Django cache (AI hot cache, stats, rate limits)
+└── ☸️ Kubernetes manifests (kustomize) · 🤖 GitHub Actions CI
 ```
 
 ### ✨ Core Features
@@ -135,6 +138,7 @@ docker compose up -d --build
 - **Landing Page Health**: [http://localhost:8000/api/health/](http://localhost:8000/api/health/)
 - **Django Admin Panel**: [http://localhost:8000/admin/](http://localhost:8000/admin/) or [http://localhost:4173/admin/](http://localhost:4173/admin/)
 - **Legacy Server-Rendered Pages**: [http://localhost:8000/legacy/](http://localhost:8000/legacy/)
+- **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) (bound to localhost; log in with `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASS` from your `.env`, default `whattocook` / `secret`)
 
 ---
 
@@ -163,6 +167,13 @@ python manage.py seed_recipes
 # Start backend server
 python manage.py runserver 127.0.0.1:8000
 ```
+
+> RabbitMQ and Redis are **optional** for bare-metal development: without them
+> the cache falls back to in-process memory and the async Celery fallback
+> degrades to the built-in culinary fallback recipes (`/api/health/` reports
+> `broker: degraded`). To run the full async path locally, start RabbitMQ
+> (`guest`/`guest` works from localhost) and Redis, then in a second terminal:
+> `celery -A WhatToCook worker -l info`.
 
 ### 2. Frontend Setup
 ```bash
@@ -207,12 +218,73 @@ npm run test:e2e       # starts Vite automatically; backend on :8000 required
 node scripts/recapture-journey.cjs && node scripts/recapture-landing.cjs
 ```
 
+## 📨 Message queue & Redis
+
+| Component | Role |
+|---|---|
+| **RabbitMQ** (`rabbitmq:4.2-management-alpine`) | Celery **broker**. AI recipe generation is first attempted inline; if the provider is slow or fails, `generate_ai_suggestions_task` is published to RabbitMQ and the client polls `/api/ai/task-status/<task_id>/`. |
+| **Redis** | Celery **result backend** (db 0) and Django **cache** (db 1). |
+
+What lives in Redis (all through Django's cache, so it degrades to a cache miss — never an error — if Redis is down):
+
+- **AI suggestions hot cache** (24h) in front of the durable `AISuggestionCache` table; DB hits re-warm Redis.
+- **Recipe detail cache** (24h) per recipe / provider / model / language — a real LLM answer is paid for once. Fallback answers are never cached.
+- **Task bookkeeping**: Celery task id → ingredient hash, so the status endpoint returns *that* task's result.
+- Platform stats, health probe and the per-scope **rate-limit counters**.
+
+`/api/health/` reports `database`, `cache` and `broker` (informational: a queue outage never fails the probe).
+RabbitMQ is pinned to **4.2** because 4.3+ rejects the transient non-exclusive queues Celery 5.5's kombu declares; bump it together with Celery.
+
+## ☸️ Kubernetes
+
+Plain manifests + kustomize in [`k8s/`](k8s): Postgres and RabbitMQ (StatefulSets with PVCs), Redis, the Django API, Celery worker, Telegram bot, the nginx frontend and an Ingress.
+
+```bash
+# 1. Build the images and make them available to your cluster (kind shown)
+docker build -t whattocook-backend:latest .
+docker build -t whattocook-frontend:latest ./frontend
+kind load docker-image whattocook-backend:latest whattocook-frontend:latest
+
+# 2. Namespace + secrets (secret.yaml is git-ignored)
+kubectl apply -f k8s/namespace.yaml
+cp k8s/secret.example.yaml k8s/secret.yaml && $EDITOR k8s/secret.yaml
+kubectl apply -f k8s/secret.yaml
+
+# 3. Deploy everything
+kubectl apply -k k8s
+kubectl -n whattocook get pods -w
+
+# 4. Reach it (or point whattocook.local at your ingress controller)
+kubectl -n whattocook port-forward svc/frontend 4173:80
+```
+
+Notes:
+
+- `CELERY_BROKER_URL` in the Secret must embed the same RabbitMQ credentials as `RABBITMQ_DEFAULT_USER/PASS`.
+- Keep the first rollout at one `web` replica (it runs migrations + seeding on boot). The `media` PVC is `ReadWriteOnce`; for autoscaling use RWX storage and apply `k8s/optional/hpa.yaml`.
+- The Telegram bot is long-polling: exactly one replica (`Recreate` strategy).
+- For a real registry: `cd k8s && kustomize edit set image whattocook-backend=ghcr.io/<you>/whattocook-backend:<tag>` (same for the frontend).
+- Add TLS (e.g. cert-manager) and tighten `ALLOWED_HOSTS` in `k8s/configmap.yaml` before exposing it publicly.
+
+## 🤖 Continuous Integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
+
+| Job | What it checks |
+|---|---|
+| **Backend** | `manage.py check`, migrations in sync, the full Django suite (`GetFood`, `tests`) on Python 3.11 / SQLite |
+| **Frontend** | `npm ci` + `tsc -b && vite build` on Node 20 |
+| **Compose + Kubernetes** | `docker compose config` (base + proxy override) and `kustomize` render validated with `kubeconform` |
+| **Docker** | Builds the backend and frontend images (no push) with layer caching |
+
+Dependabot keeps pip, npm, GitHub Actions and Docker base images current. The Playwright e2e suite is not part of CI (it needs a running backend).
+
 ## 🛡️ Production hardening
 
 All API traffic is rate-limited per endpoint scope with anon/user-aware
 buckets and `Retry-After` responses — see `GetFood/rate_limits.py` (rates
 tunable via env), `GetFood/throttles.py`, and `WhatToCook/settings.py`
-(`USE_RATE_LIMITS=1` enables; on by default). Cache uses a dummy local
+(`USE_RATE_LIMITS=1` enables; on by default). Cache uses a local in-memory
 backend when Redis is absent.
 
 ## 🖼️ Curated dish photography
