@@ -1,0 +1,102 @@
+# Django REST API (gunicorn). Runs migrations + idempotent seed + collectstatic
+# on boot (entrypoint.sh `web` role), so keep replicas at 1 for the very first
+# rollout and scale afterwards (see optional/hpa.yaml; needs RWX media storage).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/part-of: whattocook
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels: &labels
+    app.kubernetes.io/name: web
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      initContainers:
+        # An empty PVC would hide the recipe photos baked into the image
+        # (docker compose copies them into a fresh named volume; Kubernetes
+        # does not). Seed the volume once, never overwrite uploads.
+        - name: seed-media
+          image: whattocook-backend:latest
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "cp -a -n /app/media/. /mnt/media/ || true"]
+          volumeMounts:
+            - name: media
+              mountPath: /mnt/media
+      containers:
+        - name: web
+          image: whattocook-backend:latest
+          imagePullPolicy: IfNotPresent
+          args: ["web"]
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: whattocook-config
+            - secretRef:
+                name: whattocook-secrets
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
+          # First boot runs migrations + seed: allow up to ~3 minutes.
+          startupProbe:
+            httpGet: {path: /api/health/, port: http}
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet: {path: /api/health/, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet: {path: /api/health/, port: http}
+            periodSeconds: 20
+            timeoutSeconds: 8
+            failureThreshold: 3
+          resources:
+            requests: {cpu: 200m, memory: 384Mi}
+            limits: {memory: 768Mi}
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: media
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/part-of: whattocook
+spec:
+  selector:
+    app.kubernetes.io/name: web
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

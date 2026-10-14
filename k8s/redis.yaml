@@ -1,0 +1,56 @@
+# Redis: Celery result backend (db 0) + Django cache (db 1: AI hot cache,
+# platform stats, rate-limit counters). Ephemeral by design - durable data
+# lives in Postgres, the task queue lives in RabbitMQ.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels: &labels
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+          ports:
+            - name: redis
+              containerPort: 6379
+          readinessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 50m, memory: 64Mi}
+            limits: {memory: 128Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: whattocook
+spec:
+  selector:
+    app.kubernetes.io/name: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis

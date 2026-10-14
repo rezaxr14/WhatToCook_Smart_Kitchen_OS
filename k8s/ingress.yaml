@@ -1,0 +1,27 @@
+# Requires an ingress controller (ingress-nginx assumed). Change the host, and
+# add a `tls:` block (cert-manager works well) for real deployments.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: whattocook
+  labels:
+    app.kubernetes.io/part-of: whattocook
+  annotations:
+    # Recipe generation is streamed over SSE: don't buffer, allow long reads.
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: whattocook.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  name: http

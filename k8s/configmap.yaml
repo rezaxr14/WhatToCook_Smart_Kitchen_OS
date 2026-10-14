@@ -1,0 +1,31 @@
+# Non-secret configuration shared by the Django pods (web, celery, telegram-bot).
+# Secrets (SECRET_KEY, passwords, API keys, broker URL) live in the
+# `whattocook-secrets` Secret - see secret.example.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: whattocook-config
+  labels:
+    app.kubernetes.io/part-of: whattocook
+data:
+  DJANGO_SETTINGS_MODULE: WhatToCook.settings
+  PYTHONUNBUFFERED: "1"
+  DEBUG: "false"
+  # Tighten for production, e.g. "whattocook.example.com". The default keeps the
+  # in-cluster probes (Host: <pod-ip>) working.
+  ALLOWED_HOSTS: "*"
+  # CSRF_TRUSTED_ORIGINS: "https://whattocook.example.com"
+  USE_POSTGRES: "true"
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  POSTGRES_DB: whattocook
+  POSTGRES_USER: whattocook
+  # Redis: db 0 = Celery results, db 1 = Django cache (AI hot cache, stats, rate limits).
+  CELERY_RESULT_BACKEND: redis://redis:6379/0
+  REDIS_URL: redis://redis:6379/1
+  AI_PROVIDER: gemini
+  GEMINI_MODEL: gemini-3.5-flash-lite
+  GUNICORN_WORKERS: "3"
+  GUNICORN_THREADS: "2"
+  CELERY_CONCURRENCY: "2"
+  TELEGRAM_BOT_USERNAME: WhatToCookChefBot

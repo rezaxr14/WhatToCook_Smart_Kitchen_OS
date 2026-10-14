@@ -1,0 +1,53 @@
+# nginx serving the React SPA build; proxies /api /admin /static /media /legacy
+# to the `web` Service (see frontend/nginx.conf).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels: &labels
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: frontend
+          image: whattocook-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            httpGet: {path: /, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: {path: /, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 3
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {memory: 128Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    app.kubernetes.io/part-of: whattocook
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

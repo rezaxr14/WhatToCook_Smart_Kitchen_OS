@@ -1,0 +1,32 @@
+# Celery worker: consumes AI recipe-generation tasks from RabbitMQ and stores
+# results in Redis / Postgres. Scale horizontally with `replicas`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+  labels: &labels
+    app.kubernetes.io/name: celery
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: celery
+          image: whattocook-backend:latest
+          imagePullPolicy: IfNotPresent
+          args: ["celery"]
+          envFrom:
+            - configMapRef:
+                name: whattocook-config
+            - secretRef:
+                name: whattocook-secrets
+          resources:
+            requests: {cpu: 100m, memory: 256Mi}
+            limits: {memory: 512Mi}

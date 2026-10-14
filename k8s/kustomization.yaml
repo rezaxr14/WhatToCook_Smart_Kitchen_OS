@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whattocook
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - postgres.yaml
+  - redis.yaml
+  - rabbitmq.yaml
+  - web.yaml
+  - celery.yaml
+  - telegram-bot.yaml
+  - frontend.yaml
+  - ingress.yaml
+
+# Point these at your registry/tag when deploying beyond a local cluster, e.g.
+#   cd k8s && kustomize edit set image whattocook-backend=ghcr.io/<you>/whattocook-backend:<tag>
+images:
+  - name: whattocook-backend
+    newName: whattocook-backend
+    newTag: latest
+  - name: whattocook-frontend
+    newName: whattocook-frontend
+    newTag: latest

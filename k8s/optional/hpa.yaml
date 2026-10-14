@@ -1,0 +1,22 @@
+# OPTIONAL: autoscale the API. Needs metrics-server AND ReadWriteMany media
+# storage (the `media` PVC in web.yaml is ReadWriteOnce, which pins all pods to
+# one node). Apply with:  kubectl apply -n whattocook -f k8s/optional/hpa.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web
+  namespace: whattocook
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75

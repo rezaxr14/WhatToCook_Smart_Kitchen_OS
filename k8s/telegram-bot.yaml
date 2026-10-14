@@ -1,0 +1,35 @@
+# Telegram long-polling bot. Exactly one instance may poll a token, so the
+# strategy is Recreate and replicas must stay at 1. With an empty
+# TELEGRAM_BOT_TOKEN the entrypoint idles instead of crash-looping.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: telegram-bot
+  labels: &labels
+    app.kubernetes.io/name: telegram-bot
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: telegram-bot
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: telegram-bot
+          image: whattocook-backend:latest
+          imagePullPolicy: IfNotPresent
+          args: ["bot"]
+          envFrom:
+            - configMapRef:
+                name: whattocook-config
+            - secretRef:
+                name: whattocook-secrets
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 256Mi}
