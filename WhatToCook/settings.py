@@ -326,9 +326,19 @@ elif not _env_bool("THROTTLING_ENABLED", "true"):
 else:
     REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = load_rates()
 
-# Celery: default to localhost for bare-metal dev; Docker sets redis://redis:6379/0 via .env
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+# Celery: RabbitMQ is the message broker (task queue); Redis stores task results
+# and backs the Django cache. Defaults target bare-metal dev on localhost;
+# Docker Compose / Kubernetes inject the in-network URLs via the environment.
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@127.0.0.1:5672//")
+# Results live in Redis: AMQP result backends can't be polled across processes
+# (web -> AsyncResult), so never fall back to the broker URL here.
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
+# Let the worker wait for RabbitMQ at boot instead of crashing, and dispatch
+# long AI tasks fairly; ack late so a crashed worker's task is redelivered.
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_ACKS_LATE = True
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

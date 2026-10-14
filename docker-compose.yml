@@ -21,7 +21,8 @@ x-backend-common: &backend-common
     USE_POSTGRES: "true"
     DB_HOST: db
     DB_PORT: "5432"
-    CELERY_BROKER_URL: redis://redis:6379/0
+    # RabbitMQ is the Celery message broker; Redis keeps results + Django cache.
+    CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER:-whattocook}:${RABBITMQ_DEFAULT_PASS:-secret}@rabbitmq:5672//
     CELERY_RESULT_BACKEND: redis://redis:6379/0
     REDIS_URL: redis://redis:6379/1
 
@@ -38,6 +39,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     restart: unless-stopped
 
@@ -75,14 +78,37 @@ services:
   redis:
     image: redis:7-alpine
     container_name: whattocook_redis
-    # Ephemeral broker/cache is fine: Celery results are advisory,
-    # durable data lives in Postgres.
+    # Ephemeral cache + Celery result store is fine: results are advisory,
+    # durable data lives in Postgres. (The task queue itself lives in RabbitMQ.)
     command: ["redis-server", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
+
+  rabbitmq:
+    # Pinned to 4.2: RabbitMQ 4.3+ rejects the transient non-exclusive queues
+    # that Celery 5.5's kombu declares for worker control (pidbox).
+    # Bump only together with a Celery/kombu upgrade.
+    image: rabbitmq:4.2-management-alpine
+    container_name: whattocook_rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-whattocook}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-secret}
+    ports:
+      # Management UI, bound to localhost only. AMQP (5672) stays internal.
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     restart: unless-stopped
 
   celery:
@@ -96,6 +122,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     restart: unless-stopped
 
@@ -115,3 +143,4 @@ services:
 volumes:
   db_data:
   media_data:
+  rabbitmq_data:

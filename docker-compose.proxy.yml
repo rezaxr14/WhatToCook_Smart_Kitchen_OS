@@ -19,16 +19,16 @@ x-proxy-build-args: &proxy-build-args
   HTTPS_PROXY: http://host.docker.internal:10808
   http_proxy: http://host.docker.internal:10808
   https_proxy: http://host.docker.internal:10808
-  NO_PROXY: localhost,127.0.0.1,web,db,redis,celery,frontend,telegram_bot
-  no_proxy: localhost,127.0.0.1,web,db,redis,celery,frontend,telegram_bot
+  NO_PROXY: localhost,127.0.0.1,web,db,redis,rabbitmq,celery,frontend,telegram_bot
+  no_proxy: localhost,127.0.0.1,web,db,redis,rabbitmq,celery,frontend,telegram_bot
 
 x-proxy-env: &proxy-env
   HTTP_PROXY: http://host.docker.internal:10808
   HTTPS_PROXY: http://host.docker.internal:10808
   http_proxy: http://host.docker.internal:10808
   https_proxy: http://host.docker.internal:10808
-  NO_PROXY: localhost,127.0.0.1,web,db,redis,celery,frontend,telegram_bot,172.18.0.0/16
-  no_proxy: localhost,127.0.0.1,web,db,redis,celery,frontend,telegram_bot,172.18.0.0/16
+  NO_PROXY: localhost,127.0.0.1,web,db,redis,rabbitmq,celery,frontend,telegram_bot,172.18.0.0/16
+  no_proxy: localhost,127.0.0.1,web,db,redis,rabbitmq,celery,frontend,telegram_bot,172.18.0.0/16
 
 x-extra-hosts: &extra-hosts
   extra_hosts:
