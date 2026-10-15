@@ -1,0 +1,6 @@
+# Lint gate used by CI: real bugs only (syntax errors + pyflakes), no style churn.
+target-version = "py311"
+extend-exclude = ["frontend", "staticfiles", "media"]
+
+[lint]
+select = ["E9", "F"]

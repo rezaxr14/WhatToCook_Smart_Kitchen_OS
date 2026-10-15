@@ -1,4 +1,3 @@
-import os
 from django.core.management.base import BaseCommand
 from GetFood.models import Ingredient, Recipe, RecipeIngredient
 

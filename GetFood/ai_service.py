@@ -352,8 +352,6 @@ def _clean_json_str(content: str) -> str:
 
 def _fallback_recipe_suggestions(ingredients: list[str]) -> list[dict]:
     """Graceful culinary fallback suggestions when live AI is offline."""
-    ing_set = [i.lower() for i in ingredients]
-    
     presets = [
         {
             "name": "Savory Chef's Skillet",

@@ -1,5 +1,4 @@
 import hashlib
-import json
 import logging
 import os
 import requests
@@ -23,23 +22,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
-from django.http import JsonResponse, StreamingHttpResponse
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from GetFood.throttles import scoped, _throttle_class
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .ai_service import (
     DEFAULT_AI_PROVIDER,
-    GEMINI_API_KEY,
     ask_recipe_chat,
-    generate_recipe_detail,
     generate_recipe_detail_meta,
     generate_recipe_suggestions,
     generate_recipe_suggestions_meta,
@@ -51,7 +46,6 @@ from .models import (
     AISuggestionCache,
     Ingredient,
     Recipe,
-    RecipeIngredient,
     ShoppingListItem,
     TelegramAccountLink,
     UserPantry,
@@ -64,7 +58,6 @@ from .serializers import (
 )
 from . import ai_cache
 from .tasks import generate_ai_suggestions_task
-from .utils import find_best_image
 
 
 # ==========================================
@@ -829,7 +822,7 @@ def ai_suggestions_api(request):
             "model_used": model_used,
             "rate_limited_models": rate_limited_models,
         })
-    except Exception as e:
+    except Exception:
         # Fallback to Celery background task if direct call is slow or fails
         try:
             task = generate_ai_suggestions_task.delay(ingredients, ingredients_hash, provider, language)

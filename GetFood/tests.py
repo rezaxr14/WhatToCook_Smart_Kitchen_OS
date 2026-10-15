@@ -1,14 +1,10 @@
-import json
-import base64
-from io import BytesIO
 from django.contrib.auth.models import User
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from .models import Ingredient, Recipe, RecipeIngredient, TelegramAccountLink, UserPantry
-from .ai_service import scan_fridge_image, generate_recipe_suggestions, generate_recipe_detail
 
 
 class AuthAPITests(TestCase):
@@ -279,7 +275,7 @@ class TelegramBotAPITests(TestCase):
         self.assertEqual(link.telegram_username, "chef_john")
 
     def test_telegram_webhook_pantry_add_command(self):
-        link = TelegramAccountLink.objects.create(
+        TelegramAccountLink.objects.create(
             user=self.user,
             telegram_chat_id="999999",
             telegram_username="tg_tester",
