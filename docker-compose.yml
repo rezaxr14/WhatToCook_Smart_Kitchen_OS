@@ -119,9 +119,15 @@ services:
     <<: *backend-common
     container_name: whattocook_celery
     command: ["celery"]
-    # The image healthcheck probes HTTP; it only applies to the web role.
+    # The image's HTTP healthcheck only fits the web role. `disable: true` makes newer
+    # Compose releases fail `up --wait` ("has no healthcheck configured"), so each
+    # non-HTTP role gets a real check instead: here, a Celery control-channel ping.
     healthcheck:
-      disable: true
+      test: ["CMD-SHELL", "python -m celery -A WhatToCook inspect ping -d celery@$$HOSTNAME --timeout 5"]
+      interval: 45s
+      timeout: 15s
+      retries: 3
+      start_period: 40s
     depends_on:
       db:
         condition: service_healthy
@@ -137,7 +143,13 @@ services:
     container_name: whattocook_celery_beat
     command: ["beat"]
     healthcheck:
-      disable: true
+      # The entrypoint exec()s the scheduler, so PID 1 must be the beat process.
+      # (Crashes are handled by the restart policy; this keeps `up --wait` honest.)
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0 if b'beat' in open('/proc/1/cmdline', 'rb').read() else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
@@ -179,7 +191,12 @@ services:
     container_name: whattocook_telegram_bot
     command: ["bot"]
     healthcheck:
-      disable: true
+      # PID 1 is the bot (`run_telegram_bot`) or, with an empty token, the idle `sleep`.
+      test: ["CMD", "python", "-c", "import sys; c = open('/proc/1/cmdline', 'rb').read(); sys.exit(0 if (b'run_telegram_bot' in c or b'sleep' in c) else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       db:
         condition: service_healthy
