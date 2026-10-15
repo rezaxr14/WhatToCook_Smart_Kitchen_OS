@@ -61,6 +61,16 @@ class AiFailureHandlingTests(TestCase):
         self.assertEqual(data["status"], "error")
         self.assertNotIn("boom", str(data))  # no exception text for anonymous pollers
 
+    def test_degraded_suggestions_still_reach_the_poller_via_the_task_result(self):
+        with patch("GetFood.tasks.generate_recipe_suggestions", return_value=DEGRADED):
+            result = generate_ai_suggestions_task.run(["egg"], "h-carry")
+        self.assertEqual(result["recipes"], DEGRADED)
+        done = MagicMock(ready=MagicMock(return_value=True), failed=MagicMock(return_value=False), result=result)
+        with patch("celery.result.AsyncResult", return_value=done):
+            data = APIClient().get(reverse("api_ai_task_status", kwargs={"task_id": "t-carry"})).data
+        self.assertEqual(data, {"status": "done", "recipes": DEGRADED})
+        self.assertFalse(AISuggestionCache.objects.filter(ingredients_hash="h-carry").exists())  # still not cached
+
     def test_degraded_suggestions_are_not_cached_by_the_task(self):
         with patch("GetFood.tasks.generate_recipe_suggestions", return_value=DEGRADED):
             generate_ai_suggestions_task.run(["egg"], "h-degraded")

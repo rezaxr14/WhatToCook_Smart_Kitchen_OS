@@ -40,15 +40,17 @@ def generate_ai_suggestions_task(self, ingredients_list, ingredients_hash, provi
     """
     recipes = generate_recipe_suggestions(ingredients_list, provider=provider, language=language)
 
+    # The recipes travel in the task's own result (Celery result backend = Redis), so the
+    # poller gets them even when we deliberately refuse to cache a degraded answer.
     if ai_cache.is_degraded(recipes):
-        return {"status": "ok", "count": len(recipes), "degraded": True}
+        return {"status": "ok", "count": len(recipes), "degraded": True, "recipes": recipes}
 
     AISuggestionCache.objects.update_or_create(
         ingredients_hash=ingredients_hash,
         defaults={"ai_response": recipes, "created_at": timezone.now()},
     )
     ai_cache.set_suggestions(ingredients_hash, recipes)
-    return {"status": "ok", "count": len(recipes)}
+    return {"status": "ok", "count": len(recipes), "degraded": False, "recipes": recipes}
 
 
 @shared_task

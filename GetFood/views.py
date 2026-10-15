@@ -1087,7 +1087,12 @@ def ai_task_status(request, task_id):
         logger.warning("AI task %s failed: %s", task_id, res.result)
         return Response({"status": "error", "error": "AI generation failed. Please try again."})
 
-    # Resolve *this* task's result: task id -> ingredient hash -> Redis/DB.
+    # 1) The task carries its own recipes in its result (works for degraded answers too).
+    result = res.result
+    if isinstance(result, dict) and isinstance(result.get("recipes"), list) and result["recipes"]:
+        return Response({"status": "done", "recipes": result["recipes"]})
+
+    # 2) Older tasks / evicted results: task id -> ingredient hash -> Redis/DB.
     ingredients_hash = ai_cache.task_hash(task_id)
     if ingredients_hash:
         hot = ai_cache.get_suggestions(ingredients_hash)
