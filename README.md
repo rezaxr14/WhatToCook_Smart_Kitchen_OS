@@ -93,9 +93,9 @@ WhatToCook Ecosystem
 ├── 💬 Telegram Bot Webhook & Interactive Pantry Handshake
 ├── 📱 Smart Grocery Exporter (WhatsApp, Telegram, Markdown, Print)
 ├── 🗄️ PostgreSQL 15 (Docker) / SQLite3 (Auto-fallback local dev)
-├── 📨 RabbitMQ 4.2 → Celery message broker (async AI recipe generation)
+├── 📨 RabbitMQ 4.2 → Celery broker (queues: ai · maintenance) + celery beat + optional Flower
 ├── 🚀 Redis 7 → Celery results + Django cache (AI hot cache, stats, rate limits)
-└── ☸️ Kubernetes manifests (kustomize) · 🤖 GitHub Actions CI
+└── 🔭 Prometheus metrics · JSON logs · ☸️ Kubernetes (kustomize) · 🤖 GitHub Actions CI
 ```
 
 ### ✨ Core Features
@@ -132,12 +132,18 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
+> **Upgrading an existing checkout?** The backend image now runs as an unprivileged user (uid 10001).
+> A `media_data` volume created by an older image is root-owned; fix it once (this does **not** touch your database volume):
+> `docker compose run --rm --user root --entrypoint chown web -R 10001:10001 /app/media`
+> To verify the whole stack end to end (API, RabbitMQ → worker → Redis round trip, beat, metrics): `./scripts/compose-smoke.sh`.
+
 ### 🌐 Access Points:
 - **Frontend Web App**: [http://localhost:4173](http://localhost:4173)
 - **Django REST API**: [http://localhost:8000/api/](http://localhost:8000/api/)
 - **Landing Page Health**: [http://localhost:8000/api/health/](http://localhost:8000/api/health/)
 - **Django Admin Panel**: [http://localhost:8000/admin/](http://localhost:8000/admin/) or [http://localhost:4173/admin/](http://localhost:4173/admin/)
 - **Legacy Server-Rendered Pages**: [http://localhost:8000/legacy/](http://localhost:8000/legacy/)
+- **Flower / Prometheus** (optional, `docker compose --profile monitoring up -d`): [http://localhost:5555](http://localhost:5555) · [http://localhost:9090](http://localhost:9090)
 - **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) (bound to localhost; log in with `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASS` from your `.env`, default `whattocook` / `secret`)
 
 ---
@@ -225,59 +231,86 @@ node scripts/recapture-journey.cjs && node scripts/recapture-landing.cjs
 | **RabbitMQ** (`rabbitmq:4.2-management-alpine`) | Celery **broker**. AI recipe generation is first attempted inline; if the provider is slow or fails, `generate_ai_suggestions_task` is published to RabbitMQ and the client polls `/api/ai/task-status/<task_id>/`. |
 | **Redis** | Celery **result backend** (db 0) and Django **cache** (db 1). |
 
-What lives in Redis (all through Django's cache, so it degrades to a cache miss — never an error — if Redis is down):
+**Queues & workers**
+
+- `ai` — recipe generation · `maintenance` — housekeeping · `celery` — everything else. A worker consumes all three by default; dedicate workers with `CELERY_QUEUES=ai`.
+- Failed tasks are retried with exponential backoff + jitter (max 3). When retries are exhausted the status endpoint answers `{"status": "error"}` and the UI shows an error toast instead of an empty result.
+- **Celery beat** (`celery_beat` service / `celery-beat` Deployment — run exactly one) schedules `cleanup_expired_ai_cache` nightly (retention: `AI_CACHE_RETENTION_DAYS`, default 7).
+- Optional **Flower** (`docker compose --profile monitoring up -d` → <http://localhost:5555>) shows workers, tasks and queue depth. On Kubernetes: `k8s/optional/flower.yaml`, and `k8s/optional/keda-celery.yaml` scales the worker by `ai` queue length.
+
+**What lives in Redis** (all through Django's cache, so it degrades to a cache miss — never an error — if Redis is down):
 
 - **AI suggestions hot cache** (24h) in front of the durable `AISuggestionCache` table; DB hits re-warm Redis.
-- **Recipe detail cache** (24h) per recipe / provider / model / language — a real LLM answer is paid for once. Fallback answers are never cached.
+- **Recipe detail cache** (24h) per recipe / provider / model / language — a real LLM answer is paid for once.
+- The AI-offline **fallback recipes are never cached**, and a failed task can never overwrite a good cached answer.
 - **Task bookkeeping**: Celery task id → ingredient hash, so the status endpoint returns *that* task's result.
 - Platform stats, health probe and the per-scope **rate-limit counters**.
 
+**Safe concurrent boot.** `bootstrap_db` (migrate + seed) runs under a Postgres advisory lock, so any number of `web` replicas can start at once.
+
 `/api/health/` reports `database`, `cache` and `broker` (informational: a queue outage never fails the probe).
-RabbitMQ is pinned to **4.2** because 4.3+ rejects the transient non-exclusive queues Celery 5.5's kombu declares; bump it together with Celery.
+RabbitMQ is pinned to **4.2** because 4.3+ rejects the transient non-exclusive queues Celery 5.5's kombu declares; bump it together with Celery (Dependabot ignores it on purpose).
+
+## 🔭 Observability
+
+- **Structured logs**: JSON in production (`LOG_FORMAT=json`, default when `DEBUG=false`), plain text in dev. Every request gets an `X-Request-ID` (an incoming one from your ingress is reused) that appears in each log line and in the response header.
+- **Metrics**: `GET /metrics` (django-prometheus; multiprocess-safe under gunicorn). Not proxied by nginx/Ingress — scrape it in-cluster or on the compose-published API port; set `METRICS_TOKEN` to additionally require `Authorization: Bearer <token>`. RabbitMQ's built-in Prometheus endpoint is on `:15692`.
+- **Prometheus** for local use: `docker compose --profile monitoring up -d` → <http://localhost:9090> (scrapes the API, RabbitMQ and Flower; see `monitoring/prometheus.yml`). On Kubernetes use `k8s/optional/servicemonitor.yaml` (Prometheus Operator).
+- **Sentry** (optional): set `SENTRY_DSN` (plus `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`); Django and Celery are instrumented automatically.
 
 ## ☸️ Kubernetes
 
-Plain manifests + kustomize in [`k8s/`](k8s): Postgres and RabbitMQ (StatefulSets with PVCs), Redis, the Django API, Celery worker, Telegram bot, the nginx frontend and an Ingress.
+Kustomize layout in [`k8s/`](k8s):
+
+```
+k8s/base/                 Postgres + RabbitMQ (StatefulSets), Redis, web, celery, celery-beat,
+                          telegram-bot, frontend, Ingress, PodDisruptionBudget
+k8s/overlays/dev/         kind/minikube: throwaway generated secrets, DEBUG on
+k8s/overlays/prod/        TLS (cert-manager), strict ALLOWED_HOSTS, NetworkPolicies, nightly pg_dump
+k8s/optional/             HPA, KEDA queue-based scaling, Flower, ServiceMonitors, ExternalSecret example
+k8s/secret.example.yaml   template for the whattocook-secrets Secret
+```
+
+**Local cluster (kind)** — one command, then verify (needs `docker`, `kind`, `kubectl`):
 
 ```bash
-# 1. Build the images and make them available to your cluster (kind shown)
-docker build -t whattocook-backend:latest .
-docker build -t whattocook-frontend:latest ./frontend
-kind load docker-image whattocook-backend:latest whattocook-frontend:latest
+./scripts/kind-smoke.sh            # builds + loads images, deploys overlays/dev, checks the stack end to end
+kubectl -n whattocook port-forward svc/frontend 4173:80      # http://localhost:4173
+```
 
-# 2. Namespace + secrets (secret.yaml is git-ignored)
-kubectl apply -f k8s/namespace.yaml
-cp k8s/secret.example.yaml k8s/secret.yaml && $EDITOR k8s/secret.yaml
-kubectl apply -f k8s/secret.yaml
+**Production-shaped cluster**
 
-# 3. Deploy everything
-kubectl apply -k k8s
-kubectl -n whattocook get pods -w
+```bash
+# 1. secrets (never committed; k8s/secret.yaml is git-ignored)
+kubectl apply -f k8s/base/namespace.yaml
+cp k8s/secret.example.yaml k8s/secret.yaml && $EDITOR k8s/secret.yaml && kubectl apply -f k8s/secret.yaml
 
-# 4. Reach it (or point whattocook.local at your ingress controller)
-kubectl -n whattocook port-forward svc/frontend 4173:80
+# 2. edit the hostname in k8s/overlays/prod/kustomization.yaml, pin image tags, create the
+#    cert-manager ClusterIssuer (k8s/overlays/prod/cluster-issuer.example.yaml), then:
+kubectl apply -k k8s/overlays/prod
 ```
 
 Notes:
 
+- With `DEBUG=false` the app **refuses to start** on a placeholder/short `SECRET_KEY` or a well-known Postgres password — use real secrets.
 - `CELERY_BROKER_URL` in the Secret must embed the same RabbitMQ credentials as `RABBITMQ_DEFAULT_USER/PASS`.
-- Keep the first rollout at one `web` replica (it runs migrations + seeding on boot). The `media` PVC is `ReadWriteOnce`; for autoscaling use RWX storage and apply `k8s/optional/hpa.yaml`.
-- The Telegram bot is long-polling: exactly one replica (`Recreate` strategy).
-- For a real registry: `cd k8s && kustomize edit set image whattocook-backend=ghcr.io/<you>/whattocook-backend:<tag>` (same for the frontend).
-- Add TLS (e.g. cert-manager) and tighten `ALLOWED_HOSTS` in `k8s/configmap.yaml` before exposing it publicly.
+- App pods run as uid 10001 (`runAsNonRoot`, `fsGroup`, all capabilities dropped, seccomp `RuntimeDefault`). An init container seeds the `media` PVC from the image's recipe photos.
+- The `media` PVC is `ReadWriteOnce`; running more than one `web` replica (or `optional/hpa.yaml`) needs ReadWriteMany storage.
+- The Telegram bot long-polls, and celery beat must be a single scheduler: both are single-replica `Recreate` Deployments.
+- NetworkPolicies (prod overlay) only take effect on CNIs that enforce them (Calico, Cilium, …) and assume ingress-nginx lives in the `ingress-nginx` namespace.
 
 ## 🤖 Continuous Integration
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
+| Workflow | Trigger | What it checks |
+|---|---|---|
+| [`ci.yml`](.github/workflows/ci.yml) | push / PR | **Lint** (ruff), **backend tests on SQLite and Postgres**, migrations in sync, **frontend** typecheck + build, `docker compose config` (incl. proxy + monitoring profile), Kubernetes overlays rendered and validated with kubeconform (incl. KEDA / Prometheus Operator / cert-manager CRDs), **Docker images** build and the backend image runs as uid 10001 |
+| [`security.yml`](.github/workflows/security.yml) | push / PR / weekly | `pip-audit`, `npm audit` (runtime deps, high+), **CodeQL** for Python and TypeScript |
+| [`e2e.yml`](.github/workflows/e2e.yml) | nightly / manual | Playwright suite against a seeded API |
+| [`release.yml`](.github/workflows/release.yml) | `v*.*.*` tag | Publishes `ghcr.io/<owner>/whattocook-{backend,frontend}` |
 
-| Job | What it checks |
-|---|---|
-| **Backend** | `manage.py check`, migrations in sync, the full Django suite (`GetFood`, `tests`) on Python 3.11 / SQLite |
-| **Frontend** | `npm ci` + `tsc -b && vite build` on Node 20 |
-| **Compose + Kubernetes** | `docker compose config` (base + proxy override) and `kustomize` render validated with `kubeconform` |
-| **Docker** | Builds the backend and frontend images (no push) with layer caching |
-
-Dependabot keeps pip, npm, GitHub Actions and Docker base images current. The Playwright e2e suite is not part of CI (it needs a running backend).
+Dependabot keeps pip, npm, GitHub Actions and Docker base images current.
+Container-image vulnerability scanning is intentionally not wired through a third-party action (the `trivy-action` tags were hijacked in March 2026); if you add one, pin it to a full commit SHA.
+Known gap: Tailwind 3's build-time toolchain carries `npm audit` highs (dev-only, not shipped); a Tailwind 4 migration clears them.
 
 ## 🛡️ Production hardening
 
