@@ -24,6 +24,27 @@ secretGenerator:
       - TELEGRAM_BOT_TOKEN=
 
 patches:
+  # Small laptops / CI runners: the base requests (~1.5Gi memory in total) can leave
+  # pods Pending on a 2 GB Docker Desktop VM. Dev needs far less to schedule.
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value: {cpu: 10m, memory: 48Mi}
+  - target:
+      kind: StatefulSet
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests
+        value: {cpu: 10m, memory: 96Mi}
+  - target:
+      kind: Deployment
+      name: frontend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
   - target:
       kind: ConfigMap
       name: whattocook-config

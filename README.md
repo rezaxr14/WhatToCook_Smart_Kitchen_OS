@@ -305,7 +305,8 @@ Notes:
 |---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | push / PR | **Lint** (ruff), **backend tests on SQLite and Postgres**, migrations in sync, **frontend** typecheck + build, `docker compose config` (incl. proxy + monitoring profile), Kubernetes overlays rendered and validated with kubeconform (incl. KEDA / Prometheus Operator / cert-manager CRDs), **Docker images** build and the backend image runs as uid 10001 |
 | [`security.yml`](.github/workflows/security.yml) | push / PR / weekly | `pip-audit`, `npm audit` (runtime deps, high+), **CodeQL** for Python and TypeScript |
-| [`e2e.yml`](.github/workflows/e2e.yml) | nightly / manual | Playwright suite against a seeded API |
+| [`smoke.yml`](.github/workflows/smoke.yml) | push / PR | Boots the **real stacks on GitHub's runners**: the docker compose stack (`scripts/compose-smoke.sh`: API health, RabbitMQ → worker → Redis round trip, beat, `/metrics`, uid 10001, monitoring profile) and the Kubernetes dev overlay on **kind** (`scripts/kind-smoke.sh`), with pod diagnostics on failure |
+| [`e2e.yml`](.github/workflows/e2e.yml) | push / PR / nightly | Playwright suite (23 tests) against a seeded API |
 | [`release.yml`](.github/workflows/release.yml) | `v*.*.*` tag | Publishes `ghcr.io/<owner>/whattocook-{backend,frontend}` |
 
 Dependabot keeps pip, npm, GitHub Actions and Docker base images current.

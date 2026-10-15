@@ -1,0 +1,56 @@
+name: Smoke (full stack)
+
+# Boots the real stacks on GitHub's runners (Docker is available there), so nobody
+# has to run Docker/kind locally: docker compose, and the Kubernetes dev overlay on kind.
+on:
+  push:
+    branches: [main, frontend_added, django-only]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    name: docker compose stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - name: Smoke test (API, RabbitMQ -> worker -> Redis, beat, metrics, non-root, monitoring profile)
+        run: KEEP=0 bash scripts/compose-smoke.sh
+      - name: Diagnostics
+        if: failure()
+        run: |
+          docker compose --profile monitoring ps -a
+          docker compose --profile monitoring logs --no-color --tail=120
+      - name: Tear down
+        if: always()
+        run: docker compose --profile monitoring down -v
+
+  kubernetes:
+    name: Kubernetes (kind, dev overlay)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+      - name: Ensure kind is available
+        run: |
+          if ! command -v kind >/dev/null; then
+            curl -fsSLo kind https://kind.sigs.k8s.io/dl/v0.30.0/kind-linux-amd64
+            chmod +x kind && sudo mv kind /usr/local/bin/kind
+          fi
+          kind version
+      - name: Deploy the dev overlay and verify the stack
+        run: TEARDOWN=0 bash scripts/kind-smoke.sh
+      - name: Pod diagnostics
+        if: failure()
+        run: |
+          kubectl -n whattocook get pods,pvc,svc -o wide || true
+          kubectl -n whattocook get events --sort-by=.lastTimestamp | tail -60 || true
+          kubectl -n whattocook describe pods | tail -200 || true

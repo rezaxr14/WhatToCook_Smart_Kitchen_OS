@@ -1,0 +1,7 @@
+# Keep scripts runnable inside Linux containers/CI even when committed from Windows.
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.py text eol=lf

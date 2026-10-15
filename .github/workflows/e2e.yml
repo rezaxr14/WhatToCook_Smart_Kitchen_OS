@@ -1,11 +1,18 @@
 name: E2E (Playwright)
 
-# Not part of the PR gate: it boots a browser + the Django API and is slower.
-# Runs nightly and on demand (Actions tab -> E2E -> Run workflow).
+# Boots Chromium + the Django API (SQLite, seeded) and runs the 23 Playwright tests.
+# On pushes, PRs, nightly (catches upstream drift) and on demand.
 on:
+  push:
+    branches: [main, frontend_added, django-only]
+  pull_request:
   workflow_dispatch:
   schedule:
     - cron: "0 3 * * *"
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
