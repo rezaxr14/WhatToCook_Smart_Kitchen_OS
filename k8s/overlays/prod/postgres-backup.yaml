@@ -1,0 +1,76 @@
+# Nightly pg_dump to a dedicated PVC, keeping 7 days. Restore with:
+#   gunzip -c whattocook-<ts>.sql.gz | psql -h postgres -U whattocook whattocook
+# For real disaster recovery also copy the PVC off-cluster (VolumeSnapshots, rclone, ...).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backups
+  labels:
+    app.kubernetes.io/name: postgres-backup
+    app.kubernetes.io/part-of: whattocook
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  labels:
+    app.kubernetes.io/name: postgres-backup
+    app.kubernetes.io/part-of: whattocook
+spec:
+  schedule: "17 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: postgres-backup
+            app.kubernetes.io/part-of: whattocook
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: pg-dump
+              image: postgres:15-alpine
+              command:
+                - sh
+                - -c
+                - |
+                  set -eu
+                  set -o pipefail
+                  out="/backup/whattocook-$(date +%Y%m%d-%H%M%S).sql.gz"
+                  pg_dump -h postgres -U "$POSTGRES_USER" "$POSTGRES_DB" | gzip > "$out.tmp"
+                  mv "$out.tmp" "$out"
+                  find /backup -name 'whattocook-*.sql.gz' -mtime +7 -delete
+                  ls -lh /backup
+              env:
+                - name: POSTGRES_USER
+                  valueFrom:
+                    configMapKeyRef: {name: whattocook-config, key: POSTGRES_USER}
+                - name: POSTGRES_DB
+                  valueFrom:
+                    configMapKeyRef: {name: whattocook-config, key: POSTGRES_DB}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef: {name: whattocook-secrets, key: POSTGRES_PASSWORD}
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+              resources:
+                requests: {cpu: 50m, memory: 64Mi}
+                limits: {memory: 256Mi}
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: postgres-backups

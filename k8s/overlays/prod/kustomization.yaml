@@ -1,0 +1,49 @@
+# Production-shaped overlay. Before applying:
+#   1. create the `whattocook-secrets` Secret out-of-band (kubectl, Sealed Secrets or
+#      External Secrets - see ../../optional/external-secret.example.yaml)
+#   2. replace whattocook.example.com below and in the Ingress patch
+#   3. pin the image tags (kustomize edit set image ...)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whattocook
+
+resources:
+  - ../../base
+  - networkpolicy.yaml
+  - postgres-backup.yaml
+
+images:
+  - name: whattocook-backend
+    newName: ghcr.io/rezaxr14/whattocook-backend
+    newTag: latest # pin a release tag
+  - name: whattocook-frontend
+    newName: ghcr.io/rezaxr14/whattocook-frontend
+    newTag: latest # pin a release tag
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: whattocook-config
+    patch: |-
+      - op: replace
+        path: /data/ALLOWED_HOSTS
+        value: "whattocook.example.com,web" # "web" = kubelet probe Host header
+      - op: add
+        path: /data/CSRF_TRUSTED_ORIGINS
+        value: "https://whattocook.example.com"
+  - target:
+      kind: Ingress
+      name: whattocook
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: whattocook.example.com
+      - op: add
+        path: /spec/tls
+        value:
+          - hosts: ["whattocook.example.com"]
+            secretName: whattocook-tls
+      - op: add
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt-prod

@@ -1,0 +1,68 @@
+# OPTIONAL: Flower, a live view of Celery workers, tasks and RabbitMQ queues.
+# Needs FLOWER_BASIC_AUTH in the Secret. Not exposed through the Ingress:
+#   kubectl -n whattocook port-forward svc/flower 5555:5555   -> http://localhost:5555
+# Apply with:  kubectl apply -n whattocook -f k8s/optional/flower.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower
+  namespace: whattocook
+  labels: &labels
+    app.kubernetes.io/name: flower
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: flower
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: flower
+          image: mher/flower:2.0.1
+          ports:
+            - name: http
+              containerPort: 5555
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef: {name: whattocook-secrets, key: RABBITMQ_DEFAULT_USER}
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef: {name: whattocook-secrets, key: RABBITMQ_DEFAULT_PASS}
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                secretKeyRef: {name: whattocook-secrets, key: CELERY_BROKER_URL}
+            - name: FLOWER_BROKER_API
+              value: http://$(RABBITMQ_DEFAULT_USER):$(RABBITMQ_DEFAULT_PASS)@rabbitmq:15672/api/
+            - name: FLOWER_BASIC_AUTH
+              valueFrom:
+                secretKeyRef: {name: whattocook-secrets, key: FLOWER_BASIC_AUTH}
+          readinessProbe:
+            httpGet: {path: /healthcheck, port: http}
+            periodSeconds: 15
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {memory: 256Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower
+  namespace: whattocook
+  labels:
+    app.kubernetes.io/name: flower
+    app.kubernetes.io/part-of: whattocook
+spec:
+  selector:
+    app.kubernetes.io/name: flower
+  ports:
+    - name: http
+      port: 5555
+      targetPort: http

@@ -1,6 +1,7 @@
-# Django REST API (gunicorn). Runs migrations + idempotent seed + collectstatic
-# on boot (entrypoint.sh `web` role), so keep replicas at 1 for the very first
-# rollout and scale afterwards (see optional/hpa.yaml; needs RWX media storage).
+# Django REST API (gunicorn). On boot (entrypoint.sh `web` role) it runs
+# `bootstrap_db` (migrate + idempotent seed under a Postgres advisory lock, so
+# replicas can start concurrently) and collectstatic. Scaling beyond one replica
+# needs ReadWriteMany media storage (see optional/hpa.yaml).
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -36,6 +37,13 @@ spec:
       labels: *labels
     spec:
       automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
         # An empty PVC would hide the recipe photos baked into the image
         # (docker compose copies them into a fresh named volume; Kubernetes
@@ -44,6 +52,10 @@ spec:
           image: whattocook-backend:latest
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c", "cp -a -n /app/media/. /mnt/media/ || true"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           volumeMounts:
             - name: media
               mountPath: /mnt/media
@@ -52,6 +64,10 @@ spec:
           image: whattocook-backend:latest
           imagePullPolicy: IfNotPresent
           args: ["web"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           ports:
             - name: http
               containerPort: 8000
@@ -65,16 +81,16 @@ spec:
               mountPath: /app/media
           # First boot runs migrations + seed: allow up to ~3 minutes.
           startupProbe:
-            httpGet: {path: /api/health/, port: http}
+            httpGet: {path: /api/health/, port: http, httpHeaders: [{name: Host, value: web}]}
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 36
           readinessProbe:
-            httpGet: {path: /api/health/, port: http}
+            httpGet: {path: /api/health/, port: http, httpHeaders: [{name: Host, value: web}]}
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
-            httpGet: {path: /api/health/, port: http}
+            httpGet: {path: /api/health/, port: http, httpHeaders: [{name: Host, value: web}]}
             periodSeconds: 20
             timeoutSeconds: 8
             failureThreshold: 3

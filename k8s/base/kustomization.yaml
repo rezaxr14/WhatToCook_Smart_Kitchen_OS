@@ -11,12 +11,14 @@ resources:
   - rabbitmq.yaml
   - web.yaml
   - celery.yaml
+  - celery-beat.yaml
   - telegram-bot.yaml
   - frontend.yaml
   - ingress.yaml
+  - pdb.yaml
 
 # Point these at your registry/tag when deploying beyond a local cluster, e.g.
-#   cd k8s && kustomize edit set image whattocook-backend=ghcr.io/<you>/whattocook-backend:<tag>
+#   cd k8s/overlays/prod && kustomize edit set image whattocook-backend=ghcr.io/<you>/whattocook-backend:<tag>
 images:
   - name: whattocook-backend
     newName: whattocook-backend

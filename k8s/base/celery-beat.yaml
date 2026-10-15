@@ -1,0 +1,45 @@
+# Celery beat: schedules periodic tasks (nightly AI-cache cleanup).
+# Exactly one scheduler must run, hence Recreate + a single replica.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  labels: &labels
+    app.kubernetes.io/name: celery-beat
+    app.kubernetes.io/part-of: whattocook
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: celery-beat
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: celery-beat
+          image: whattocook-backend:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          args: ["beat"]
+          envFrom:
+            - configMapRef:
+                name: whattocook-config
+            - secretRef:
+                name: whattocook-secrets
+          resources:
+            requests: {cpu: 25m, memory: 96Mi}
+            limits: {memory: 192Mi}

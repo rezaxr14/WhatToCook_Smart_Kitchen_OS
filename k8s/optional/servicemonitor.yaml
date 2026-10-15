@@ -1,0 +1,29 @@
+# OPTIONAL: Prometheus Operator scrape configs (kube-prometheus-stack).
+# Apply with:  kubectl apply -f k8s/optional/servicemonitor.yaml
+# Add a `release: <your-helm-release>` label if your Prometheus selects monitors by it.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: whattocook-api
+  namespace: whattocook
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: whattocook-rabbitmq
+  namespace: whattocook
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+  endpoints:
+    - port: prometheus
+      interval: 15s

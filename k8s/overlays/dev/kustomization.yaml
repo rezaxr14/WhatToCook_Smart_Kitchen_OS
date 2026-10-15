@@ -1,0 +1,36 @@
+# Local cluster (kind / minikube / Docker Desktop). Throwaway secrets, DEBUG on.
+#   kubectl apply -k k8s/overlays/dev      (or run scripts/kind-smoke.sh)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: whattocook
+
+resources:
+  - ../../base
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+secretGenerator:
+  - name: whattocook-secrets
+    literals:
+      - SECRET_KEY=dev-only-not-a-secret-4Zq9x2LmN7vR1tYw8Kc3Jd6Hs5Fb0GpA
+      - POSTGRES_PASSWORD=dev-postgres-pw
+      - RABBITMQ_DEFAULT_USER=whattocook
+      - RABBITMQ_DEFAULT_PASS=dev-rabbit-pw
+      - CELERY_BROKER_URL=amqp://whattocook:dev-rabbit-pw@rabbitmq:5672//
+      - FLOWER_BASIC_AUTH=admin:dev
+      - GEMINI_API_KEY=
+      - TELEGRAM_BOT_TOKEN=
+
+patches:
+  - target:
+      kind: ConfigMap
+      name: whattocook-config
+    patch: |-
+      - op: replace
+        path: /data/DEBUG
+        value: "true"
+      - op: replace
+        path: /data/LOG_FORMAT
+        value: text

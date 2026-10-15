@@ -1,0 +1,34 @@
+# OPTIONAL: scale the Celery worker with the depth of the RabbitMQ `ai` queue.
+# Requires KEDA (https://keda.sh). Replaces any CPU-based scaling of the worker.
+# Apply with:  kubectl apply -f k8s/optional/keda-celery.yaml
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: rabbitmq-broker
+  namespace: whattocook
+spec:
+  secretTargetRef:
+    - parameter: host # full AMQP URI incl. credentials
+      name: whattocook-secrets
+      key: CELERY_BROKER_URL
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: celery
+  namespace: whattocook
+spec:
+  scaleTargetRef:
+    name: celery
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  cooldownPeriod: 120
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: ai
+        mode: QueueLength
+        value: "5" # ~ messages per replica
+      authenticationRef:
+        name: rabbitmq-broker
