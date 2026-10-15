@@ -31,7 +31,7 @@ jobs:
           nohup python manage.py runserver 127.0.0.1:8000 --noreload > api.log 2>&1 &
           for i in $(seq 1 40); do curl -fs http://127.0.0.1:8000/api/health/ >/dev/null && exit 0; sleep 1; done
           echo "API did not start"; cat api.log; exit 1
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: npm
