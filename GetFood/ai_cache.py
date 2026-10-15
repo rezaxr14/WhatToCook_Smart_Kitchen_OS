@@ -44,6 +44,17 @@ def _set(key, value, ttl):
 
 # -- suggestions -------------------------------------------------------------
 
+def is_degraded(recipes) -> bool:
+    """True when the suggestions are the built-in culinary fallback (AI offline).
+
+    Such answers must not be pinned in Redis or the DB for 24h: a short
+    provider outage would otherwise outlive itself.
+    """
+    return isinstance(recipes, list) and any(
+        isinstance(r, dict) and str(r.get("provider", "")).startswith("fallback") for r in recipes
+    )
+
+
 def get_suggestions(ingredients_hash: str):
     """Return a non-empty list of cached recipe ideas, else None."""
     value = _get(f"{PREFIX}:sug:{ingredients_hash}")
@@ -51,7 +62,7 @@ def get_suggestions(ingredients_hash: str):
 
 
 def set_suggestions(ingredients_hash: str, recipes) -> None:
-    if isinstance(recipes, list) and recipes:
+    if isinstance(recipes, list) and recipes and not is_degraded(recipes):
         _set(f"{PREFIX}:sug:{ingredients_hash}", recipes, SUGGESTIONS_TTL)
 
 

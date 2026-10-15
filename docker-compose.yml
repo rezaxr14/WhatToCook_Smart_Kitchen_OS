@@ -101,6 +101,8 @@ services:
     ports:
       # Management UI, bound to localhost only. AMQP (5672) stays internal.
       - "127.0.0.1:15672:15672"
+      # Built-in Prometheus plugin (metrics), localhost only.
+      - "127.0.0.1:15692:15692"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -127,6 +129,49 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  celery_beat:
+    # Periodic tasks (nightly AI-cache cleanup). Exactly one instance may run.
+    <<: *backend-common
+    container_name: whattocook_celery_beat
+    command: ["beat"]
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Optional monitoring stack:  docker compose --profile monitoring up -d --------
+  flower:
+    # Live view of workers, tasks and queues (http://localhost:5555).
+    profiles: ["monitoring"]
+    image: mher/flower:2.0.1
+    container_name: whattocook_flower
+    environment:
+      CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER:-whattocook}:${RABBITMQ_DEFAULT_PASS:-secret}@rabbitmq:5672//
+      FLOWER_BROKER_API: http://${RABBITMQ_DEFAULT_USER:-whattocook}:${RABBITMQ_DEFAULT_PASS:-secret}@rabbitmq:15672/api/
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:change-me}
+    ports:
+      - "127.0.0.1:5555:5555"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    # Scrapes the API (/metrics), RabbitMQ (:15692) and Flower. UI: http://localhost:9090
+    profiles: ["monitoring"]
+    image: prom/prometheus:v3.5.0
+    container_name: whattocook_prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+
   telegram_bot:
     <<: *backend-common
     container_name: whattocook_telegram_bot
@@ -144,3 +189,4 @@ volumes:
   db_data:
   media_data:
   rabbitmq_data:
+  prometheus_data:

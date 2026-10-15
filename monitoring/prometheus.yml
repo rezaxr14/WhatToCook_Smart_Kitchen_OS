@@ -1,0 +1,25 @@
+# Prometheus scrape config for the optional compose "monitoring" profile.
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: whattocook-api
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["web:8000"]
+    # If you set METRICS_TOKEN in .env, uncomment and paste the same value:
+    # authorization:
+    #   type: Bearer
+    #   credentials: "<METRICS_TOKEN>"
+
+  - job_name: rabbitmq
+    static_configs:
+      - targets: ["rabbitmq:15692"] # built-in rabbitmq_prometheus plugin
+
+  - job_name: celery-flower
+    static_configs:
+      - targets: ["flower:5555"]
+    # Flower is behind basic auth by default:
+    # basic_auth:
+    #   username: admin
+    #   password: change-me

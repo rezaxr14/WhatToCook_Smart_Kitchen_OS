@@ -7,6 +7,16 @@ from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
+# Anonymous visitors act as the seeded guest-demo account ("1-Click Guest Demo"),
+# never as "whoever signed up first": that would expose a real user's pantry and
+# let anyone mint a Telegram link token for a real account.
+DEMO_USERNAME = "ChefDemo"
+
+
+def _guest_user():
+    return User.objects.filter(username=DEMO_USERNAME).first()
+
+
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -248,7 +258,7 @@ def api_auth_me(request):
 def api_auth_demo(request):
     """1-Click Guest Demo Login with pre-stocked kitchen pantry."""
     demo_user, created = User.objects.get_or_create(
-        username="ChefDemo",
+        username=DEMO_USERNAME,
         defaults={"email": "chef@whattocook.local"}
     )
     if created:
@@ -283,7 +293,7 @@ def api_pantry_get(request):
     """Get current user pantry ingredients."""
     if not request.user.is_authenticated:
         # Fallback to first pantry or empty
-        pantry = UserPantry.objects.first()
+        pantry = UserPantry.objects.filter(user__username=DEMO_USERNAME).first()
         if pantry:
             return Response(UserPantrySerializer(pantry).data)
         return Response({"ingredients": [], "total_ingredients": 0})
@@ -296,7 +306,7 @@ def api_pantry_get(request):
 @scoped("pantry")
 def api_pantry_add(request):
     """Add ingredient(s) to the authenticated user's pantry."""
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     if not user:
         return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -339,7 +349,7 @@ def api_pantry_add(request):
 @scoped("pantry")
 def api_pantry_remove(request):
     """Remove ingredient from user's pantry."""
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     if not user:
         return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -364,7 +374,7 @@ def api_pantry_remove(request):
 @scoped("pantry")
 def api_pantry_clear(request):
     """Clear all ingredients in user's pantry."""
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     if not user:
         return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -445,7 +455,7 @@ def api_pantry_scan_image(request):
     pantry_data = None
 
     # Handle auto-add or user-requested immediate save
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     if auto_add and user:
         pantry, _ = UserPantry.objects.get_or_create(user=user)
         for item in detected_items:
@@ -483,7 +493,7 @@ def api_can_cook(request):
     - 100% matched recipes (can fully cook)
     - partial matches (missing 1 or 2 ingredients) with match percentages
     """
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     pantry_ingredients = set()
     if user:
         pantry = UserPantry.objects.filter(user=user).first()
@@ -722,7 +732,7 @@ def api_ai_models(request):
 @scoped("telegram_link")
 def api_telegram_link(request):
     """Generate instant Telegram Bot connection handshake link."""
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     auth_token = f"auth_{user.id if user else 1}_{os.urandom(4).hex()}"
     bot_username = getattr(settings, "TELEGRAM_BOT_USERNAME", "WhatToCook_AIBot")
 
@@ -757,7 +767,7 @@ def ai_suggestions_api(request):
     if custom_ingredients and isinstance(custom_ingredients, list) and len(custom_ingredients) > 0:
         ingredients = [str(i).strip() for i in custom_ingredients if str(i).strip()]
     else:
-        user = request.user if request.user.is_authenticated else User.objects.first()
+        user = request.user if request.user.is_authenticated else _guest_user()
         try:
             pantry = UserPantry.objects.get(user=user)
             ingredients = [i.name for i in pantry.ingredients.all()]
@@ -804,11 +814,12 @@ def ai_suggestions_api(request):
     try:
         recipes, model_used, rate_limited_models = generate_recipe_suggestions_meta(ingredients, provider=provider, model=model, language=language)
         # Store in cache
-        AISuggestionCache.objects.update_or_create(
-            ingredients_hash=ingredients_hash,
-            defaults={"ai_response": recipes, "created_at": timezone.now()}
-        )
-        ai_cache.set_suggestions(ingredients_hash, recipes)
+        if not ai_cache.is_degraded(recipes):  # never cache the AI-offline fallback
+            AISuggestionCache.objects.update_or_create(
+                ingredients_hash=ingredients_hash,
+                defaults={"ai_response": recipes, "created_at": timezone.now()}
+            )
+            ai_cache.set_suggestions(ingredients_hash, recipes)
         return Response({
             "status": "done",
             "recipes": recipes,
@@ -1078,6 +1089,10 @@ def ai_task_status(request, task_id):
     res = AsyncResult(task_id)
     if not res.ready():
         return Response({"status": "pending"})
+    if res.failed():
+        # Retries exhausted. Don't leak the exception text to anonymous pollers.
+        logger.warning("AI task %s failed: %s", task_id, res.result)
+        return Response({"status": "error", "error": "AI generation failed. Please try again."})
 
     # Resolve *this* task's result: task id -> ingredient hash -> Redis/DB.
     ingredients_hash = ai_cache.task_hash(task_id)
@@ -1107,7 +1122,7 @@ def ai_task_status(request, task_id):
 def index(request):
     recipes = Recipe.objects.all()
     ingredients = Ingredient.objects.all()
-    user_pantry = UserPantry.objects.first()
+    user_pantry = UserPantry.objects.filter(user__username=DEMO_USERNAME).first()
 
     page = request.GET.get("page", 1)
     paginator = Paginator(recipes, 6)
@@ -1264,7 +1279,7 @@ def api_ai_stream_recipe(request):
 @permission_classes([AllowAny])
 def api_telegram_get_link(request):
     """Generate or retrieve a Telegram connection token for the logged-in user."""
-    user = request.user if request.user.is_authenticated else User.objects.first()
+    user = request.user if request.user.is_authenticated else _guest_user()
     if not user:
         user, _ = User.objects.get_or_create(username="chef_demo")
 

@@ -459,14 +459,16 @@ def generate_recipe_suggestions_meta(ingredients: list[str], provider: str = Non
                 except Exception:
                     continue
 
+    used_fallback = False
     if not recipes:
+        used_fallback = True
         recipes = _fallback_recipe_suggestions(ingredients)
 
     # Attach best matching local images
     for r in recipes:
         r["image"] = find_best_image(r.get("name", "dish"))
         if "provider" not in r:
-            r["provider"] = provider if not error_note else "fallback (AI offline)"
+            r["provider"] = "fallback (AI offline)" if (error_note or used_fallback) else provider
         r["model_used"] = model_used
 
     return recipes, model_used, rate_limited_models

@@ -68,7 +68,7 @@ class TaskStatusTests(TestCase):
         self.client = APIClient()
 
     def _status(self, task_id):
-        done = MagicMock(ready=MagicMock(return_value=True))
+        done = MagicMock(ready=MagicMock(return_value=True), failed=MagicMock(return_value=False))
         with patch("celery.result.AsyncResult", return_value=done):
             return self.client.get(reverse("api_ai_task_status", kwargs={"task_id": task_id}))
 

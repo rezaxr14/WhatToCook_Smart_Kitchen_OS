@@ -80,6 +80,10 @@ export const AIChefPage: React.FC = () => {
               setSuggestions(taskRes.recipes || []);
               setIsGenerating(false);
               aiToast(t('aiChefPage.toastComplete'), t('aiChefPage.toastDoneTitle'));
+            } else if (taskRes.status === 'error') {
+              clearInterval(pollInterval);
+              setIsGenerating(false);
+              error(taskRes.error || t('aiChefPage.errHiccup'), t('aiChefPage.errGenTitle'));
             }
           } catch (e) {
             clearInterval(pollInterval);

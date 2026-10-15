@@ -19,8 +19,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from GetFood.metrics import metrics
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('metrics', metrics, name='metrics'),
     path('', include('GetFood.urls')),
 ]
 from django.views.static import serve

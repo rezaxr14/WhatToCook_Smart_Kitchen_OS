@@ -7,14 +7,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Run as an unprivileged user (uid 10001). Kubernetes pins the same uid and
+# sets fsGroup so mounted volumes stay writable.
+RUN useradd --system --uid 10001 --user-group --no-create-home --shell /usr/sbin/nologin app \
+    && chown app:app /app
+
 # Dependencies first for layer caching: code changes don't reinstall them.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Application code
-COPY . .
+COPY --chown=app:app . .
 
 RUN chmod +x /app/entrypoint.sh
+
+USER 10001
 
 EXPOSE 8000
 

@@ -3,7 +3,8 @@ import { AISuggestedDish, AIRecipeDetail, AIProvider, AIProvidersResponse, Recip
 import i18n from '../i18n';
 
 export interface AISuggestionsResponse {
-  status: 'done' | 'processing';
+  status: 'done' | 'processing' | 'pending' | 'error';
+  error?: string;
   recipes?: AISuggestedDish[];
   task_id?: string;
   cached?: boolean;

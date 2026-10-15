@@ -106,9 +106,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'GetFood',
     'rest_framework',
+    'django_prometheus',
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'WhatToCook.logging_utils.RequestIDMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -118,6 +121,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'WhatToCook.urls'
@@ -192,6 +196,35 @@ else:
         }
     }
 
+
+# ---------------------------------------------------------------------------
+# Refuse to boot a production (DEBUG=false) process on insecure defaults
+# ---------------------------------------------------------------------------
+_PLACEHOLDERS = ("django-insecure", "change-me", "changeme", "replace-me")
+
+
+def _is_weak_secret(value: str, min_len: int = 1) -> bool:
+    return len(value) < min_len or any(p in value.lower() for p in _PLACEHOLDERS)
+
+
+if not DEBUG and not _IS_TESTING:
+    _problems = []
+    if _is_weak_secret(SECRET_KEY, 32):
+        _problems.append("SECRET_KEY is unset, a placeholder, or shorter than 32 characters")
+    if USE_POSTGRES:
+        _db_password = DATABASES["default"]["PASSWORD"]
+        if _db_password in ("", "secret", "password", "postgres") or _is_weak_secret(_db_password):
+            _problems.append("POSTGRES_PASSWORD is unset or a well-known/placeholder value")
+    if _problems:
+        from django.core.exceptions import ImproperlyConfigured
+
+        raise ImproperlyConfigured(
+            "Refusing to start with DEBUG=false on insecure defaults: " + "; ".join(_problems) + ". See .env.example."
+        )
+    if "*" in ALLOWED_HOSTS:
+        import warnings
+
+        warnings.warn("ALLOWED_HOSTS contains '*' with DEBUG=false - restrict it to your real hostnames.", stacklevel=1)
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -334,6 +367,27 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@127.0.0.1
 # (web -> AsyncResult), so never fall back to the broker URL here.
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://127.0.0.1:6379/0")
 CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
+# Dedicated queues so slow AI work never starves housekeeping (and vice versa);
+# scale/dedicate workers per queue with CELERY_QUEUES (see entrypoint.sh).
+CELERY_TASK_ROUTES = {
+    "GetFood.tasks.generate_ai_suggestions_task": {"queue": "ai"},
+    "GetFood.tasks.cleanup_expired_ai_cache": {"queue": "maintenance"},
+}
+# Keep Django's LOGGING (JSON in production) inside the worker too.
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+try:
+    from celery.schedules import crontab
+
+    CELERY_BEAT_SCHEDULE = {
+        "cleanup-expired-ai-cache": {
+            "task": "GetFood.tasks.cleanup_expired_ai_cache",
+            "schedule": crontab(hour=3, minute=30),
+        },
+    }
+except ImportError:  # celery is optional for bare-metal runs
+    CELERY_BEAT_SCHEDULE = {}
+# How long expired AI suggestion rows are kept before the nightly cleanup task drops them.
+AI_CACHE_RETENTION_DAYS = int(os.getenv("AI_CACHE_RETENTION_DAYS", "7"))
 # Let the worker wait for RabbitMQ at boot instead of crashing, and dispatch
 # long AI tasks fairly; ack late so a crashed worker's task is redelivered.
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
@@ -368,3 +422,46 @@ else:
     }
 
 
+
+
+# ---------------------------------------------------------------------------
+# Observability: structured logs, Prometheus metrics, optional Sentry
+# ---------------------------------------------------------------------------
+LOG_LEVEL = os.getenv("LOG_LEVEL", "WARNING" if _IS_TESTING else "INFO").upper()
+LOG_FORMAT = os.getenv("LOG_FORMAT", "text" if DEBUG else "json").lower()  # "json" | "text"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"request_id": {"()": "WhatToCook.logging_utils.RequestIDFilter"}},
+    "formatters": {
+        "text": {"format": "%(asctime)s %(levelname)s [%(request_id)s] %(name)s: %(message)s"},
+        "json": {"()": "WhatToCook.logging_utils.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["request_id"],
+            "formatter": LOG_FORMAT if LOG_FORMAT in ("json", "text") else "text",
+        },
+    },
+    "root": {"handlers": ["console"], "level": LOG_LEVEL},
+}
+
+# /metrics (django-prometheus). Not proxied by the frontend nginx / Ingress, so it
+# is reachable in-cluster / on the compose-published API port only; set
+# METRICS_TOKEN to require "Authorization: Bearer <token>" as well.
+METRICS_ENABLED = _env_bool("METRICS_ENABLED", "true")
+METRICS_TOKEN = os.getenv("METRICS_TOKEN", "")
+
+SENTRY_DSN = os.getenv("SENTRY_DSN", "").strip()
+if SENTRY_DSN and not _IS_TESTING:
+    import sentry_sdk
+
+    # Django + Celery integrations are enabled automatically when installed.
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=os.getenv("SENTRY_ENVIRONMENT", "development" if DEBUG else "production"),
+        traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0")),
+        send_default_pii=False,
+    )
