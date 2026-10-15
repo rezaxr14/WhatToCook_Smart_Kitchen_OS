@@ -26,3 +26,11 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # Pinned to 4.2 on purpose: 4.3+ rejects the queues Celery 5.5's kombu
+      # declares. Bump together with a Celery/kombu upgrade, not automatically.
+      - dependency-name: rabbitmq

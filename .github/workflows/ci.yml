@@ -13,14 +13,49 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - name: ruff (syntax errors + pyflakes, see ruff.toml)
+        run: ruff check .
+
   backend:
-    name: Backend (Django tests)
+    name: Backend tests (${{ matrix.db }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, postgres]
+    services:
+      # Started for both legs (cheap); only the `postgres` leg points Django at it.
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: whattocook
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: whattocook
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U whattocook"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      # Same as the README testing instructions: bare-metal SQLite, hermetic
-      # in-memory cache. No Postgres / Redis / RabbitMQ needed for the suite.
-      USE_POSTGRES: "false"
+      USE_POSTGRES: ${{ matrix.db == 'postgres' && 'true' || 'false' }}
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      POSTGRES_USER: whattocook
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: whattocook
+      # No RabbitMQ / Redis needed: the suite uses an in-memory cache and mocks the broker.
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -60,24 +95,33 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-      - name: docker compose config (base + proxy override)
+      - name: docker compose config (base, proxy override, monitoring profile)
         run: |
           cp .env.example .env
           docker compose -f docker-compose.yml config --quiet
           docker compose -f docker-compose.yml -f docker-compose.proxy.yml config --quiet
-      - name: Render Kubernetes manifests
-        run: kubectl kustomize k8s > rendered.yaml
-      - name: Validate against Kubernetes schemas
+          docker compose --profile monitoring config --quiet
+      - name: Render Kubernetes overlays
+        run: |
+          kubectl kustomize k8s/overlays/dev > rendered-dev.yaml
+          kubectl kustomize k8s/overlays/prod > rendered-prod.yaml
+      - name: Validate against Kubernetes + CRD schemas
         run: |
           curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
             | tar xz kubeconform
-          ./kubeconform -strict -summary -kubernetes-version 1.30.0 rendered.yaml k8s/optional/hpa.yaml k8s/secret.example.yaml
+          ./kubeconform -strict -summary -kubernetes-version 1.30.0 \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            rendered-dev.yaml rendered-prod.yaml \
+            k8s/optional/hpa.yaml k8s/optional/flower.yaml k8s/optional/keda-celery.yaml \
+            k8s/optional/servicemonitor.yaml k8s/secret.example.yaml \
+            k8s/overlays/prod/cluster-issuer.example.yaml
 
   docker:
     name: Docker images build
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [backend, frontend]
+    needs: [lint, backend, frontend]
     steps:
       - uses: actions/checkout@v6
       - uses: docker/setup-buildx-action@v3
@@ -86,9 +130,15 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: whattocook-backend:ci
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
+      - name: Backend image runs as a non-root user
+        run: |
+          uid=$(docker run --rm --entrypoint id whattocook-backend:ci -u)
+          echo "uid=$uid"
+          test "$uid" = "10001"
       - name: Build frontend image
         uses: docker/build-push-action@v6
         with:
