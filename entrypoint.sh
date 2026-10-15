@@ -11,16 +11,26 @@ echo "🍳 WhatToCook backend initializing (role: ${ROLE})..."
 # ---------------------------------------------------------------
 echo "⏳ Waiting for the database to be ready..."
 i=0
-until python -c "
+until out=$(python -c "
 import os, django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'WhatToCook.settings')
 django.setup()
 from django.db import connection
 connection.ensure_connection()
-" >/dev/null 2>&1; do
+" 2>&1); do
+    # A configuration error (e.g. refusing insecure defaults with DEBUG=false) will
+    # never fix itself: fail fast and show it instead of retrying for two minutes.
+    case "$out" in
+        *ImproperlyConfigured*|*ModuleNotFoundError*|*SyntaxError*)
+            echo "❌ Startup failed:"
+            echo "$out" | tail -n 8
+            exit 1
+            ;;
+    esac
     i=$((i + 1))
     if [ "$i" -ge 60 ]; then
-        echo "❌ Database not reachable after 60 attempts. Giving up."
+        echo "❌ Database not reachable after 60 attempts. Last error:"
+        echo "$out" | tail -n 8
         exit 1
     fi
     sleep 2

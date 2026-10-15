@@ -12,7 +12,8 @@ x-backend-common: &backend-common
     context: .
   image: whattocook-backend:latest
   env_file:
-    - .env
+    - path: .env
+      required: false # optional: every setting has a working default
   environment:
     DJANGO_SETTINGS_MODULE: WhatToCook.settings
     PYTHONUNBUFFERED: "1"
@@ -60,7 +61,8 @@ services:
     image: postgres:15-alpine
     container_name: whattocook_db
     env_file:
-      - .env
+      - path: .env
+        required: false
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-whattocook}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}

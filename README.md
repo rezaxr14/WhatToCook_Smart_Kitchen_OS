@@ -127,6 +127,8 @@ cp .env.example .env
 # (If your network requires an HTTP proxy for internet egress, add your overrides:
 #  docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d --build)
 
+# (the .env file is optional: every setting has a working default)
+
 # 3. Build and launch all lightweight containers
 #    (migrations, idempotent seeding and collectstatic run automatically on boot)
 docker compose up -d --build
