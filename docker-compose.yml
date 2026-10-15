@@ -191,8 +191,8 @@ services:
     container_name: whattocook_telegram_bot
     command: ["bot"]
     healthcheck:
-      # PID 1 is the bot (`run_telegram_bot`) or, with an empty token, the idle `sleep`.
-      test: ["CMD", "python", "-c", "import sys; c = open('/proc/1/cmdline', 'rb').read(); sys.exit(0 if (b'run_telegram_bot' in c or b'sleep' in c) else 1)"]
+      # PID 1 is the bot (`run_telegram_bot`) or, with an empty token, the idle entrypoint shell.
+      test: ["CMD", "python", "-c", "import sys; c = open('/proc/1/cmdline', 'rb').read(); sys.exit(0 if (b'run_telegram_bot' in c or b'entrypoint.sh' in c) else 1)"]
       interval: 30s
       timeout: 5s
       retries: 3

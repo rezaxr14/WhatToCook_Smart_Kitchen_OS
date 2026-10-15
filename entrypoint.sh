@@ -86,7 +86,10 @@ case "$ROLE" in
     bot)
         if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
             echo "⚠️ TELEGRAM_BOT_TOKEN is empty. Telegram bot disabled; idling so 'docker compose up' stays healthy."
-            sleep infinity
+            # Stay PID 1 (the healthcheck relies on it) but exit promptly on `docker stop`.
+            trap 'exit 0' TERM INT
+            sleep infinity &
+            wait $!
         fi
         echo "🚀 Starting Telegram bot (long polling)..."
         sleep 5
