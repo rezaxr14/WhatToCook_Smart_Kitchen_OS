@@ -106,6 +106,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'GetFood',
     'rest_framework',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',  # Swagger UI assets served locally (no CDN)
     'django_prometheus',
 ]
 
@@ -336,6 +338,17 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {},
     'EXCEPTION_HANDLER': 'GetFood.throttles.wtc_exception_handler',
     'UNAUTHENTICATED_USER': 'django.contrib.auth.models.AnonymousUser',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'WhatToCook API',
+    'DESCRIPTION': 'Pantry, recipe matching, AI chef (suggestions, vision scan, chat, SSE), shopping list and Telegram bot.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'PREPROCESSING_HOOKS': ['GetFood.api_schemas.exclude_legacy_routes'],
 }
 
 # Production API is JSON-only (no browsable HTML forms/CSRF surface).

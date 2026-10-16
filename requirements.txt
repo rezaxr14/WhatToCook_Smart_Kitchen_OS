@@ -11,3 +11,5 @@ gunicorn~=23.0.0
 whitenoise~=6.9.0
 django-prometheus~=2.4
 sentry-sdk~=2.30
+drf-spectacular~=0.30
+drf-spectacular-sidecar~=2026.10
