@@ -337,7 +337,7 @@ def _call_lmstudio(prompt: str, system_instruction: str = "") -> str:
     )
     response.raise_for_status()
     data = response.json()
-    content = data.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+    content = ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "").strip()
     return content
 
 
