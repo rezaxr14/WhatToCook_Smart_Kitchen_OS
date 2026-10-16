@@ -23,6 +23,7 @@ merge). Push a branch/PR and read the jobs; don't spend hours fighting a local D
 - **Queues.** `ai`, `maintenance`, `celery`. Route every new task in `CELERY_TASK_ROUTES`, schedule periodic ones in `CELERY_BEAT_SCHEDULE`, keep workers consuming `CELERY_QUEUES`.
 - **AI fallbacks are never cached** (`ai_cache.is_degraded`). The Celery task *returns its recipes*, so the status endpoint works even when nothing is cached. Failed tasks → `status: "error"` (no exception text to clients).
 - **Anonymous visitors act as `ChefDemo`** (`DEMO_USERNAME`, `_guest_user()`), never `User.objects.first()`.
+- **Shopping lists are owner-scoped.** Rows belong to a user or to one anonymous *session* (`_shopping_scope`/`_shopping_qs` in `views.py`); never look rows up by id alone and never add a shared fallback bucket. API errors never echo exception text (log it instead).
 - **Secrets.** With `DEBUG=false` the app refuses placeholder/short `SECRET_KEY` and well-known Postgres passwords (`settings.py`). `.env` is optional locally; every setting has a working default.
 - **Containers run as uid 10001.** Never use `healthcheck: disable: true` in compose: newer Compose releases fail `up --wait` ("has no healthcheck configured"). Give each role a real check; the PID-1 checks (beat, bot) depend on the entrypoint `exec`-ing the process (idle bot stays the entrypoint shell and traps SIGTERM).
 - **Boot safety.** `bootstrap_db` migrates + seeds under a Postgres advisory lock so replicas can start together. Don't reintroduce a bare `migrate` in entrypoints.
