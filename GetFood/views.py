@@ -852,7 +852,9 @@ def ai_recipe_detail_api(request, recipe_name):
         recipe_data, model_used, rate_limited_models = generate_recipe_detail_meta(recipe_name, provider=provider, model=model, language=language)
         return Response(recipe_data)
     except Exception as e:
-        return Response({"error": f"Error generating recipe details: {e}"}, status=500)
+        # Log the cause server-side; never echo exception text (hosts, keys, paths) to anonymous callers.
+        logger.warning("Recipe detail failed for %r: %s", recipe_name, e)
+        return Response({"error": "Could not generate recipe details. Please try again."}, status=500)
 
 
 @api_view(["POST"])
@@ -903,18 +905,38 @@ def api_recipe_chat(request):
 # Shopping List REST APIs (Multi-Tier Persistence)
 # ==========================================
 
+def _shopping_scope(request, create=False):
+    """Who owns the shopping list for this request: ``(user, session_key)`` or ``None``.
+
+    Logged-in users own their list; anonymous visitors own a list keyed by their *own* session.
+    There is deliberately no shared fallback bucket: an anonymous caller without a session has no
+    list (``None``) until a write creates one (``create=True``).
+    """
+    if request.user.is_authenticated:
+        return request.user, ""
+    key = request.session.session_key
+    if not key and create:
+        request.session.create()
+        key = request.session.session_key
+    return (None, key) if key else None
+
+
+def _shopping_qs(scope):
+    """Items owned by ``scope`` (nothing at all when there is no owner)."""
+    if scope is None:
+        return ShoppingListItem.objects.none()
+    user, key = scope
+    if user:
+        return ShoppingListItem.objects.filter(user=user)
+    return ShoppingListItem.objects.filter(user__isnull=True, session_key=key)
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("shopping")
 def api_shopping_list_get(request):
     """Retrieve all shopping list items from the database."""
-    user = request.user if request.user.is_authenticated else None
-    session_key = request.session.session_key or "guest_default"
-
-    if user:
-        items = ShoppingListItem.objects.filter(user=user)
-    else:
-        items = ShoppingListItem.objects.filter(session_key=session_key)
+    items = _shopping_qs(_shopping_scope(request))
 
     data = [
         {
@@ -936,8 +958,7 @@ def api_shopping_list_get(request):
 @scoped("shopping")
 def api_shopping_list_add(request):
     """Add a single item or multiple items to the shopping list."""
-    user = request.user if request.user.is_authenticated else None
-    session_key = request.session.session_key or "guest_default"
+    user, session_key = _shopping_scope(request, create=True)
 
     items_data = request.data.get("items")
     single_name = request.data.get("name")
@@ -949,7 +970,7 @@ def api_shopping_list_add(request):
             if name:
                 item = ShoppingListItem.objects.create(
                     user=user,
-                    session_key=session_key if not user else "",
+                    session_key=session_key,
                     name=name,
                     category=entry.get("category", "General"),
                     quantity=entry.get("quantity", "1 item"),
@@ -960,7 +981,7 @@ def api_shopping_list_add(request):
     elif single_name:
         item = ShoppingListItem.objects.create(
             user=user,
-            session_key=session_key if not user else "",
+            session_key=session_key,
             name=single_name.strip(),
             category=request.data.get("category", "General"),
             quantity=request.data.get("quantity", "1 item"),
@@ -991,18 +1012,13 @@ def api_shopping_list_add(request):
 @scoped("shopping")
 def api_shopping_list_sync(request):
     """Bulk sync entire local shopping list into the database."""
-    user = request.user if request.user.is_authenticated else None
-    session_key = request.session.session_key or "guest_default"
-
     incoming_items = request.data.get("items", [])
     if not isinstance(incoming_items, list):
         return Response({"error": "Invalid items format"}, status=400)
 
-    # Clear existing session/user list and replace with full sync
-    if user:
-        ShoppingListItem.objects.filter(user=user).delete()
-    else:
-        ShoppingListItem.objects.filter(session_key=session_key).delete()
+    # Replace only the caller's own list (their account, or their own anonymous session).
+    user, session_key = _shopping_scope(request, create=True)
+    _shopping_qs((user, session_key)).delete()
 
     created_items = []
     for entry in incoming_items:
@@ -1010,7 +1026,7 @@ def api_shopping_list_sync(request):
         if name:
             item = ShoppingListItem.objects.create(
                 user=user,
-                session_key=session_key if not user else "",
+                session_key=session_key,
                 name=name,
                 category=entry.get("category", "General"),
                 quantity=entry.get("quantity", "1 item"),
@@ -1031,7 +1047,7 @@ def api_shopping_list_sync(request):
 def api_shopping_list_toggle(request, item_id):
     """Toggle or update an existing shopping list item."""
     try:
-        item = ShoppingListItem.objects.get(id=item_id)
+        item = _shopping_qs(_shopping_scope(request)).get(id=item_id)
         if "checked" in request.data:
             item.checked = bool(request.data["checked"])
         if "name" in request.data:
@@ -1051,7 +1067,7 @@ def api_shopping_list_toggle(request, item_id):
 @scoped("shopping")
 def api_shopping_list_remove(request, item_id):
     """Remove a single item from the shopping list."""
-    ShoppingListItem.objects.filter(id=item_id).delete()
+    _shopping_qs(_shopping_scope(request)).filter(id=item_id).delete()  # only the caller's own rows
     return Response({"status": "deleted", "id": item_id})
 
 
@@ -1060,11 +1076,9 @@ def api_shopping_list_remove(request, item_id):
 @scoped("shopping")
 def api_shopping_list_clear(request):
     """Clear completed items or all items from the shopping list."""
-    user = request.user if request.user.is_authenticated else None
-    session_key = request.session.session_key or "guest_default"
     only_completed = request.data.get("only_completed", False) if request.method == "POST" else request.GET.get("only_completed", False)
 
-    qs = ShoppingListItem.objects.filter(user=user) if user else ShoppingListItem.objects.filter(session_key=session_key)
+    qs = _shopping_qs(_shopping_scope(request))
     if only_completed:
         qs = qs.filter(checked=True)
     

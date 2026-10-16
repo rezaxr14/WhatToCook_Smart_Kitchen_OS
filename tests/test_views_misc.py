@@ -1,8 +1,8 @@
 """API tests for the non-AI views: auth/pantry error paths, shopping list, Telegram bot, platform
 probes, legacy server-rendered pages and the rate-limit helpers.
 
-Deliberately NOT covered here: who may edit or delete a given shopping-list row. That is an open
-authorization question (see the PR description), so no test pins the current behaviour.
+Shopping-list ownership (users and anonymous sessions never see or touch each other's rows) is
+covered by ``ShoppingListOwnershipTests``.
 """
 import os
 from unittest.mock import MagicMock, patch
@@ -107,7 +107,8 @@ class ShoppingListTests(ApiTestCase):
 
     def test_anonymous_visitors_use_a_session_scoped_list(self):
         anon = APIClient()
-        anon.post(reverse("api_shopping_list_add"), {"name": "Salt"}, format="json")
+        self.assertEqual(anon.get(reverse("api_shopping_list_get")).data, {"items": [], "count": 0})  # no session yet
+        anon.post(reverse("api_shopping_list_add"), {"name": "Salt"}, format="json")  # creates the session
         self.assertEqual(anon.get(reverse("api_shopping_list_get")).data["count"], 1)
         self.assertEqual(self.client.get(reverse("api_shopping_list_get")).data["count"], 0)  # not the logged-in user's list
 
@@ -141,6 +142,79 @@ class ShoppingListTests(ApiTestCase):
         r = self.client.delete(reverse("api_shopping_list_clear"), {"only_completed": ""})  # query-string flavour: empty = all
         self.assertEqual(r.data["status"], "cleared")
         self.assertFalse(ShoppingListItem.objects.filter(user=self.user).exists())
+
+
+class ShoppingListOwnershipTests(ApiTestCase):
+    """Rows belong to a user or to one anonymous session; nobody can read, edit, delete or wipe another's."""
+
+    def setUp(self):
+        super().setUp()
+        self.alice = User.objects.create_user("alice", password=PW)
+        self.bob = User.objects.create_user("bob", password=PW)
+        self.alice_item = ShoppingListItem.objects.create(user=self.alice, name="Alice milk")
+        self.alice_client = APIClient()
+        self.alice_client.force_authenticate(self.alice)
+
+    def _anon_with_item(self, name):
+        anon = APIClient()
+        anon.post(reverse("api_shopping_list_add"), {"name": name}, format="json")
+        return anon, ShoppingListItem.objects.get(name=name)
+
+    def _assert_untouched(self):
+        self.alice_item.refresh_from_db()
+        self.assertEqual((self.alice_item.name, self.alice_item.checked), ("Alice milk", False))
+
+    def test_anonymous_callers_cannot_edit_or_delete_a_users_item(self):
+        anon = APIClient()
+        r = anon.patch(reverse("api_shopping_list_toggle", args=[self.alice_item.id]), {"checked": True, "name": "HACKED"}, format="json")
+        self.assertEqual(r.status_code, 404)
+        anon.delete(reverse("api_shopping_list_remove", args=[self.alice_item.id]))
+        self._assert_untouched()
+
+    def test_another_user_cannot_edit_or_delete_a_users_item(self):
+        bob = APIClient()
+        bob.force_authenticate(self.bob)
+        r = bob.patch(reverse("api_shopping_list_toggle", args=[self.alice_item.id]), {"name": "HACKED"}, format="json")
+        self.assertEqual(r.status_code, 404)
+        bob.delete(reverse("api_shopping_list_remove", args=[self.alice_item.id]))
+        self._assert_untouched()
+
+    def test_a_user_cannot_edit_an_anonymous_visitors_item_either(self):
+        _, item = self._anon_with_item("Anon salt")
+        r = self.alice_client.patch(reverse("api_shopping_list_toggle", args=[item.id]), {"name": "HACKED"}, format="json")
+        self.assertEqual(r.status_code, 404)
+        self.alice_client.delete(reverse("api_shopping_list_remove", args=[item.id]))
+        item.refresh_from_db()
+        self.assertEqual(item.name, "Anon salt")
+
+    def test_anonymous_sessions_are_isolated_from_each_other(self):
+        one, one_item = self._anon_with_item("One salt")
+        two, two_item = self._anon_with_item("Two pepper")
+        self.assertEqual([i["name"] for i in one.get(reverse("api_shopping_list_get")).data["items"]], ["One salt"])
+        self.assertEqual([i["name"] for i in two.get(reverse("api_shopping_list_get")).data["items"]], ["Two pepper"])
+        self.assertEqual(two.patch(reverse("api_shopping_list_toggle", args=[one_item.id]), {"checked": True}, format="json").status_code, 404)
+        two.delete(reverse("api_shopping_list_remove", args=[one_item.id]))
+        self.assertTrue(ShoppingListItem.objects.filter(pk=one_item.pk).exists())
+
+    def test_sync_and_clear_only_wipe_the_callers_own_list(self):
+        one, _ = self._anon_with_item("One salt")
+        two, _ = self._anon_with_item("Two pepper")
+        two.post(reverse("api_shopping_list_sync"), {"items": [{"name": "Two basil"}]}, format="json")
+        two.post(reverse("api_shopping_list_clear"), {}, format="json")
+        self.alice_client.post(reverse("api_shopping_list_sync"), {"items": []}, format="json")
+        self.assertEqual(ShoppingListItem.objects.filter(name="One salt").count(), 1)  # untouched by two's sync/clear
+        self.assertFalse(ShoppingListItem.objects.filter(user=self.alice).exists())  # alice's own sync did replace hers
+        self.assertEqual(one.get(reverse("api_shopping_list_get")).data["count"], 1)
+
+    def test_a_session_less_caller_reads_nothing_even_when_anonymous_rows_exist(self):
+        self._anon_with_item("One salt")
+        self.assertEqual(APIClient().get(reverse("api_shopping_list_get")).data["count"], 0)
+
+    def test_no_legacy_shared_guest_bucket_exists(self):
+        ShoppingListItem.objects.create(user=None, session_key="guest_default", name="Legacy shared row")
+        self.assertEqual(APIClient().get(reverse("api_shopping_list_get")).data["count"], 0)
+        anon, _ = self._anon_with_item("Mine")
+        self.assertEqual([i["name"] for i in anon.get(reverse("api_shopping_list_get")).data["items"]], ["Mine"])
 
 
 # --------------------------------------------------------------------------- telegram
@@ -340,11 +414,12 @@ class LegacyPageTests(TestCase):
         self.assertEqual(self.user.userpantry.ingredients.count(), 0)
         self.assertEqual(self.client.post(reverse("pantry"), {"unrelated": "1"}).status_code, 200)
 
-    def test_ai_suggestions_page_renders_for_logged_in_users(self):
-        # ai_recipe_detail is intentionally not rendered here: its template reverses a URL name that
-        # does not exist (reported in the PR description), so a 200 assertion would fail.
+    def test_ai_pages_render_for_logged_in_users(self):
         self.client.force_login(self.user)
         self.assertEqual(self.client.get(reverse("ai_suggestions")).status_code, 200)
+        r = self.client.get(reverse("ai_recipe_detail", args=["Soup"]))  # regression: template used a non-existent URL name
+        self.assertEqual((r.status_code, r.context["recipe_name"]), (200, "Soup"))
+        self.assertIn(reverse("api_ai_recipe_detail", args=["__REPLACE__"]), r.content.decode())
 
     def test_can_cook_for_anonymous_and_for_a_stocked_pantry(self):
         self.assertEqual(self.client.get(reverse("can_cook")).context["possible_recipes"].paginator.count, 0)

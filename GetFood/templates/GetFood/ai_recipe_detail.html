@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function fetchRecipeDetail(retryCount = 3, delay = 2000) {
         try {
-            const url = "{% url 'ai_recipe_detail_api' recipe_name='__REPLACE__' %}"
+            const url = "{% url 'api_ai_recipe_detail' recipe_name='__REPLACE__' %}"
                 .replace('__REPLACE__', encodeURIComponent("{{ recipe_name }}"));
 
             const response = await fetch(url);

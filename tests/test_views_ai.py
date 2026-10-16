@@ -320,11 +320,15 @@ class RecipeDetailAndChatTests(ApiTestCase):
         self.assertEqual(gen.call_args.args[0], "Soup")
         self.assertEqual(gen.call_args.kwargs["language"], "tr")
 
-    def test_detail_failure_is_a_500_with_an_error_key(self):
-        with patch("GetFood.views.generate_recipe_detail_meta", side_effect=RuntimeError("boom")):
-            r = self.client.get(reverse("api_ai_recipe_detail", args=["Soup"]))
+    def test_detail_failure_is_a_500_that_does_not_leak_the_exception(self):
+        secret = "SECRET-INTERNAL-HOST db.internal:5432"
+        with patch("GetFood.views.generate_recipe_detail_meta", side_effect=RuntimeError(secret)):
+            with self.assertLogs("GetFood.views", level="WARNING") as logs:
+                r = self.client.get(reverse("api_ai_recipe_detail", args=["Soup"]))
         self.assertEqual(r.status_code, 500)
         self.assertIn("error", r.json())
+        self.assertNotIn(secret, r.content.decode())
+        self.assertIn(secret, "\n".join(logs.output))  # the cause is still logged server-side
 
     def test_chat_requires_a_message(self):
         for body in ({}, {"message": "   "}):

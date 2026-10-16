@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import confetti from 'canvas-confetti';
 import { ShoppingListModal } from '../components/shopping/ShoppingListModal';
 import { TelegramConnectModal } from '../components/settings/TelegramConnectModal';
+import { getCsrfToken } from '../api/client';
 
 export interface ShoppingItem {
   id: string;
@@ -58,7 +59,8 @@ export const ShoppingListProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     const fetchRemoteItems = async () => {
       try {
-        const res = await fetch('/api/shopping-list/', { credentials: 'omit' });
+        // Same-origin cookies identify the owner (account or anonymous session); without them the API has no list for us.
+        const res = await fetch('/api/shopping-list/', { credentials: 'same-origin' });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data.items) && data.items.length > 0) {
@@ -100,7 +102,9 @@ export const ShoppingListProvider: React.FC<{ children: React.ReactNode }> = ({ 
       try {
         await fetch('/api/shopping-list/sync/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          // Logged-in sessions are CSRF-checked by DRF; without this header the sync was rejected (403) for them.
+          headers: { 'Content-Type': 'application/json', ...(getCsrfToken() ? { 'X-CSRFToken': getCsrfToken() as string } : {}) },
           body: JSON.stringify({
             items: items.map((i) => ({
               name: i.name,
