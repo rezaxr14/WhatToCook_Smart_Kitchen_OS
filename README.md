@@ -143,6 +143,7 @@ docker compose up -d --build
 - **Frontend Web App**: [http://localhost:4173](http://localhost:4173)
 - **Django REST API**: [http://localhost:8000/api/](http://localhost:8000/api/)
 - **Landing Page Health**: [http://localhost:8000/api/health/](http://localhost:8000/api/health/)
+- **API docs (Swagger UI)**: [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/), machine-readable schema at [`/api/schema/`](http://localhost:8000/api/schema/) (`?format=json` for JSON)
 - **Django Admin Panel**: [http://localhost:8000/admin/](http://localhost:8000/admin/) or [http://localhost:4173/admin/](http://localhost:4173/admin/)
 - **Legacy Server-Rendered Pages**: [http://localhost:8000/legacy/](http://localhost:8000/legacy/)
 - **Flower / Prometheus** (optional, `docker compose --profile monitoring up -d`): [http://localhost:5555](http://localhost:5555) · [http://localhost:9090](http://localhost:9090)

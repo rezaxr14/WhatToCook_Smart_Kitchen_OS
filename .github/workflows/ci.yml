@@ -68,6 +68,9 @@ jobs:
         run: python manage.py check
       - name: Migrations are in sync with the models
         run: python manage.py makemigrations --check --dry-run
+      - name: OpenAPI schema is valid and every route is documented
+        if: matrix.db == 'sqlite'
+        run: python manage.py spectacular --validate --fail-on-warn --file /tmp/openapi.yml
       - name: Test suite (with coverage)
         run: |
           pip install coverage

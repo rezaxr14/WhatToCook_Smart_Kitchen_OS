@@ -15,6 +15,9 @@ test: ## backend tests on SQLite (same as CI's sqlite leg)
 cov: ## backend tests + coverage gate
 	USE_POSTGRES=false coverage run manage.py test GetFood tests && coverage report
 
+schema: ## validate the OpenAPI schema strictly and write openapi.yaml (gitignored)
+	USE_POSTGRES=false $(PY) manage.py spectacular --validate --fail-on-warn --file openapi.yaml
+
 lint: ## ruff (syntax errors + pyflakes)
 	ruff check .
 
