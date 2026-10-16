@@ -9,7 +9,9 @@ CodeQL, audits, GHCR release).
 Items below are ordered by value/risk. Each has an acceptance test; add a CI check wherever it makes sense.
 
 ## Next
-1. **Raise coverage where it is thinnest.** `GetFood/ai_service.py` is at ~34%: mock the Gemini/LM Studio providers and cover the error/quota/fallback branches, plus the error paths in `GetFood/views.py` (~60%). *Done when* the gate (`.coveragerc`) is ratcheted to ≥ 70%.
+1. ~~**Raise coverage where it is thinnest.**~~ **Done** (pending CI on the PR): `ai_service.py` 34% → 99%, `views.py` 60% → 99%,
+   total 60% → 93%; gate ratcheted 58 → 90 in `.coveragerc`. Remaining soft spots: `WhatToCook/settings.py` (69%), `GetFood/utils.py` (69%),
+   `GetFood/tasks.py` (81%). `tests/test_ai_service.py`, `tests/test_views_ai.py`, `tests/test_views_misc.py` hold the new tests.
 2. **OpenAPI docs.** `drf-spectacular`: `/api/schema/` + Swagger UI at `/api/docs/`. *Done when* CI runs `manage.py spectacular --validate --fail-on-warn` and a test asserts the schema lists the AI endpoints.
 3. **Security headers.** CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` in `frontend/nginx.conf` (check the 3D scene, fonts and Gemini-less flows still work). *Done when* `smoke.yml` curls the headers and `e2e.yml` stays green.
 4. **Frontend bundle.** The main chunk is ~1.06 MB (Vite warns >500 kB): route-level `React.lazy` + `manualChunks` for `three`/react. *Done when* the build has no chunk warning (or a documented budget) and e2e is green.
