@@ -1,0 +1,12 @@
+[run]
+source = GetFood, WhatToCook
+omit =
+    */migrations/*
+    GetFood/tests.py
+    GetFood/management/commands/seed_*
+
+[report]
+# Ratchet: raise this as coverage improves (measured 60% on 2026-10-15; weakest: GetFood/ai_service.py).
+fail_under = 58
+skip_empty = True
+show_missing = False

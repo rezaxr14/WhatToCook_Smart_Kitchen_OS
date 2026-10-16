@@ -68,8 +68,50 @@ jobs:
         run: python manage.py check
       - name: Migrations are in sync with the models
         run: python manage.py makemigrations --check --dry-run
-      - name: Test suite
-        run: python manage.py test GetFood tests --verbosity 2
+      - name: Test suite (with coverage)
+        run: |
+          pip install coverage
+          coverage run manage.py test GetFood tests --verbosity 2
+      - name: Coverage gate + summary
+        if: matrix.db == 'sqlite'
+        run: |
+          echo '### Backend coverage' >> "$GITHUB_STEP_SUMMARY"
+          coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY" || true
+          coverage report # fails below fail_under in .coveragerc
+
+  backup-restore:
+    name: Backup/restore drill (Postgres)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: whattocook
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: whattocook
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U whattocook"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      POSTGRES_USER: whattocook
+      POSTGRES_PASSWORD: ci-only-password
+      POSTGRES_DB: whattocook
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Dump with the CronJob's pipeline, restore into a fresh DB, compare
+        run: bash scripts/backup-restore-drill.sh
 
   frontend:
     name: Frontend (typecheck + build)
@@ -121,7 +163,7 @@ jobs:
     name: Docker images build
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [lint, backend, frontend]
+    needs: [lint, backend, backup-restore, frontend]
     steps:
       - uses: actions/checkout@v6
       - uses: docker/setup-buildx-action@v3
