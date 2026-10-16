@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -57,7 +57,7 @@ jobs:
       POSTGRES_DB: whattocook
       # No RabbitMQ / Redis needed: the suite uses an in-memory cache and mocks the broker.
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11" # matches the Dockerfile
@@ -103,7 +103,7 @@ jobs:
       POSTGRES_PASSWORD: ci-only-password
       POSTGRES_DB: whattocook
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -121,7 +121,7 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version: 20 # matches frontend/Dockerfile
@@ -136,7 +136,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: docker compose config (base, proxy override, monitoring profile)
         run: |
           cp .env.example .env
@@ -165,7 +165,7 @@ jobs:
     timeout-minutes: 20
     needs: [lint, backend, backup-restore, frontend]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v3
       - name: Build backend image
         uses: docker/build-push-action@v6
