@@ -50,6 +50,44 @@ from .models import (
     TelegramAccountLink,
     UserPantry,
 )
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+
+from .api_schemas import (
+    AiModelsResponseSerializer,
+    AiProvidersResponseSerializer,
+    AuthResponseSerializer,
+    CanCookResponseSerializer,
+    ErrorSerializer,
+    HealthSerializer,
+    LoginRequestSerializer,
+    MeResponseSerializer,
+    MessageSerializer,
+    PantryAddRequestSerializer,
+    PantryMutationResponseSerializer,
+    PantryRemoveRequestSerializer,
+    RecipeChatRequestSerializer,
+    RecipeChatResponseSerializer,
+    ScanRequestSerializer,
+    ScanResponseSerializer,
+    ShoppingAddRequestSerializer,
+    ShoppingAddResponseSerializer,
+    ShoppingClearRequestSerializer,
+    ShoppingClearResponseSerializer,
+    ShoppingListResponseSerializer,
+    ShoppingRemoveResponseSerializer,
+    ShoppingSyncRequestSerializer,
+    ShoppingSyncResponseSerializer,
+    ShoppingUpdateRequestSerializer,
+    ShoppingUpdateResponseSerializer,
+    SignupRequestSerializer,
+    StatsSerializer,
+    SuggestionsRequestSerializer,
+    SuggestionsResponseSerializer,
+    TaskStatusResponseSerializer,
+    TelegramLinkResponseSerializer,
+    TelegramWebhookResponseSerializer,
+)
 from .serializers import (
     IngredientSerializer,
     RecipeSerializer,
@@ -82,6 +120,7 @@ class UserPantryViewSet(viewsets.ReadOnlyModelViewSet):
     throttle_classes = [_throttle_class("catalog")]
 
 
+@extend_schema(tags=["Platform"], summary="Catalog counters", responses=StatsSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def api_stats(request):
@@ -109,6 +148,7 @@ def api_stats(request):
     return Response(data)
 
 
+@extend_schema(tags=["Platform"], summary="Liveness/readiness probe", responses={200: HealthSerializer, 503: HealthSerializer})
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def api_health(request):
@@ -158,6 +198,7 @@ def api_health(request):
 # Authentication REST APIs
 # ==========================================
 
+@extend_schema(tags=["Auth"], summary="Log in (session cookie)", request=LoginRequestSerializer, responses={200: AuthResponseSerializer, 400: ErrorSerializer, 401: ErrorSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("auth")
@@ -187,6 +228,7 @@ def api_auth_login(request):
     )
 
 
+@extend_schema(tags=["Auth"], summary="Create an account and log in", request=SignupRequestSerializer, responses={201: AuthResponseSerializer, 400: ErrorSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("signup")
@@ -219,6 +261,7 @@ def api_auth_signup(request):
     }, status=status.HTTP_201_CREATED)
 
 
+@extend_schema(tags=["Auth"], summary="Log out", request=None, responses=MessageSerializer)
 @api_view(["POST"])
 @scoped("auth")
 def api_auth_logout(request):
@@ -227,6 +270,7 @@ def api_auth_logout(request):
     return Response({"message": "Logged out successfully"})
 
 
+@extend_schema(tags=["Auth"], summary="Current session (anonymous visitors get authenticated=false)", responses=MeResponseSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def api_auth_me(request):
@@ -245,6 +289,7 @@ def api_auth_me(request):
     })
 
 
+@extend_schema(tags=["Auth"], summary="Log in as the shared ChefDemo account", request=None, responses=AuthResponseSerializer)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("demo")
@@ -280,6 +325,7 @@ def api_auth_demo(request):
 # User Pantry REST APIs
 # ==========================================
 
+@extend_schema(tags=["Pantry"], summary="Current pantry (guests see the demo pantry)", responses=UserPantrySerializer)
 @api_view(["GET"])
 @scoped("pantry")
 def api_pantry_get(request):
@@ -295,6 +341,7 @@ def api_pantry_get(request):
     return Response(UserPantrySerializer(pantry).data)
 
 
+@extend_schema(tags=["Pantry"], summary="Add ingredients by id, id list or free-text name", request=PantryAddRequestSerializer, responses={200: PantryMutationResponseSerializer, 400: ErrorSerializer, 404: ErrorSerializer})
 @api_view(["POST"])
 @scoped("pantry")
 def api_pantry_add(request):
@@ -338,6 +385,7 @@ def api_pantry_add(request):
     })
 
 
+@extend_schema(tags=["Pantry"], summary="Remove one ingredient", request=PantryRemoveRequestSerializer, responses={200: PantryMutationResponseSerializer, 400: ErrorSerializer, 404: ErrorSerializer})
 @api_view(["POST"])
 @scoped("pantry")
 def api_pantry_remove(request):
@@ -363,6 +411,7 @@ def api_pantry_remove(request):
         return Response({"error": "Ingredient not found."}, status=404)
 
 
+@extend_schema(tags=["Pantry"], summary="Empty the pantry", request=None, responses={200: PantryMutationResponseSerializer, 400: ErrorSerializer})
 @api_view(["POST"])
 @scoped("pantry")
 def api_pantry_clear(request):
@@ -379,6 +428,7 @@ def api_pantry_clear(request):
     })
 
 
+@extend_schema(tags=["AI"], summary="Detect ingredients in a fridge photo (vision)", request={"multipart/form-data": ScanRequestSerializer, "application/json": ScanRequestSerializer}, responses={200: ScanResponseSerializer, 400: ErrorSerializer, 413: ErrorSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("scan", "scan_day")
@@ -476,6 +526,7 @@ def api_pantry_scan_image(request):
 # Smart Recipe Matching ("Can Cook") API
 # ==========================================
 
+@extend_schema(tags=["Pantry"], summary="Recipes the pantry can fully or partially make", responses=CanCookResponseSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("can_cook")
@@ -581,6 +632,7 @@ def _check_lmstudio_health():
     }
 
 
+@extend_schema(tags=["AI"], summary="Which AI providers are usable right now", responses=AiProvidersResponseSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("ai_meta")
@@ -619,6 +671,7 @@ def api_ai_providers(request):
     })
 
 
+@extend_schema(tags=["AI"], summary="Selectable Gemini models (live list or curated fallback)", responses=AiModelsResponseSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("ai_meta")
@@ -743,6 +796,7 @@ def api_telegram_link(request):
     })
 
 
+@extend_schema(tags=["AI"], summary="AI recipe suggestions (cached; may return a task to poll)", request=SuggestionsRequestSerializer, parameters=[OpenApiParameter("ingredients", str, description="GET only: comma-separated ingredients."), OpenApiParameter("provider", str), OpenApiParameter("model", str), OpenApiParameter("language", str), OpenApiParameter("force_refresh", bool)], responses=SuggestionsResponseSerializer)
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
 @scoped("ai", "ai_day")
@@ -840,6 +894,7 @@ def ai_suggestions_api(request):
             })
 
 
+@extend_schema(tags=["AI"], summary="Full AI recipe (ingredients, steps, nutrition)", parameters=[OpenApiParameter("provider", str), OpenApiParameter("model", str), OpenApiParameter("language", str)], responses={200: OpenApiTypes.OBJECT, 500: ErrorSerializer})
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("ai", "ai_day")
@@ -857,6 +912,7 @@ def ai_recipe_detail_api(request, recipe_name):
         return Response({"error": "Could not generate recipe details. Please try again."}, status=500)
 
 
+@extend_schema(tags=["AI"], summary="Ask the sous-chef about a recipe", request=RecipeChatRequestSerializer, responses={200: RecipeChatResponseSerializer, 400: ErrorSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("ai", "ai_day")
@@ -931,6 +987,7 @@ def _shopping_qs(scope):
     return ShoppingListItem.objects.filter(user__isnull=True, session_key=key)
 
 
+@extend_schema(tags=["Shopping list"], summary="The caller's shopping list (account or own session)", responses=ShoppingListResponseSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("shopping")
@@ -953,6 +1010,7 @@ def api_shopping_list_get(request):
     return Response({"items": data, "count": len(data)})
 
 
+@extend_schema(tags=["Shopping list"], summary="Add one item or several", request=ShoppingAddRequestSerializer, responses=ShoppingAddResponseSerializer)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("shopping")
@@ -1007,6 +1065,7 @@ def api_shopping_list_add(request):
     })
 
 
+@extend_schema(tags=["Shopping list"], summary="Replace the caller's whole list", request=ShoppingSyncRequestSerializer, responses={200: ShoppingSyncResponseSerializer, 400: ErrorSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("shopping")
@@ -1041,6 +1100,7 @@ def api_shopping_list_sync(request):
     })
 
 
+@extend_schema(tags=["Shopping list"], summary="Update an item (check off, rename, quantity, category)", request=ShoppingUpdateRequestSerializer, responses={200: ShoppingUpdateResponseSerializer, 404: ErrorSerializer})
 @api_view(["PATCH", "PUT"])
 @permission_classes([AllowAny])
 @scoped("shopping")
@@ -1062,6 +1122,7 @@ def api_shopping_list_toggle(request, item_id):
         return Response({"error": "Item not found"}, status=404)
 
 
+@extend_schema(tags=["Shopping list"], summary="Delete one of the caller's items", responses=ShoppingRemoveResponseSerializer)
 @api_view(["DELETE"])
 @permission_classes([AllowAny])
 @scoped("shopping")
@@ -1071,6 +1132,7 @@ def api_shopping_list_remove(request, item_id):
     return Response({"status": "deleted", "id": item_id})
 
 
+@extend_schema(tags=["Shopping list"], summary="Clear the caller's list (or only checked items)", request=ShoppingClearRequestSerializer, parameters=[OpenApiParameter("only_completed", bool, description="DELETE form of the body flag.")], responses=ShoppingClearResponseSerializer)
 @api_view(["POST", "DELETE"])
 @permission_classes([AllowAny])
 @scoped("shopping")
@@ -1087,6 +1149,7 @@ def api_shopping_list_clear(request):
 
 
 
+@extend_schema(tags=["AI"], summary="Poll a background suggestion task", responses=TaskStatusResponseSerializer)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def ai_task_status(request, task_id):
@@ -1262,6 +1325,7 @@ def ai_recipe_detail(request, name):
 # Real-Time Streaming AI Recipe API (SSE)
 # ==========================================
 
+@extend_schema(tags=["AI"], summary="Stream a recipe as Server-Sent Events", description="Each event is `data: {\"chunk\": str, \"done\": bool}`; the last has `done: true`.", parameters=[OpenApiParameter("recipe", str), OpenApiParameter("provider", str), OpenApiParameter("language", str)], responses={(200, "text/event-stream"): OpenApiTypes.STR})
 @api_view(["GET"])
 @permission_classes([AllowAny])
 @scoped("ai", "ai_hour")
@@ -1287,6 +1351,7 @@ def api_ai_stream_recipe(request):
 # Telegram Bot Integration APIs
 # ==========================================
 
+@extend_schema(tags=["Telegram"], summary="Deep link to connect the Telegram bot", request=None, responses=TelegramLinkResponseSerializer)
 @api_view(["GET", "POST"])
 @permission_classes([AllowAny])
 def api_telegram_get_link(request):
@@ -1314,6 +1379,7 @@ def api_telegram_get_link(request):
 
 
 @csrf_exempt
+@extend_schema(tags=["Telegram"], summary="Telegram bot webhook (Telegram calls this)", request=OpenApiTypes.OBJECT, parameters=[OpenApiParameter("X-Telegram-Bot-Api-Secret-Token", str, OpenApiParameter.HEADER, description="Required when TELEGRAM_WEBHOOK_SECRET is configured.")], responses={200: TelegramWebhookResponseSerializer, 403: ErrorSerializer})
 @api_view(["POST"])
 @permission_classes([AllowAny])
 @scoped("telegram_webhook")

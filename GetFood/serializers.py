@@ -11,7 +11,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = ["id", "name", "calories_per_100g", "category", "image_url"]
 
-    def get_image_url(self, obj):
+    def get_image_url(self, obj) -> str:
         return find_ingredient_image(obj.name)
 
 
@@ -54,10 +54,10 @@ class RecipeSerializer(serializers.ModelSerializer):
             return obj.image.url
         return find_best_image(obj.name)
 
-    def get_image(self, obj):
+    def get_image(self, obj) -> str:
         return self._get_resolved_image(obj)
 
-    def get_image_url(self, obj):
+    def get_image_url(self, obj) -> str:
         return self._get_resolved_image(obj)
 
 
