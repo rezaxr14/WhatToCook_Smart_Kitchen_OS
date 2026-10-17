@@ -1,0 +1,105 @@
+name: Visual comparison
+
+# Renders the main pages (frontend/e2e-visual) from two builds - the PR's base and its head - with the SAME
+# Playwright script, browser, fonts (stubbed) and data, then diffs them (scripts/compare-screenshots.sh).
+# Informational by default: the job summary has a per-page table and the `visual-comparison` artifact holds
+# base/, head/ and diff/ PNGs (changed pixels in red). Set VISUAL_FAIL_ABOVE_PCT to make it a gate.
+# Use it for anything that can change how pages look (CSS framework, theme, layout, component library).
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/visual.yml"
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Ref to compare against (default: origin/main)"
+        required: false
+        default: "origin/main"
+
+concurrency:
+  group: visual-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      USE_POSTGRES: "false"
+      BASE_SHA: ${{ github.event.pull_request.base.sha || inputs.base_ref || 'origin/main' }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Prepare and start the API (SQLite, seeded)
+        run: |
+          python manage.py migrate --noinput
+          python manage.py seed_recipes
+          nohup python manage.py runserver 127.0.0.1:8000 --noreload > api.log 2>&1 &
+          for i in $(seq 1 40); do curl -fs http://127.0.0.1:8000/api/health/ >/dev/null && exit 0; sleep 1; done
+          echo "API did not start"; cat api.log; exit 1
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Check out and build the BASE (${{ env.BASE_SHA }}), serve on :4174
+        run: |
+          git worktree add /tmp/base "$BASE_SHA"
+          cd /tmp/base/frontend
+          npm ci
+          npx vite build
+          nohup npx vite preview --port 4174 --strictPort > /tmp/preview-base.log 2>&1 &
+      - name: Build the HEAD, serve on :4173
+        working-directory: frontend
+        run: |
+          npm ci
+          npx vite build
+          nohup npx vite preview --port 4173 --strictPort > /tmp/preview-head.log 2>&1 &
+      - name: Wait for both servers
+        run: |
+          for port in 4173 4174; do
+            for i in $(seq 1 40); do curl -fs "http://localhost:$port/" >/dev/null && break; sleep 1; done
+            curl -fs "http://localhost:$port/" >/dev/null || { echo "port $port did not start"; cat /tmp/preview-*.log; exit 1; }
+          done
+      - name: Install Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Screenshots - base
+        working-directory: frontend
+        env:
+          VISUAL_BASE_URL: http://localhost:4174
+          SHOTS_DIR: ${{ github.workspace }}/shots/base
+        run: npm run test:visual
+      - name: Screenshots - head
+        working-directory: frontend
+        env:
+          VISUAL_BASE_URL: http://localhost:4173
+          SHOTS_DIR: ${{ github.workspace }}/shots/head
+        run: npm run test:visual
+
+      - name: Compare
+        run: bash frontend/scripts/compare-screenshots.sh shots/base shots/head shots/diff
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-comparison
+          path: shots/
+          if-no-files-found: ignore
+      - name: Server logs
+        if: failure()
+        run: |
+          cat api.log || true
+          cat /tmp/preview-base.log /tmp/preview-head.log || true
