@@ -133,6 +133,8 @@ jobs:
       - run: npm ci
       - name: Typecheck and build
         run: npm run build
+      - name: Bundle budget (no three.js in the entry graph, size limits)
+        run: npm run check:bundle
 
   deploy-config:
     name: Compose + Kubernetes manifests

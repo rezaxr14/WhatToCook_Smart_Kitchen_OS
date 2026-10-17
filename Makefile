@@ -21,8 +21,8 @@ schema: ## validate the OpenAPI schema strictly and write openapi.yaml (gitignor
 lint: ## ruff (syntax errors + pyflakes)
 	ruff check .
 
-web: ## frontend typecheck + production build
-	cd frontend && npm ci && npm run build
+web: ## frontend typecheck + production build + bundle budget
+	cd frontend && npm ci && npm run build && npm run check:bundle
 
 e2e: ## Playwright (needs the API on :8000: make run)
 	cd frontend && npm run test:e2e
