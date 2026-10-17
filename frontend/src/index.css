@@ -166,3 +166,21 @@ html[dir='rtl'] .font-mono {
   direction: ltr;
   unicode-bidi: embed;
 }
+
+/*
+  Tailwind v4 preflight differences that would change how this app looked under v3.
+  Kept as base-layer rules so utilities still override them.
+*/
+@layer base {
+  /* v3 gave every button a pointer cursor; v4 uses the default arrow. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* v3 placeholders were gray-400; v4 uses the current text colour at reduced opacity. */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
