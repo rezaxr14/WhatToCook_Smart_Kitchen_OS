@@ -42,12 +42,12 @@ export const ServingScaler: React.FC<ServingScalerProps> = ({
   return (
     <div className="flex flex-wrap items-center gap-2 bg-stone-100/90 p-1.5 px-3 rounded-2xl border border-stone-200/80 max-w-full overflow-hidden">
       <div className="flex items-center gap-1.5 text-stone-700 font-extrabold text-xs">
-        <Users className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
+        <Users className="w-3.5 h-3.5 text-brand-500 shrink-0" />
         <span>Portions:</span>
       </div>
 
       {/* Stepper buttons */}
-      <div className="flex items-center gap-1 bg-white/80 p-0.5 rounded-xl border border-stone-200/60 shadow-2xs">
+      <div className="flex items-center gap-1 bg-white/80 p-0.5 rounded-xl border border-stone-200/60">
         <button
           type="button"
           onClick={() => onChange(Math.max(1, currentServings - 1))}
@@ -81,10 +81,10 @@ export const ServingScaler: React.FC<ServingScalerProps> = ({
             type="button"
             onClick={() => onChange(opt)}
             className={`px-2 py-1 rounded-lg text-[11px] font-extrabold transition-all ${
-              currentServings === opt
-                ? 'bg-brand-500 text-white shadow-2xs'
-                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/70'
-            }`}
+ currentServings === opt
+ ? 'bg-brand-500 text-white'
+ : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/70'
+ }`}
           >
             {opt}x
           </button>

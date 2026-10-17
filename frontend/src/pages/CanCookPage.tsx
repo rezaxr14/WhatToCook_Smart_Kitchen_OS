@@ -64,7 +64,7 @@ export const CanCookPage: React.FC = () => {
   return (
     <div className="space-y-8 pb-16">
       {/* Header Banner */}
-      <div className="bg-gradient-to-br from-brand-600 via-orange-600 to-amber-600 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-linear-to-br/srgb from-brand-600 via-orange-600 to-amber-600 rounded-3xl p-6 sm:p-10 text-white shadow-xl relative overflow-hidden">
         <div className="relative z-10 max-w-2xl space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-md">
             <ChefHat className="w-3.5 h-3.5" />
@@ -102,17 +102,17 @@ export const CanCookPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('full')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold transition-all ${
-              activeTab === 'full'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
-            }`}
+ activeTab === 'full'
+ ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+ : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+ }`}
           >
             <CheckCircle className="w-4 h-4" />
             <span>100% Ready to Cook</span>
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                activeTab === 'full' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
-              }`}
+ activeTab === 'full' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
+ }`}
             >
               {fullCount}
             </span>
@@ -121,17 +121,17 @@ export const CanCookPage: React.FC = () => {
           <button
             onClick={() => setActiveTab('partial')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-bold transition-all ${
-              activeTab === 'partial'
-                ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
-                : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
-            }`}
+ activeTab === 'partial'
+ ? 'bg-amber-600 text-white shadow-md shadow-amber-600/20'
+ : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+ }`}
           >
             <AlertCircle className="w-4 h-4" />
             <span>Missing 1 or 2 Items</span>
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-bold ${
-                activeTab === 'partial' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
-              }`}
+ activeTab === 'partial' ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
+ }`}
             >
               {partialCount}
             </span>
@@ -141,7 +141,7 @@ export const CanCookPage: React.FC = () => {
         {activeTab === 'partial' && partialCount > 0 && (
           <button
             onClick={handleAddAllMissingToGrocery}
-            className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition-all"
           >
             <ShoppingCart className="w-4 h-4" />
             <span>Add All Missing to Grocery List</span>

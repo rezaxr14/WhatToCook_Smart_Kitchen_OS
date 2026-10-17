@@ -107,7 +107,7 @@ export const LanguageModal: React.FC<ModalProps> = ({ isOpen, onClose, showClose
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -125,7 +125,7 @@ export const LanguageModal: React.FC<ModalProps> = ({ isOpen, onClose, showClose
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center space-y-1.5 mb-6">
-              <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-500 to-sage-500 flex items-center justify-center text-white mb-3">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-linear-to-tr/srgb from-brand-500 to-sage-500 flex items-center justify-center text-white mb-3">
                 <Globe className="w-7 h-7" />
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
@@ -144,10 +144,10 @@ export const LanguageModal: React.FC<ModalProps> = ({ isOpen, onClose, showClose
                     onClick={() => select(lang.code)}
                     aria-pressed={selected}
                     className={`flex items-center gap-2.5 p-3 rounded-2xl border text-start transition-all cursor-pointer ${
-                      selected
-                        ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-200'
-                        : 'border-stone-200 hover:border-brand-300 hover:bg-stone-50'
-                    }`}
+ selected
+ ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-200'
+ : 'border-stone-200 hover:border-brand-300 hover:bg-stone-50'
+ }`}
                   >
                     <span className="text-2xl leading-none">{lang.flag}</span>
                     <span className="min-w-0">
@@ -156,7 +156,7 @@ export const LanguageModal: React.FC<ModalProps> = ({ isOpen, onClose, showClose
                       </span>
                       <span className="block text-[11px] text-stone-400">{lang.name}</span>
                     </span>
-                    {selected && <Check className="w-4 h-4 ms-auto text-brand-600 flex-shrink-0" />}
+                    {selected && <Check className="w-4 h-4 ms-auto text-brand-600 shrink-0" />}
                   </button>
                 );
               })}

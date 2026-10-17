@@ -145,12 +145,12 @@ export const RecipeDetailPage: React.FC = () => {
             else if (t.src !== '/media/recipes/default.png') t.src = '/media/recipes/default.png';
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-950 via-stone-950/60 to-transparent" />
 
         <div className="relative z-10 space-y-4 max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
             {recipe.cooking_time && (
-              <span className="bg-amber-500/90 text-stone-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+              <span className="bg-amber-500/90 text-stone-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
                 <Clock className="w-3.5 h-3.5" />
                 <span>{recipe.cooking_time} mins Total Cook Time</span>
               </span>
@@ -174,7 +174,7 @@ export const RecipeDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Ingredients Checklist */}
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm space-y-4 sticky top-24">
+          <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs space-y-4 sticky top-24">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-stone-900 text-lg flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-brand-500" />
@@ -216,10 +216,10 @@ export const RecipeDetailPage: React.FC = () => {
                     <div
                       key={ri.id}
                       className={`w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        isChecked
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
-                          : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
-                      }`}
+ isChecked
+ ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
+ : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
+ }`}
                     >
                       <button
                         onClick={() => toggleIngredientCheck(ri.ingredient.id)}
@@ -227,28 +227,28 @@ export const RecipeDetailPage: React.FC = () => {
                       >
                         <div
                           className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
-                            isChecked
-                              ? 'bg-emerald-600 border-emerald-600 text-white'
-                              : 'bg-white border-stone-300'
-                          }`}
+ isChecked
+ ? 'bg-emerald-600 border-emerald-600 text-white'
+ : 'bg-white border-stone-300'
+ }`}
                         >
                           {isChecked && <Check className="w-3.5 h-3.5" />}
                         </div>
                         <span
                           className={`text-sm font-semibold truncate capitalize ${
-                            isChecked ? 'line-through' : ''
-                          }`}
+ isChecked ? 'line-through' : ''
+ }`}
                         >
                           {ri.ingredient.name}
                         </span>
                       </button>
 
-                      <div className="flex items-center gap-2 text-xs text-stone-500 flex-shrink-0">
+                      <div className="flex items-center gap-2 text-xs text-stone-500 shrink-0">
                         <span className="font-mono font-bold text-stone-700">
                           {scaledQuantity} {ri.unit}
                         </span>
                         {isStocked ? (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 font-sans font-bold">
+                          <span className="text-[10px] px-1.5 py-0.2 rounded-sm bg-emerald-100 text-emerald-800 font-sans font-bold">
                             In Pantry
                           </span>
                         ) : (
@@ -275,10 +275,10 @@ export const RecipeDetailPage: React.FC = () => {
                     <div
                       key={ing.id}
                       className={`w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        isChecked
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
-                          : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
-                      }`}
+ isChecked
+ ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
+ : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
+ }`}
                     >
                       <button
                         onClick={() => toggleIngredientCheck(ing.id)}
@@ -286,17 +286,17 @@ export const RecipeDetailPage: React.FC = () => {
                       >
                         <div
                           className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
-                            isChecked
-                              ? 'bg-emerald-600 border-emerald-600 text-white'
-                              : 'bg-white border-stone-300'
-                          }`}
+ isChecked
+ ? 'bg-emerald-600 border-emerald-600 text-white'
+ : 'bg-white border-stone-300'
+ }`}
                         >
                           {isChecked && <Check className="w-3.5 h-3.5" />}
                         </div>
                         <span
                           className={`text-sm font-semibold truncate capitalize ${
-                            isChecked ? 'line-through' : ''
-                          }`}
+ isChecked ? 'line-through' : ''
+ }`}
                         >
                           {ing.name}
                         </span>
@@ -332,7 +332,7 @@ export const RecipeDetailPage: React.FC = () => {
 
         {/* Step-by-Step Instructions */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-extrabold text-stone-900 flex items-center gap-2">
                 <ChefHat className="w-6 h-6 text-brand-500" />
@@ -351,17 +351,17 @@ export const RecipeDetailPage: React.FC = () => {
                     key={idx}
                     onClick={() => toggleStepCheck(idx)}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer flex items-start gap-4 ${
-                      isDone
-                        ? 'bg-emerald-50/60 border-emerald-200 opacity-75'
-                        : 'bg-stone-50/60 border-stone-200 hover:border-brand-300 hover:bg-white'
-                    }`}
+ isDone
+ ? 'bg-emerald-50/60 border-emerald-200 opacity-75'
+ : 'bg-stone-50/60 border-stone-200 hover:border-brand-300 hover:bg-white'
+ }`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                        isDone
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
-                      }`}
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+ isDone
+ ? 'bg-emerald-600 text-white'
+ : 'bg-brand-500 text-white shadow-xs shadow-brand-500/20'
+ }`}
                     >
                       {isDone ? <Check className="w-4 h-4" /> : idx + 1}
                     </div>

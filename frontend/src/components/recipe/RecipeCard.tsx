@@ -57,12 +57,12 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
             if (t.src !== fallbackUrl) t.src = fallbackUrl;
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-900/70 via-stone-900/20 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
           {recipe.cooking_time ? (
-            <span className="bg-stone-900/80 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+            <span className="bg-stone-900/80 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs">
               <Clock className="w-3.5 h-3.5 text-amber-300" />
               <span>{recipe.cooking_time} mins</span>
             </span>
@@ -72,11 +72,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
 
           {hasMatchInfo && (
             <span
-              className={`text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-md shadow-sm flex items-center gap-1 ${
-                matchedRecipe.missing_count === 0
-                  ? 'bg-emerald-500/90 text-white'
-                  : 'bg-amber-500/90 text-white'
-              }`}
+              className={`text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-md shadow-xs flex items-center gap-1 ${
+ matchedRecipe.missing_count === 0
+ ? 'bg-emerald-500/90 text-white'
+ : 'bg-amber-500/90 text-white'
+ }`}
             >
               {matchedRecipe.missing_count === 0 ? (
                 <>
@@ -93,7 +93,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
 
         {/* Title overlay in image */}
         <div className="absolute bottom-3 left-3 right-3">
-          <h3 className="text-lg font-bold text-white leading-tight drop-shadow-sm group-hover:text-amber-200 transition-colors">
+          <h3 className="text-lg font-bold text-white leading-tight drop-shadow-xs group-hover:text-amber-200 transition-colors">
             {recipe.name}
           </h3>
         </div>
@@ -109,7 +109,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
           {/* Missing items warning if in CanCook mode */}
           {hasMatchInfo && matchedRecipe.missing_count > 0 && (
             <div className="mb-4 p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-xs text-amber-900 flex items-start gap-1.5">
-              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold">Missing ({matchedRecipe.missing_count}): </span>
                 <span>{matchedRecipe.missing_ingredients.join(', ')}</span>
@@ -144,7 +144,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
         <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
           <Link
             to={`/recipe/${recipe.id}`}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-brand-50 hover:bg-brand-500 text-brand-700 hover:text-white font-semibold text-sm transition-all group-hover:shadow-sm"
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-brand-50 hover:bg-brand-500 text-brand-700 hover:text-white font-semibold text-sm transition-all group-hover:shadow-xs"
           >
             <ChefHat className="w-4 h-4" />
             <span>View & Cook Recipe</span>

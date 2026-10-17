@@ -28,19 +28,19 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div
-        className={`inline-flex items-center gap-1 p-1 rounded-2xl bg-stone-100/90 border border-stone-200/80 shadow-2xs ${
-          compact ? 'text-xs' : 'text-sm'
-        }`}
+        className={`inline-flex items-center gap-1 p-1 rounded-2xl bg-stone-100/90 border border-stone-200/80 ${
+ compact ? 'text-xs' : 'text-sm'
+ }`}
       >
         {/* Cloud AI Button */}
         <button
           type="button"
           onClick={() => setActiveAIProvider('gemini')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
-            activeAIProvider === 'gemini'
-              ? 'bg-white text-stone-900 shadow-2xs'
-              : 'text-stone-500 hover:text-stone-900'
-          }`}
+ activeAIProvider === 'gemini'
+ ? 'bg-white text-stone-900'
+ : 'text-stone-500 hover:text-stone-900'
+ }`}
           title={`Cloud AI Engine (${geminiModel})`}
         >
           <Sparkles className="w-3.5 h-3.5 text-brand-500" />
@@ -57,12 +57,12 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
           }}
           disabled={!isLMStudioOnline}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all relative ${
-            !isLMStudioOnline
-              ? 'opacity-40 cursor-not-allowed text-stone-400 bg-stone-100'
-              : activeAIProvider === 'lmstudio'
-              ? 'bg-white text-stone-900 shadow-2xs cursor-pointer'
-              : 'text-stone-500 hover:text-stone-900 cursor-pointer'
-          }`}
+ !isLMStudioOnline
+ ? 'opacity-40 cursor-not-allowed text-stone-400 bg-stone-100'
+ : activeAIProvider === 'lmstudio'
+ ? 'bg-white text-stone-900 cursor-pointer'
+ : 'text-stone-500 hover:text-stone-900 cursor-pointer'
+ }`}
           title={
             isLMStudioOnline
               ? `Local AI Engine (${lmModel}) - Ready`
@@ -85,7 +85,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
           <button
             type="button"
             onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-stone-900/85 hover:bg-stone-900 text-stone-200 text-xs font-semibold border border-stone-700/80 shadow-xs cursor-pointer transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-stone-900/85 hover:bg-stone-900 text-stone-200 text-xs font-semibold border border-stone-700/80 cursor-pointer transition-colors"
           >
             <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider">Model:</span>
             <span className="truncate max-w-[140px] font-mono text-[11px]">
@@ -100,7 +100,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                 className="fixed inset-0 z-40"
                 onClick={() => setModelDropdownOpen(false)}
               />
-              <div className="fixed left-1/2 -translate-x-1/2 top-24 w-[min(18rem,calc(100vw-1.5rem))] max-h-96 overflow-y-auto bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl z-50 p-2 space-y-1 scrollbar-thin sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:translate-x-0 sm:mt-1.5 sm:w-72">
+              <div className="fixed left-1/2 -translate-x-1/2 top-24 w-[min(18rem,calc(100vw-1.5rem))] max-h-96 overflow-y-auto bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl z-50 p-2 space-y-1 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:translate-x-0 sm:mt-1.5 sm:w-72">
                 <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-stone-400 flex items-center justify-between">
                   <span>Google Gemini Models</span>
                   <span className="text-[9px] text-amber-400/80 lowercase">auto-fallback active</span>
@@ -122,12 +122,12 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                         }
                       }}
                       className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-all ${
-                        isRateLimited
-                          ? 'opacity-40 bg-stone-800/40 text-stone-500 cursor-not-allowed border border-dashed border-stone-700/50'
-                          : isSelected
-                          ? 'bg-brand-500 text-white font-bold cursor-pointer'
-                          : 'text-stone-300 hover:bg-stone-800 cursor-pointer'
-                      }`}
+ isRateLimited
+ ? 'opacity-40 bg-stone-800/40 text-stone-500 cursor-not-allowed border border-dashed border-stone-700/50'
+ : isSelected
+ ? 'bg-brand-500 text-white font-bold cursor-pointer'
+ : 'text-stone-300 hover:bg-stone-800 cursor-pointer'
+ }`}
                       title={
                         isRateLimited
                           ? `${label} reached rate/quota limit. Auto-fallback will use other available models.`
@@ -138,7 +138,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold truncate">{label}</span>
                           {isRateLimited && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded bg-red-900/60 text-red-300 font-bold border border-red-800/50">
+                            <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-sm bg-red-900/60 text-red-300 font-bold border border-red-800/50">
                               <AlertTriangle className="w-2.5 h-2.5" /> Limit
                             </span>
                           )}
@@ -149,7 +149,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                           </div>
                         )}
                       </div>
-                      {isSelected && <Check className="w-3.5 h-3.5 flex-shrink-0 text-white" />}
+                      {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-white" />}
                     </button>
                   );
                 })}

@@ -13,7 +13,7 @@ export const NotFoundPage: React.FC = () => {
 
   return (
     <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-400 to-orange-500 text-stone-950 shadow-[0_12px_40px_rgba(251,146,60,0.35)]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-linear-to-br/srgb from-amber-400 to-orange-500 text-stone-950 shadow-[0_12px_40px_rgba(251,146,60,0.35)]">
         <ChefHat className="h-8 w-8" />
       </div>
       <div className="mt-8 text-[11px] font-black tracking-[0.5em] text-amber-600">404</div>
@@ -23,7 +23,7 @@ export const NotFoundPage: React.FC = () => {
         {!user && (
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-6 py-3 text-sm font-extrabold text-stone-950 transition-transform hover:scale-105"
+            className="inline-flex items-center gap-2 rounded-full bg-linear-to-r/srgb from-amber-400 to-orange-500 px-6 py-3 text-sm font-extrabold text-stone-950 transition-transform hover:scale-105"
           >
             <Sparkles className="h-4 w-4" />
             {t('notFound.home')}

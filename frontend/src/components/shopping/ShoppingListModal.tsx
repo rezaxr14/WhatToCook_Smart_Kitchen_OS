@@ -80,7 +80,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
           onClose();
         }
       }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -89,7 +89,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
         className="relative w-full max-w-xl bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden my-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-950 p-6 text-white flex items-center justify-between">
+        <div className="bg-linear-to-r/srgb from-stone-900 via-stone-850 to-stone-950 p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <ShoppingCart className="w-6 h-6" />
@@ -145,7 +145,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
             />
             <button
               type="submit"
-              className="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold text-sm flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              className="px-4 py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl font-bold text-sm flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add</span>
@@ -169,10 +169,10 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
                 <div
                   key={item.id}
                   className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
-                    item.checked
-                      ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900 opacity-60'
-                      : 'bg-stone-50 border-stone-200 text-stone-800'
-                  }`}
+ item.checked
+ ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900 opacity-60'
+ : 'bg-stone-50 border-stone-200 text-stone-800'
+ }`}
                 >
                   <button
                     type="button"
@@ -187,8 +187,8 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
                     <div className="min-w-0">
                       <p
                         className={`text-sm font-bold truncate ${
-                          item.checked ? 'line-through text-stone-500' : 'text-stone-900'
-                        }`}
+ item.checked ? 'line-through text-stone-500' : 'text-stone-900'
+ }`}
                       >
                         {item.name}
                       </p>

@@ -63,7 +63,7 @@ export const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
         className="relative w-full max-w-lg bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden my-8"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-950 p-6 text-white flex items-center justify-between">
+        <div className="bg-linear-to-r/srgb from-stone-900 via-stone-850 to-stone-950 p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <Sparkles className="w-5 h-5" />
@@ -98,7 +98,7 @@ export const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
               placeholder="Search missing item (e.g. Butter, Eggs, Heavy Cream, Garlic)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
             />
           </div>
 
@@ -109,10 +109,10 @@ export const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                 key={tag}
                 onClick={() => setSearchTerm(tag)}
                 className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                  searchTerm.toLowerCase() === tag.toLowerCase()
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
-                }`}
+ searchTerm.toLowerCase() === tag.toLowerCase()
+ ? 'bg-amber-500 text-white'
+ : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+ }`}
               >
                 {tag}
               </button>

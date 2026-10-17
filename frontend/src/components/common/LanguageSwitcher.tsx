@@ -38,7 +38,7 @@ export const LanguageSwitcher: React.FC = () => {
           role="listbox"
           aria-label={t('language.label')}
           dir="ltr"
-          className="absolute bottom-full mb-2 end-0 w-48 rounded-2xl bg-stone-900 border border-stone-700 shadow-2xl p-1.5 space-y-0.5 z-50"
+          className="absolute bottom-full mb-2 inset-e-0 w-48 rounded-2xl bg-stone-900 border border-stone-700 shadow-2xl p-1.5 space-y-0.5 z-50"
         >
           {SUPPORTED_LANGUAGES.map((lang) => {
             const selected = current === lang.code;
@@ -53,15 +53,15 @@ export const LanguageSwitcher: React.FC = () => {
                     setOpen(false);
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs transition-colors cursor-pointer ${
-                    selected ? 'bg-brand-500 text-white font-bold' : 'text-stone-300 hover:bg-stone-800'
-                  }`}
+ selected ? 'bg-brand-500 text-white font-bold' : 'text-stone-300 hover:bg-stone-800'
+ }`}
                 >
                   <span className="text-base leading-none">{lang.flag}</span>
                   <span className="font-semibold">{lang.nativeName}</span>
                   <span className={`ms-auto text-[10px] ${selected ? 'text-amber-100' : 'text-stone-500'}`}>
                     {lang.name}
                   </span>
-                  {selected && <Check className="w-3 h-3 flex-shrink-0" />}
+                  {selected && <Check className="w-3 h-3 shrink-0" />}
                 </button>
               </li>
             );

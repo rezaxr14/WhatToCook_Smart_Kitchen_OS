@@ -99,7 +99,7 @@ export const RecipesPage: React.FC = () => {
     <div className="space-y-10 pb-16">
       {/* Authenticated Kitchen Dashboard Strip */}
       {isAuthenticated && (
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 text-white p-8 sm:p-10 shadow-2xl border border-stone-800">
+        <section className="relative overflow-hidden rounded-3xl bg-linear-to-br/srgb from-stone-900 via-stone-900 to-stone-950 text-white p-8 sm:p-10 shadow-2xl border border-stone-800">
           <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 space-y-6">

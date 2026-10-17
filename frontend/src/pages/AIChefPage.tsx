@@ -101,7 +101,7 @@ export const AIChefPage: React.FC = () => {
   return (
     <div className="space-y-10 pb-16">
       {/* AI Studio Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-stone-900 via-stone-800 to-stone-950 text-white p-8 sm:p-12 shadow-2xl border border-stone-800">
+      <div className="relative overflow-hidden rounded-3xl bg-linear-to-r/srgb from-stone-900 via-stone-800 to-stone-950 text-white p-8 sm:p-12 shadow-2xl border border-stone-800">
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl space-y-4">
@@ -121,7 +121,7 @@ export const AIChefPage: React.FC = () => {
       </div>
 
       {/* Control Panel: Ingredient Selector & Prompt Form */}
-      <div className="bg-white rounded-3xl border border-stone-200/90 p-6 md:p-8 shadow-sm space-y-6">
+      <div className="bg-white rounded-3xl border border-stone-200/90 p-6 md:p-8 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-bold text-stone-900">
@@ -153,10 +153,10 @@ export const AIChefPage: React.FC = () => {
                   key={name}
                   onClick={() => toggleIngredient(name)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/30'
-                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                  }`}
+ isSelected
+ ? 'bg-brand-500 text-white shadow-xs shadow-brand-500/30'
+ : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+ }`}
                 >
                   <span>{name}</span>
                   <span className="text-[10px] opacity-80">{isSelected ? '✓' : '+'}</span>
@@ -176,7 +176,7 @@ export const AIChefPage: React.FC = () => {
               if (e.key === 'Enter') handleAddCustom();
             }}
             placeholder={t('aiChefPage.customPlaceholder')}
-            className="flex-1 px-3.5 py-2 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+            className="flex-1 px-3.5 py-2 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
           />
           <StyledButton $variant="secondary" $size="sm" onClick={handleAddCustom}>
             {t('aiChefPage.add')}
@@ -263,7 +263,7 @@ export const AIChefPage: React.FC = () => {
                         }
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-900/70 via-transparent to-transparent opacity-80" />
 
                     <div className="absolute top-3 left-3 flex gap-2">
                       <span className="bg-stone-900/80 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
@@ -277,7 +277,7 @@ export const AIChefPage: React.FC = () => {
                     </div>
 
                     <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-lg font-bold text-white leading-tight drop-shadow-sm group-hover:text-amber-200 transition-colors">
+                      <h3 className="text-lg font-bold text-white leading-tight drop-shadow-xs group-hover:text-amber-200 transition-colors">
                         {dish.name}
                       </h3>
                     </div>

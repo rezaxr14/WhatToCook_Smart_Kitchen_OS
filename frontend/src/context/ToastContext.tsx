@@ -61,19 +61,19 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               exit={{ opacity: 0, y: 10, scale: 0.9 }}
               transition={{ duration: 0.2 }}
               className={`pointer-events-auto p-4 rounded-2xl shadow-xl backdrop-blur-lg border flex items-start gap-3 text-sm ${
-                toast.type === 'success'
-                  ? 'bg-white/95 border-emerald-200 text-emerald-950 shadow-emerald-500/10'
-                  : toast.type === 'error'
-                  ? 'bg-white/95 border-rose-200 text-rose-950 shadow-rose-500/10'
-                  : toast.type === 'ai'
-                  ? 'bg-gradient-to-r from-orange-500/95 to-amber-500/95 text-white border-orange-400 shadow-orange-500/20'
-                  : 'bg-white/95 border-stone-200 text-stone-900 shadow-stone-500/10'
-              }`}
+ toast.type === 'success'
+ ? 'bg-white/95 border-emerald-200 text-emerald-950 shadow-emerald-500/10'
+ : toast.type === 'error'
+ ? 'bg-white/95 border-rose-200 text-rose-950 shadow-rose-500/10'
+ : toast.type === 'ai'
+ ? 'bg-linear-to-r/srgb from-orange-500/95 to-amber-500/95 text-white border-orange-400 shadow-orange-500/20'
+ : 'bg-white/95 border-stone-200 text-stone-900 shadow-stone-500/10'
+ }`}
             >
-              <div className="mt-0.5 flex-shrink-0">
+              <div className="mt-0.5 shrink-0">
                 {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
                 {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-600" />}
-                {toast.type === 'ai' && <Sparkles className="w-5 h-5 text-amber-200 animate-spin" style={{ animationDuration: '4s' }} />}
+                {toast.type === 'ai'&& <Sparkles className="w-5 h-5 text-amber-200 animate-spin" style={{ animationDuration:'4s' }} />}
                 {toast.type === 'info' && <Info className="w-5 h-5 text-brand-600" />}
               </div>
               <div className="flex-1">

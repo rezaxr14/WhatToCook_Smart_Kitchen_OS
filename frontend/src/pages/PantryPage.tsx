@@ -34,7 +34,7 @@ export const PantryPage: React.FC = () => {
   return (
     <div className="space-y-8 pb-16">
       {/* Page Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-stone-900 via-stone-850 to-stone-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-linear-to-r/srgb from-stone-900 via-stone-850 to-stone-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10">
@@ -52,7 +52,7 @@ export const PantryPage: React.FC = () => {
           {/* Gemini Vision Fridge Scanner CTA */}
           <button
             onClick={openScanner}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-400 to-brand-500 text-stone-950 font-extrabold text-xs shadow-lg shadow-brand-500/20 hover:scale-105 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-linear-to-r/srgb from-amber-400 to-brand-500 text-stone-950 font-extrabold text-xs shadow-lg shadow-brand-500/20 hover:scale-105 transition-all cursor-pointer"
           >
             <Camera className="w-4 h-4" />
             <span>{t('pantryPage.scanFridgePhoto')}</span>
@@ -75,7 +75,7 @@ export const PantryPage: React.FC = () => {
       </div>
 
       {/* Pantry Shelf Section */}
-      <div className="bg-white/80 backdrop-blur-xl border border-stone-200/90 rounded-3xl p-6 shadow-sm">
+      <div className="bg-white/80 backdrop-blur-xl border border-stone-200/90 rounded-3xl p-6 shadow-xs">
         <PantryShelf
           ingredients={pantryIngredients}
           onRemove={removeIngredient}

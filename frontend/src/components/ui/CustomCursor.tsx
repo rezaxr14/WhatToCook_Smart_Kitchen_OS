@@ -52,10 +52,10 @@ export const CustomCursor: React.FC = () => {
   }, []);
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[90] hidden md:block" aria-hidden>
+    <div className="pointer-events-none fixed inset-0 z-90 hidden md:block" aria-hidden>
       <div
         ref={dot}
-        className="absolute -ml-[3px] -mt-[3px] h-1.5 w-1.5 rounded-full bg-amber-200"
+        className="absolute ml-[-3px] mt-[-3px] h-1.5 w-1.5 rounded-full bg-amber-200"
         style={{ left: 0, top: 0 }}
       />
       <div

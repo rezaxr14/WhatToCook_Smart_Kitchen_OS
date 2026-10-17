@@ -56,9 +56,9 @@ export const PWAInstallBanner: React.FC = () => {
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-4 right-4 z-50 max-w-sm bg-gradient-to-r from-stone-900 to-stone-950 border border-stone-700 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-3"
+            className="fixed bottom-4 right-4 z-50 max-w-sm bg-linear-to-r/srgb from-stone-900 to-stone-950 border border-stone-700 text-white p-4 rounded-3xl shadow-2xl flex items-center gap-3"
           >
-            <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 flex-shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center text-brand-400 shrink-0">
               <Smartphone className="w-5 h-5" />
             </div>
 
@@ -71,7 +71,7 @@ export const PWAInstallBanner: React.FC = () => {
 
             <button
               onClick={handleInstall}
-              className="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-md shadow-brand-500/20 transition-all flex-shrink-0"
+              className="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-md shadow-brand-500/20 transition-all shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Install</span>

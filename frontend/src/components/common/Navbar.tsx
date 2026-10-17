@@ -64,8 +64,8 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-stone-200/80 transition-all">
       <div className="max-w-7xl 2xl:max-w-[1480px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
+        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="w-10 h-10 rounded-2xl bg-linear-to-tr/srgb from-brand-600 via-orange-500 to-amber-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform duration-300">
             <ChefHat className="w-5 h-5" />
           </div>
           <div className="flex flex-col">
@@ -91,18 +91,18 @@ export const Navbar: React.FC = () => {
                 to={link.to}
                 style={{ height: '36px' }}
                 className={`h-9 flex items-center justify-center gap-1.5 px-2.5 lg:px-3.5 rounded-xl text-xs font-bold transition-all relative select-none box-border leading-none ${
-                  active
-                    ? 'bg-white text-brand-600 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
-                }`}
+ active
+ ? 'bg-white text-brand-600'
+ : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+ }`}
               >
-                <span className="flex-shrink-0 flex items-center justify-center">{link.icon}</span>
+                <span className="shrink-0 flex items-center justify-center">{link.icon}</span>
                 <span className="leading-none whitespace-nowrap hidden lg:inline">{link.label}</span>
                 {link.badge !== undefined && (
                   <span
-                    className={`h-5 min-w-[20px] px-1.5 flex items-center justify-center text-[10px] leading-none rounded-full font-extrabold flex-shrink-0 ${
-                      active ? 'bg-brand-100 text-brand-700' : 'bg-stone-200 text-stone-700'
-                    }`}
+                    className={`h-5 min-w-[20px] px-1.5 flex items-center justify-center text-[10px] leading-none rounded-full font-extrabold shrink-0 ${
+ active ? 'bg-brand-100 text-brand-700' : 'bg-stone-200 text-stone-700'
+ }`}
                   >
                     {link.badge}
                   </span>
@@ -119,7 +119,7 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Right Utility & Auth Area */}
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 min-w-0">
           <div className="hidden 2xl:block">
             <AIProviderSwitcher compact />
           </div>
@@ -128,7 +128,7 @@ export const Navbar: React.FC = () => {
           {isAuthenticated ? (
             <div className="flex items-center gap-2 pl-2 border-l border-stone-200">
               <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-stone-50 border border-stone-200/80 text-xs font-bold text-stone-800">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-brand-500 to-amber-500 text-white flex items-center justify-center font-extrabold text-[10px]">
+                <div className="w-6 h-6 rounded-full bg-linear-to-tr/srgb from-brand-500 to-amber-500 text-white flex items-center justify-center font-extrabold text-[10px]">
                   {user?.username?.substring(0, 2).toUpperCase() || 'U'}
                 </div>
                 <span className="hidden xl:inline">{user?.username}</span>
@@ -188,10 +188,10 @@ export const Navbar: React.FC = () => {
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`flex items-center justify-between p-3 rounded-xl text-sm font-semibold ${
-                  isActive(link.to)
-                    ? 'bg-brand-50 text-brand-600 font-bold'
-                    : 'text-stone-700 hover:bg-stone-100'
-                }`}
+ isActive(link.to)
+ ? 'bg-brand-50 text-brand-600 font-bold'
+ : 'text-stone-700 hover:bg-stone-100'
+ }`}
               >
                 <div className="flex items-center gap-2.5">
                   {link.icon}

@@ -68,7 +68,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-3xl border border-stone-200/90 p-6 shadow-sm space-y-5">
+    <div className="bg-white rounded-3xl border border-stone-200/90 p-6 shadow-xs space-y-5">
       {/* Header and Quick Bundle Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -87,7 +87,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
           <button
             type="button"
             onClick={handleAddBundle}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition-colors shadow-2xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer"
           >
             <Wand2 className="w-3.5 h-3.5 text-amber-600" />
             <span>+ Add Chef's Starter Kit</span>
@@ -96,7 +96,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
       </div>
 
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
         {CATEGORIES.map((cat) => {
           const isSelected = selectedCategory === cat;
           return (
@@ -105,10 +105,10 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
               type="button"
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                isSelected
-                  ? 'bg-stone-900 text-white shadow-2xs'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200/80 hover:text-stone-900'
-              }`}
+ isSelected
+ ? 'bg-stone-900 text-white'
+ : 'bg-stone-100 text-stone-600 hover:bg-stone-200/80 hover:text-stone-900'
+ }`}
             >
               {cat}
             </button>
@@ -128,7 +128,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
               if (e.key === 'Enter') handleCustomAdd();
             }}
             placeholder="Search ingredients (e.g. Avocado, Ice Cream, Chicken, Mozzarella)..."
-            className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
           />
         </div>
 
@@ -155,14 +155,14 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
                 {/* Photo Thumbnail with Exact Uniform Fixed Dimensions */}
                 <div
                   style={{ height: '96px', width: '100%' }}
-                  className="relative w-full rounded-xl overflow-hidden bg-stone-100 flex-shrink-0"
+                  className="relative w-full rounded-xl overflow-hidden bg-stone-100 shrink-0"
                 >
                   {ing.image_url ? (
                     <img
                       src={ing.image_url}
                       alt={ing.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-300"
+                      className="w-full h-full object-cover transition-transform duration-300"
                       loading="lazy"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
@@ -175,7 +175,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
                     </div>
                   )}
 
-                  <span className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg bg-white/90 group-hover:bg-brand-500 group-hover:text-white text-stone-700 flex items-center justify-center shadow-xs transition-colors">
+                  <span className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg bg-white/90 group-hover:bg-brand-500 group-hover:text-white text-stone-700 flex items-center justify-center transition-colors">
                     <Plus className="w-3.5 h-3.5" />
                   </span>
                 </div>

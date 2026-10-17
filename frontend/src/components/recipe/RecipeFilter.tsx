@@ -21,7 +21,7 @@ export const RecipeFilter: React.FC<RecipeFilterProps> = ({
   categories,
 }) => {
   return (
-    <div className="bg-white/85 backdrop-blur-xl border border-stone-200/80 rounded-3xl p-5 md:p-6 shadow-sm mb-8 space-y-5">
+    <div className="bg-white/85 backdrop-blur-xl border border-stone-200/80 rounded-3xl p-5 md:p-6 shadow-xs mb-8 space-y-5">
       {/* Top Search and Quick Stats */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
@@ -31,7 +31,7 @@ export const RecipeFilter: React.FC<RecipeFilterProps> = ({
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search by recipe name or ingredients (e.g. Pasta, Chicken, Chocolate)..."
-            className="w-full pl-11 pr-10 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+            className="w-full pl-11 pr-10 py-3 bg-stone-50 border border-stone-200 rounded-2xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
           />
           {searchTerm && (
             <button
@@ -64,14 +64,14 @@ export const RecipeFilter: React.FC<RecipeFilterProps> = ({
       </div>
 
       {/* Category Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <button
           onClick={() => onCategoryChange('All')}
           className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-            selectedCategory === 'All'
-              ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
-              : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
-          }`}
+ selectedCategory === 'All'
+ ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
+ : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
+ }`}
         >
           🍳 All Dishes
         </button>
@@ -81,10 +81,10 @@ export const RecipeFilter: React.FC<RecipeFilterProps> = ({
             key={cat}
             onClick={() => onCategoryChange(cat)}
             className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-              selectedCategory === cat
-                ? 'bg-stone-900 text-white shadow-sm'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
-            }`}
+ selectedCategory === cat
+ ? 'bg-stone-900 text-white shadow-xs'
+ : 'bg-stone-100 text-stone-600 hover:bg-stone-200/70'
+ }`}
           >
             {cat}
           </button>

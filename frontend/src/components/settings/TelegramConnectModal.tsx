@@ -79,7 +79,7 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({ isOp
           onClose();
         }
       }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -88,7 +88,7 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({ isOp
         className="relative w-full max-w-md bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden my-auto"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-sky-600 via-sky-500 to-sky-700 p-5 text-white flex items-center justify-between">
+        <div className="bg-linear-to-r/srgb from-sky-600 via-sky-500 to-sky-700 p-5 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center text-white shadow-inner">
               <Bot className="w-5 h-5" />
@@ -104,7 +104,7 @@ export const TelegramConnectModal: React.FC<TelegramConnectModalProps> = ({ isOp
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all cursor-pointer shadow-xs"
+            className="w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-all cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-4 h-4" />

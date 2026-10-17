@@ -13,7 +13,7 @@ export const QuickActionsWidget: React.FC = () => {
   return (
     <>
       {/* Language — opposite corner from the utility actions */}
-      <aside aria-label="Language" className="fixed bottom-4 sm:bottom-6 start-4 sm:start-6 z-30" dir="ltr">
+      <aside aria-label="Language" className="fixed bottom-4 sm:bottom-6 inset-s-4 sm:inset-s-6 z-30" dir="ltr">
         <button
           type="button"
           onClick={openLanguageModal}
@@ -32,7 +32,7 @@ export const QuickActionsWidget: React.FC = () => {
       {/* Grocery & Telegram — right corner */}
       <aside
         aria-label="Quick Actions"
-        className="fixed bottom-4 sm:bottom-6 end-4 sm:end-6 z-30 flex items-center gap-2.5"
+        className="fixed bottom-4 sm:bottom-6 inset-e-4 sm:inset-e-6 z-30 flex items-center gap-2.5"
         dir="ltr"
       >
         {/* Quick Grocery List Trigger */}

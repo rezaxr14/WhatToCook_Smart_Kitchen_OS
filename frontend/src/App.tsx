@@ -33,7 +33,7 @@ const AIRecipeDetailPage = lazyPage(() => import('./pages/AIRecipeDetailPage'), 
 const AuthPage = lazyPage(() => import('./pages/AuthPage'), 'AuthPage');
 
 const RouteFallback: React.FC = () => (
-  <div role="status" aria-live="polite" aria-busy="true" className="flex justify-center py-24">
+  <div role="status"aria-live="polite"aria-busy="true" className="flex justify-center py-24">
     <div className="h-8 w-8 animate-spin rounded-full border-2 border-stone-300 border-t-brand-600" />
     <span className="sr-only">Loading…</span>
   </div>
@@ -48,9 +48,9 @@ const AppRoutes: React.FC = () => {
 
   return (
     <>
-      <div className={`min-h-screen flex flex-col bg-[#fafaf9] text-stone-900 selection:bg-brand-500 selection:text-white transition-all duration-300 ${
-        isAnyModalOpen ? 'blur-[3px] brightness-90 transition-all duration-300' : ''
-      }`}>
+      <div className={`min-h-screen flex flex-col bg-warmgray-50 text-stone-900 selection:bg-brand-500 selection:text-white transition-all duration-300 ${
+ isAnyModalOpen ? 'blur-[3px] brightness-90 transition-all duration-300' : ''
+ }`}>
       <Navbar />
       {/* The landing journey is a full-bleed cinematic experience — no page gutter (nav & footer stay for app-wide actions/language). */}
       <main className={isLanding ? 'flex-1 w-full' : 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8'}>

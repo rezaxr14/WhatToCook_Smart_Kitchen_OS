@@ -489,9 +489,9 @@ export const LandingPage: React.FC = () => {
       {/* Loading experience */}
       {!veilGone && (
         <div
-          className={`fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-[#070503] transition-opacity duration-700 ${
-            ready ? 'pointer-events-none opacity-0' : 'opacity-100'
-          }`}
+          className={`fixed inset-0 z-80 flex flex-col items-center justify-center gap-6 bg-[#070503] transition-opacity duration-700 ${
+ ready ? 'pointer-events-none opacity-0' : 'opacity-100'
+ }`}
         >
           <div className="relative flex h-20 w-20 items-center justify-center">
             <div className="absolute inset-0 animate-spin rounded-full border border-amber-200/15 border-t-amber-300/90" style={{ animationDuration: '1.1s' }} />
@@ -519,7 +519,7 @@ export const LandingPage: React.FC = () => {
             {t('story.heroKicker')}
           </div>
           <h1
-            className="mt-7 bg-gradient-to-b from-white via-amber-50 to-amber-200/70 bg-clip-text text-5xl font-black leading-[1.02] tracking-tight text-transparent sm:text-7xl lg:text-8xl"
+            className="mt-7 bg-linear-to-b/srgb from-white via-amber-50 to-amber-200/70 bg-clip-text text-5xl font-black leading-[1.02] tracking-tight text-transparent sm:text-7xl lg:text-8xl"
             style={DISPLAY_FONT}
           >
             {t('story.heroTitle')}
@@ -529,7 +529,7 @@ export const LandingPage: React.FC = () => {
             <button
               onClick={handleDemo}
               data-cursor="COOK"
-              className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-7 py-3.5 text-sm font-extrabold text-stone-950 shadow-[0_8px_40px_rgba(251,146,60,0.35)] transition-transform hover:scale-105"
+              className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r/srgb from-amber-400 to-orange-500 px-7 py-3.5 text-sm font-extrabold text-stone-950 shadow-[0_8px_40px_rgba(251,146,60,0.35)] transition-transform hover:scale-105"
             >
               <Play className="h-4 w-4 fill-stone-950" />
               {t('landing.tryDemo')}
@@ -557,7 +557,7 @@ export const LandingPage: React.FC = () => {
       </Chapter>
 
       {/* Scroll cue */}
-      <div ref={cueRef} className="pointer-events-none fixed inset-x-0 bottom-24 z-10 flex justify-center" data-chapter="cue">
+      <div ref={cueRef} className="pointer-events-none fixed inset-x-0 bottom-24 z-10 flex justify-center"data-chapter="cue">
         <button
           onClick={scrollDown}
           className="pointer-events-auto flex flex-col items-center gap-1 text-stone-400 transition-colors hover:text-amber-200"
@@ -637,7 +637,7 @@ export const LandingPage: React.FC = () => {
         {/* Desktop 3 Red Circles (hidden md:block): Positioned in the 3 circled zones, well away from edges & rail */}
 
         {/* 1. Left Circle Card (mid-left) */}
-        <div className="hidden md:block absolute left-8 lg:left-14 top-[48%] -translate-y-1/2 w-60 lg:w-68 pointer-events-auto">
+        <div className="hidden md:block absolute left-8 lg:left-14 top-[48%] -translate-y-1/2 w-60 pointer-events-auto">
           <div className="rounded-3xl border border-sky-400/30 bg-stone-950/80 p-4 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-sky-400/60 transition-all duration-300 hover:scale-[1.03]">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/15 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-sky-300 uppercase">
@@ -659,7 +659,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* 2. Bottom-Center Circle Card (lower middle) */}
-        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 bottom-20 lg:bottom-24 w-60 lg:w-68 pointer-events-auto">
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 bottom-20 lg:bottom-24 w-60 pointer-events-auto">
           <div className="rounded-3xl border border-amber-400/30 bg-stone-950/80 p-4 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-amber-400/60 transition-all duration-300 hover:scale-[1.03]">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/15 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-amber-300 uppercase">
@@ -681,7 +681,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* 3. Right Circle Card (lower-right, safely inset from right rail & buttons!) */}
-        <div className="hidden md:block absolute right-16 lg:right-24 bottom-22 lg:bottom-26 w-60 lg:w-68 pointer-events-auto">
+        <div className="hidden md:block absolute right-16 lg:right-24 w-60 pointer-events-auto">
           <div className="rounded-3xl border border-emerald-400/30 bg-stone-950/80 p-4 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-emerald-400/60 transition-all duration-300 hover:scale-[1.03]">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-emerald-300 uppercase">
@@ -762,7 +762,7 @@ export const LandingPage: React.FC = () => {
             <button
               onClick={() => navigate('/recipes')}
               data-cursor="COOK"
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-500 py-3 text-sm font-extrabold text-stone-950 transition-transform hover:scale-[1.03]"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r/srgb from-amber-400 to-orange-500 py-3 text-sm font-extrabold text-stone-950 transition-transform hover:scale-[1.03]"
             >
               {t('story.makeThis')}
               <ArrowRight className="h-4 w-4" />
@@ -782,7 +782,7 @@ export const LandingPage: React.FC = () => {
             <button
               onClick={handleDemo}
               data-cursor="COOK"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-8 py-3.5 text-sm font-extrabold text-stone-950 shadow-[0_8px_40px_rgba(251,146,60,0.4)] transition-transform hover:scale-105"
+              className="inline-flex items-center gap-2 rounded-full bg-linear-to-r/srgb from-amber-400 to-orange-500 px-8 py-3.5 text-sm font-extrabold text-stone-950 shadow-[0_8px_40px_rgba(251,146,60,0.4)] transition-transform hover:scale-105"
             >
               <Sparkles className="h-4 w-4" />
               {t('story.ctaStart')}
@@ -844,10 +844,10 @@ export const LandingPage: React.FC = () => {
                 >
                   <span
                     className={`block rounded-full transition-all duration-300 ${
-                      active
-                        ? 'h-3.5 w-3.5 bg-amber-400 ring-4 ring-amber-400/25 shadow-[0_0_14px_rgba(251,191,36,0.95)]'
-                        : 'h-2 w-2 bg-stone-500/80 group-hover:scale-125 group-hover:bg-amber-200'
-                    }`}
+ active
+ ? 'h-3.5 w-3.5 bg-amber-400 ring-4 ring-amber-400/25 shadow-[0_0_14px_rgba(251,191,36,0.95)]'
+ : 'h-2 w-2 bg-stone-500/80 group-hover:scale-125 group-hover:bg-amber-200'
+ }`}
                   />
                   <span
                     className="pointer-events-none absolute right-11 whitespace-nowrap rounded-full border border-stone-200/20 bg-stone-950/90 px-3.5 py-1.5 text-xs font-black tracking-wide text-amber-100 opacity-0 shadow-2xl backdrop-blur-md transition-all duration-200 group-hover:opacity-100 group-hover:-translate-x-1"
@@ -863,12 +863,12 @@ export const LandingPage: React.FC = () => {
           {/* Bottom control pill */}
           {(tourStatus === 'playing' || tourStatus === 'paused' || tourStatus === 'ended') && (
             <div className="fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
-              <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-stone-100/12 bg-stone-950/70 py-1.5 pl-2 pr-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+              <div className="pointer-events-auto flex items-center gap-3 rounded-full border bg-stone-950/70 py-1.5 pl-2 pr-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
                 {tourStatus === 'ended' ? (
                   <button
                     onClick={startTour}
                     data-cursor="REPLAY"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 px-4 py-2 text-xs font-extrabold text-stone-950"
+                    className="inline-flex items-center gap-2 rounded-full bg-linear-to-r/srgb from-amber-400 to-orange-500 px-4 py-2 text-xs font-extrabold text-stone-950"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
                     {t('tour.replay')}
@@ -878,7 +878,7 @@ export const LandingPage: React.FC = () => {
                     onClick={tourStatus === 'playing' ? pauseTour : resumeTour}
                     data-cursor="PLAY"
                     aria-label={tourStatus === 'playing' ? t('tour.pause') : t('tour.play')}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-stone-950 transition-transform hover:scale-105"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-linear-to-r/srgb from-amber-400 to-orange-500 text-stone-950 transition-transform hover:scale-105"
                   >
                     {tourStatus === 'playing' ? (
                       <Pause className="h-4 w-4 fill-stone-950" />
@@ -909,7 +909,7 @@ export const LandingPage: React.FC = () => {
             <div className="fixed inset-x-0 bottom-0 z-30 h-[3px] bg-stone-800/60">
               <div
                 ref={hairlineRef}
-                className="h-full bg-gradient-to-r from-amber-500 via-orange-400 to-amber-300 shadow-[0_0_12px_rgba(251,146,60,0.7)]"
+                className="h-full bg-linear-to-r/srgb from-amber-500 via-orange-400 to-amber-300 shadow-[0_0_12px_rgba(251,146,60,0.7)]"
                 style={{ width: '0%' }}
               />
             </div>

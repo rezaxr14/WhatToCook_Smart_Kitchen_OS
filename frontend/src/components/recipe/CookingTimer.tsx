@@ -92,7 +92,7 @@ export const CookingTimer: React.FC<CookingTimerProps> = ({
   const progressPercent = totalSeconds > 0 ? ((totalSeconds - timeLeft) / totalSeconds) * 100 : 100;
 
   return (
-    <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm flex flex-col items-center">
+    <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs flex flex-col items-center">
       <div className="w-full flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 text-stone-800 font-bold text-sm">
           <Flame className="w-4 h-4 text-brand-500" />

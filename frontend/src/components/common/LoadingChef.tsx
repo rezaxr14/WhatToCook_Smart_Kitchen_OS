@@ -41,7 +41,7 @@ export const LoadingChef: React.FC<LoadingChefProps> = ({ message, provider = 'g
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            className="w-24 h-24 rounded-full bg-gradient-to-tr from-brand-500 to-amber-400 flex items-center justify-center shadow-lg shadow-brand-500/30 text-white relative z-10"
+            className="w-24 h-24 rounded-full bg-linear-to-tr/srgb from-brand-500 to-amber-400 flex items-center justify-center shadow-lg shadow-brand-500/30 text-white relative z-10"
           >
             <ChefHat className="w-12 h-12" />
           </motion.div>
@@ -81,7 +81,7 @@ export const LoadingChef: React.FC<LoadingChefProps> = ({ message, provider = 'g
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -5 }}
-          className="text-stone-600 text-sm font-medium min-h-[1.5rem]"
+          className="text-stone-600 text-sm font-medium min-h-6"
         >
           {message || COOKING_STEPS[stepIndex]}
         </motion.p>
@@ -92,8 +92,8 @@ export const LoadingChef: React.FC<LoadingChefProps> = ({ message, provider = 'g
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-500 ${
-                i === stepIndex ? 'w-6 bg-brand-500' : 'w-1.5 bg-stone-200'
-              }`}
+ i === stepIndex ? 'w-6 bg-brand-500' : 'w-1.5 bg-stone-200'
+ }`}
             />
           ))}
         </div>

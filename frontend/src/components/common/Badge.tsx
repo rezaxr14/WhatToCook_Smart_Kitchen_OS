@@ -28,7 +28,7 @@ export const Badge: React.FC<BadgeProps> = ({
       case 'rose':
         return 'bg-rose-50 text-rose-700 border-rose-200';
       case 'gemini':
-        return 'bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 text-indigo-700 border-indigo-200 font-medium';
+        return 'bg-linear-to-r/srgb from-blue-500/10 via-indigo-500/10 to-purple-500/10 text-indigo-700 border-indigo-200 font-medium';
       case 'neutral':
         return 'bg-stone-100 text-stone-700 border-stone-200';
       case 'orange':
@@ -41,9 +41,9 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded-full border shadow-sm ${getStyles()} ${sizeStyles} ${className}`}
+      className={`inline-flex items-center gap-1.5 font-medium rounded-full border shadow-xs ${getStyles()} ${sizeStyles} ${className}`}
     >
-      {icon && <span className="flex-shrink-0">{icon}</span>}
+      {icon && <span className="shrink-0">{icon}</span>}
       {children}
     </span>
   );

@@ -170,7 +170,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
           onClose();
         }
       }}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-9999 flex items-center justify-center p-4 bg-stone-950/75 backdrop-blur-md overflow-y-auto"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -179,7 +179,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
         className="relative w-full max-w-2xl bg-white rounded-3xl border border-stone-200 shadow-2xl overflow-hidden my-auto"
       >
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-950 p-6 text-white flex items-center justify-between">
+        <div className="bg-linear-to-r/srgb from-stone-900 via-stone-850 to-stone-950 p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <Camera className="w-5 h-5" />
@@ -187,7 +187,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-lg text-white">AI Fridge & Counter Scanner</h3>
-                <span className="bg-gradient-to-r from-brand-400 to-amber-400 text-stone-950 font-extrabold text-[10px] uppercase px-2 py-0.5 rounded-full">
+                <span className="bg-linear-to-r/srgb from-brand-400 to-amber-400 text-stone-950 font-extrabold text-[10px] uppercase px-2 py-0.5 rounded-full">
                   AI Vision
                 </span>
               </div>
@@ -217,7 +217,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                 onClick={() => fileInputRef.current?.click()}
                 className="group border-2 border-dashed border-stone-300 hover:border-brand-500 rounded-3xl p-8 text-center cursor-pointer transition-all bg-stone-50 hover:bg-brand-50/30 flex flex-col items-center justify-center space-y-3"
               >
-                <div className="w-16 h-16 rounded-2xl bg-brand-100 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors shadow-sm">
+                <div className="w-16 h-16 rounded-2xl bg-brand-100 group-hover:bg-brand-500 text-brand-600 group-hover:text-white flex items-center justify-center transition-colors shadow-xs">
                   <Upload className="w-8 h-8" />
                 </div>
                 <div>
@@ -312,8 +312,8 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                   src={previewUrl}
                   alt="Scanned item"
                   className={`w-full h-full object-cover transition-opacity duration-300 ${
-                    isScanning ? 'opacity-80' : 'opacity-100'
-                  }`}
+ isScanning ? 'opacity-80' : 'opacity-100'
+ }`}
                 />
 
                 {/* Animated Scanning Laser Line */}
@@ -322,7 +322,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                     initial={{ top: '0%' }}
                     animate={{ top: ['0%', '95%', '0%'] }}
                     transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-                    className="absolute left-0 right-0 h-1 bg-gradient-to-r from-brand-500 via-amber-400 to-brand-500 shadow-[0_0_15px_#f97316] z-20 pointer-events-none"
+                    className="absolute left-0 right-0 h-1 bg-linear-to-r/srgb from-brand-500 via-amber-400 to-brand-500 shadow-[0_0_15px_#f97316] z-20 pointer-events-none"
                   />
                 )}
 
@@ -406,18 +406,18 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                           key={idx}
                           onClick={() => toggleSelect(item.name)}
                           className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                            isChecked
-                              ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-sm'
-                              : 'bg-stone-50 border-stone-200 text-stone-500 opacity-60'
-                          }`}
+ isChecked
+ ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-xs'
+ : 'bg-stone-50 border-stone-200 text-stone-500 opacity-60'
+ }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div
                               className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
-                                isChecked
-                                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                                  : 'bg-white border-stone-300'
-                              }`}
+ isChecked
+ ? 'bg-emerald-600 border-emerald-600 text-white'
+ : 'bg-white border-stone-300'
+ }`}
                             >
                               {isChecked && <Check className="w-3.5 h-3.5" />}
                             </div>
@@ -431,7 +431,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                             </div>
                           </div>
 
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex-shrink-0">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
                             {Math.round(item.confidence * 100)}%
                           </span>
                         </div>

@@ -176,9 +176,9 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
   return (
     <section className="mt-12 rounded-3xl bg-white border border-stone-200/90 shadow-xl overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3 border-b border-stone-800">
+      <div className="bg-linear-to-r/srgb from-stone-900 via-stone-850 to-stone-900 px-6 py-4 text-white flex flex-wrap items-center justify-between gap-3 border-b border-stone-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-400 to-brand-500 flex items-center justify-center shadow-md">
+          <div className="w-10 h-10 rounded-2xl bg-linear-to-br/srgb from-amber-400 to-brand-500 flex items-center justify-center shadow-md">
             <ChefHat className="w-5 h-5 text-stone-950" />
           </div>
           <div>
@@ -213,7 +213,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
       </div>
 
       {/* Preset suggestion pills */}
-      <div className="bg-stone-50/80 px-6 py-2.5 border-b border-stone-200/80 flex items-center gap-2 overflow-x-auto scrollbar-none">
+      <div className="bg-stone-50/80 px-6 py-2.5 border-b border-stone-200/80 flex items-center gap-2 overflow-x-auto">
         <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
           <MessageSquare className="w-3 h-3 text-stone-400" /> Quick Ask:
         </span>
@@ -224,7 +224,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
               type="button"
               disabled={isLoading}
               onClick={() => handleSendMessage(q)}
-              className="text-xs font-semibold px-3 py-1 rounded-full bg-white hover:bg-amber-50 text-stone-700 hover:text-amber-900 border border-stone-200/90 shadow-2xs transition-all whitespace-nowrap cursor-pointer hover:border-amber-300 disabled:opacity-50"
+              className="text-xs font-semibold px-3 py-1 rounded-full bg-white hover:bg-amber-50 text-stone-700 hover:text-amber-900 border border-stone-200/90 transition-all whitespace-nowrap cursor-pointer hover:border-amber-300 disabled:opacity-50"
             >
               {q}
             </button>
@@ -243,22 +243,22 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
             >
               {/* Avatar */}
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold shadow-2xs ${
-                  isUser
-                    ? 'bg-stone-900 text-amber-400'
-                    : 'bg-amber-100 text-stone-900 border border-amber-300'
-                }`}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold ${
+ isUser
+ ? 'bg-stone-900 text-amber-400'
+ : 'bg-amber-100 text-stone-900 border border-amber-300'
+ }`}
               >
                 {isUser ? 'You' : <ChefHat className="w-4 h-4 text-stone-800" />}
               </div>
 
               {/* Message Bubble */}
               <div
-                className={`max-w-[82%] rounded-2xl p-4 shadow-2xs ${
-                  isUser
-                    ? 'bg-gradient-to-r from-stone-900 to-stone-800 text-white rounded-tr-xs'
-                    : 'bg-white border border-stone-200/90 text-stone-800 rounded-tl-xs'
-                }`}
+                className={`max-w-[82%] rounded-2xl p-4 ${
+ isUser
+ ? 'bg-linear-to-r/srgb from-stone-900 to-stone-800 text-white'
+ : 'bg-white border border-stone-200/90 text-stone-800'
+ }`}
               >
                 {isUser ? (
                   <p className="text-sm font-medium leading-relaxed">{m.content}</p>
@@ -268,8 +268,8 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
 
                 <div
                   className={`mt-2 flex items-center justify-between text-[10px] font-mono ${
-                    isUser ? 'text-stone-400' : 'text-stone-400'
-                  }`}
+ isUser ? 'text-stone-400' : 'text-stone-400'
+ }`}
                 >
                   <span>{m.timestamp}</span>
                   {m.modelUsed && (
@@ -284,10 +284,10 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
         {/* Loading indicator */}
         {isLoading && (
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center flex-shrink-0 animate-bounce">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 animate-bounce">
               <ChefHat className="w-4 h-4 text-stone-800" />
             </div>
-            <div className="bg-white border border-stone-200/90 rounded-2xl rounded-tl-xs p-4 shadow-2xs flex items-center gap-2">
+            <div className="bg-white border border-stone-200/90 rounded-2xl p-4 flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse delay-150" />
               <div className="w-2 h-2 rounded-full bg-stone-700 animate-pulse delay-300" />
@@ -304,7 +304,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
       {/* Error alert */}
       {chatError && (
         <div className="px-6 py-2 bg-red-50 border-t border-red-200 text-red-700 text-xs flex items-center gap-2">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           <span>{chatError}</span>
         </div>
       )}
@@ -322,7 +322,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder={`Ask anything about ${recipeName} (e.g., 'What can I substitute for garlic?')...`}
-          className="flex-1 bg-stone-100/80 hover:bg-stone-100 focus:bg-white text-stone-900 text-sm rounded-2xl px-4 py-3 border border-stone-200 focus:border-stone-400 focus:outline-none transition-all placeholder:text-stone-400"
+          className="flex-1 bg-stone-100/80 hover:bg-stone-100 focus:bg-white text-stone-900 text-sm rounded-2xl px-4 py-3 border border-stone-200 focus:border-stone-400 focus:outline-hidden transition-all placeholder:text-stone-400"
           disabled={isLoading}
         />
         <button

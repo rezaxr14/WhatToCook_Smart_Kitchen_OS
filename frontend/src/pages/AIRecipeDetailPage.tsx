@@ -116,11 +116,11 @@ export const AIRecipeDetailPage: React.FC = () => {
             (e.target as HTMLImageElement).src = getDishImageUrl(recipe.name);
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-950 via-stone-950/60 to-transparent" />
 
         <div className="relative z-10 space-y-4 max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="bg-amber-500/90 text-stone-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+            <span className="bg-amber-500/90 text-stone-950 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-xs">
               <Sparkles className="w-3.5 h-3.5" />
               <span>AI Master Chef Recipe</span>
             </span>
@@ -149,19 +149,19 @@ export const AIRecipeDetailPage: React.FC = () => {
       {/* Nutrition Macro Bar */}
       {recipe.nutrition && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm text-center">
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center">
             <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Calories</div>
             <div className="text-xl font-extrabold text-stone-900 mt-1">{recipe.nutrition.calories || '350 kcal'}</div>
           </div>
-          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm text-center">
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center">
             <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Protein</div>
             <div className="text-xl font-extrabold text-emerald-600 mt-1">{recipe.nutrition.protein || '24g'}</div>
           </div>
-          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm text-center">
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center">
             <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Carbs</div>
             <div className="text-xl font-extrabold text-amber-600 mt-1">{recipe.nutrition.carbs || '38g'}</div>
           </div>
-          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-sm text-center">
+          <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs text-center">
             <div className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Fats</div>
             <div className="text-xl font-extrabold text-orange-600 mt-1">{recipe.nutrition.fat || '12g'}</div>
           </div>
@@ -172,7 +172,7 @@ export const AIRecipeDetailPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Ingredients Checklist */}
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-sm space-y-4 sticky top-24">
+          <div className="bg-white rounded-3xl p-6 border border-stone-200 shadow-xs space-y-4 sticky top-24">
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-stone-900 text-lg flex items-center gap-2">
                 <ChefHat className="w-5 h-5 text-brand-500" />
@@ -212,10 +212,10 @@ export const AIRecipeDetailPage: React.FC = () => {
                   <div
                     key={idx}
                     className={`w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                      isChecked
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
-                        : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
-                    }`}
+ isChecked
+ ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
+ : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
+ }`}
                   >
                     <button
                       onClick={() => toggleIngredient(ing.name)}
@@ -223,10 +223,10 @@ export const AIRecipeDetailPage: React.FC = () => {
                     >
                       <div
                         className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
-                          isChecked
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
-                            : 'bg-white border-stone-300'
-                        }`}
+ isChecked
+ ? 'bg-emerald-600 border-emerald-600 text-white'
+ : 'bg-white border-stone-300'
+ }`}
                       >
                         {isChecked && <Check className="w-3.5 h-3.5" />}
                       </div>
@@ -235,7 +235,7 @@ export const AIRecipeDetailPage: React.FC = () => {
                       </span>
                     </button>
 
-                    <div className="flex items-center gap-2 text-xs text-stone-500 flex-shrink-0">
+                    <div className="flex items-center gap-2 text-xs text-stone-500 shrink-0">
                       <span className="font-mono font-bold text-stone-700">
                         {scaledAmount} {ing.unit}
                       </span>
@@ -264,7 +264,7 @@ export const AIRecipeDetailPage: React.FC = () => {
 
         {/* Step-by-Step Culinary Method */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-extrabold text-stone-900 flex items-center gap-2">
                 <Sparkles className="w-6 h-6 text-brand-500" />
@@ -287,18 +287,18 @@ export const AIRecipeDetailPage: React.FC = () => {
                     key={idx}
                     onClick={() => toggleStep(idx)}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer space-y-3 ${
-                      isDone
-                        ? 'bg-emerald-50/60 border-emerald-200 opacity-75'
-                        : 'bg-stone-50/60 border-stone-200 hover:border-brand-300 hover:bg-white'
-                    }`}
+ isDone
+ ? 'bg-emerald-50/60 border-emerald-200 opacity-75'
+ : 'bg-stone-50/60 border-stone-200 hover:border-brand-300 hover:bg-white'
+ }`}
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0 ${
-                          isDone
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-gradient-to-tr from-brand-500 to-amber-500 text-white shadow-sm'
-                        }`}
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+ isDone
+ ? 'bg-emerald-600 text-white'
+ : 'bg-linear-to-tr/srgb from-brand-500 to-amber-500 text-white shadow-xs'
+ }`}
                       >
                         {isDone ? <Check className="w-4 h-4" /> : idx + 1}
                       </div>
@@ -320,7 +320,7 @@ export const AIRecipeDetailPage: React.FC = () => {
                     {/* Master Chef Secret Tip */}
                     {chefTip && (
                       <div className="ml-12 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2">
-                        <Lightbulb className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                         <div>
                           <strong className="font-bold">Chef's Secret: </strong>
                           <span>{chefTip}</span>

@@ -47,7 +47,7 @@ export const AuthPage: React.FC = () => {
       <StyledCard className="p-8 bg-white border border-stone-200 shadow-xl space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-amber-400 flex items-center justify-center text-white mx-auto shadow-md shadow-brand-500/30">
+          <div className="w-14 h-14 rounded-2xl bg-linear-to-tr/srgb from-brand-600 to-amber-400 flex items-center justify-center text-white mx-auto shadow-md shadow-brand-500/30">
             <ChefHat className="w-8 h-8" />
           </div>
           <h2 className="text-2xl font-extrabold text-stone-900 tracking-tight">
@@ -65,16 +65,16 @@ export const AuthPage: React.FC = () => {
           type="button"
           onClick={handleDemo}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-brand-500/10 to-orange-500/10 border border-amber-300 text-stone-800 font-bold text-sm hover:border-brand-500 transition-all shadow-sm group"
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-linear-to-r/srgb from-amber-500/10 via-brand-500/10 to-orange-500/10 border border-amber-300 text-stone-800 font-bold text-sm hover:border-brand-500 transition-all shadow-xs group"
         >
           <Zap className="w-4 h-4 text-amber-600 fill-amber-500 group-hover:scale-110 transition-transform" />
           <span>{t('auth.guestDemo')}</span>
         </button>
 
         <div className="relative flex py-1 items-center">
-          <div className="flex-grow border-t border-stone-200"></div>
-          <span className="flex-shrink mx-4 text-xs uppercase font-bold text-stone-400">{t('auth.orWithAccount')}</span>
-          <div className="flex-grow border-t border-stone-200"></div>
+          <div className="grow border-t border-stone-200"></div>
+          <span className="shrink mx-4 text-xs uppercase font-bold text-stone-400">{t('auth.orWithAccount')}</span>
+          <div className="grow border-t border-stone-200"></div>
         </div>
 
         {/* Tabs */}
@@ -83,8 +83,8 @@ export const AuthPage: React.FC = () => {
             type="button"
             onClick={() => setMode('login')}
             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              mode === 'login' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'
-            }`}
+ mode === 'login' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 hover:text-stone-900'
+ }`}
           >
             {t('auth.signInTab')}
           </button>
@@ -92,8 +92,8 @@ export const AuthPage: React.FC = () => {
             type="button"
             onClick={() => setMode('signup')}
             className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              mode === 'signup' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-900'
-            }`}
+ mode === 'signup' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-500 hover:text-stone-900'
+ }`}
           >
             {t('auth.createAccountTab')}
           </button>
@@ -116,7 +116,7 @@ export const AuthPage: React.FC = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t('auth.usernamePlaceholder')}
-              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
 
@@ -130,7 +130,7 @@ export const AuthPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="chef@example.com"
-                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+                className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
           )}
@@ -143,7 +143,7 @@ export const AuthPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
+              className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
 
