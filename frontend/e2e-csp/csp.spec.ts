@@ -79,7 +79,11 @@ test('web fonts are activated without an inline onload handler', async ({ page }
   expect(await violations(page)).toEqual([]);
 });
 
-for (const path of ['/recipes', '/can-cook', '/pantry', '/ai-chef', '/auth', '/definitely-not-a-route']) {
+// Deep links are loaded with page.goto (a full document request), which also guards the dev/preview proxy
+// from swallowing SPA routes: Vite proxies by path *prefix*, and a bare '/ai' once hijacked '/ai-chef'.
+const ROUTES = ['/recipes', '/recipe/1', '/can-cook', '/pantry', '/ai-chef', '/ai', '/aichef', '/auth', '/definitely-not-a-route'];
+
+for (const path of ROUTES) {
   test(`route ${path} renders without violations`, async ({ page }) => {
     await page.goto(path);
     await page.waitForLoadState('networkidle');
