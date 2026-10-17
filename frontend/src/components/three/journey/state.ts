@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 
 /**
  * Shared scroll state for the landing journey. The page scroll handler in
@@ -17,7 +16,15 @@ export const pointer = {
 };
 
 /** Smooth 0..1 ramp of p between a..b. */
-export const seg = (p: number, a: number, b: number): number => THREE.MathUtils.smoothstep(p, a, b);
+export const seg = (p: number, a: number, b: number): number => {
+  // Same maths as THREE.MathUtils.smoothstep. Inlined on purpose: this module is imported eagerly by the landing
+  // page, and `import * as THREE` here pulled ~360 kB of three into the entry chunk of EVERY route even though
+  // the 3D scene itself is lazy-loaded. Keep three out of anything the entry chunk imports.
+  if (p <= a) return 0;
+  if (p >= b) return 1;
+  const x = (p - a) / (b - a);
+  return x * x * (3 - 2 * x);
+};
 
 /** Window ramp: 0 → 1 between a..b, 1 → 0 between c..d. */
 export const win = (p: number, a: number, b: number, c: number, d: number): number =>
