@@ -85,7 +85,7 @@ Scrolling the landing page tells the whole story in eight chapters: open the fri
 
 ```
 WhatToCook Ecosystem
-├── 🌐 React 18 + TypeScript + TailwindCSS + TanStack Query Frontend (Vite)
+├── 🌐 React 18 + TypeScript + Tailwind CSS 4 + TanStack Query Frontend (Vite)
 │   └── 🧊 React Three Fiber 3D hero · react-i18next (EN/TR/FA/AR/ES + RTL) · PWA
 ├── 🛡️ nginx reverse proxy → serves the SPA build, proxies /api /admin /static /media /legacy
 ├── ⚡ Django 5.2 REST Framework API Backend (Python 3.11, gunicorn + WhiteNoise)
@@ -226,6 +226,7 @@ npm run build          # typecheck + vite build
 npm run test:e2e       # starts Vite automatically; backend on :8000 required
 npm run test:e2e:csp   # builds + serves the bundle with the real CSP; fails on any violation
 npm run check:bundle   # after `npm run build`: bundle budget (initial graph, per-chunk limits, no three.js up front)
+npm run test:visual    # full-page screenshots of the main pages (CI diffs main vs the PR: .github/workflows/visual.yml)
 # refresh the journey screenshots in docs/screenshots (dev servers running):
 node scripts/recapture-journey.cjs && node scripts/recapture-landing.cjs
 ```
@@ -319,7 +320,7 @@ Dependabot keeps pip, npm, GitHub Actions and Docker base images current.
 
 **Developer tooling:** `make help` lists the common tasks (`make test`, `make cov`, `make smoke`, `make drill`, …); `pre-commit install` adds the same lint gate locally; [`AGENTS.md`](AGENTS.md) documents the invariants and what CI proves (read it before changing queues, compose, k8s or secrets); [`docs/ROADMAP.md`](docs/ROADMAP.md) lists what to build next.
 Container-image vulnerability scanning is intentionally not wired through a third-party action (the `trivy-action` tags were hijacked in March 2026); if you add one, pin it to a full commit SHA.
-Known gap: Tailwind 3's build-time toolchain carries `npm audit` highs (dev-only, not shipped); a Tailwind 4 migration clears them.
+Frontend `npm audit` (dev dependencies included) has no highs since the Tailwind 4 migration. Two *moderate* `react-router` advisories remain (open redirect via backslash in `<Link>`/`useNavigate`); the fix only exists in React Router 7 (roadmap item 11).
 
 ## 🛡️ Production hardening
 

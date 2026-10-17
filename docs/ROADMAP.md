@@ -29,7 +29,18 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    vendor chunk (~920 kB, only loaded by the landing scene) has a documented 1,000 kB budget; `npm run check:bundle` (CI + `make web`) holds every
    other chunk to 300 kB and the initial graph to 220 kB gz, and fails if three appears up front. Not done: prefetching route chunks on hover,
    an error boundary for a chunk that stays unreachable (offline) - today that shows a blank page, as the lazy 3D scene already did.
-5. **Tailwind 3 → 4.** Clears the dev-only `npm audit` highs. *Done when* `npm audit --audit-level=high` (including dev) is clean, e2e is green, and screenshots of the main pages are compared.
+5. ~~**Tailwind 3 → 4.**~~ **Done** (pending CI on the PR): `npm audit --audit-level=high` including dev dependencies now exits 0 (9 findings → 2 moderate;
+   all 5 highs hung off the `tailwindcss@3` chain). Migrated with the official upgrade tool, then audited, because it is not trustworthy on its own:
+   it rewrote the `outline` *variant name* in `StyledButton.tsx` (a string, not a class; reverted - `tsc` caught it) and renamed 5 classes that were dead in v3.
+   Parity work: compared the generated class sets (no utility silently dropped), re-added v3's button cursor and gray-400 placeholder in `@layer base`
+   (`e2e-csp/styles.spec.ts`), pinned 39 gradients to sRGB (`/srgb`; v4 defaults to oklab), checked no element combines a Tailwind transform with a JS
+   transform (v4 composes them), and verified the lockfile has the musl native binaries the `node:20-alpine` image needs.
+   **Deliberately NOT activated** - these classes were silently dead in v3 (many are v4 vocabulary) and would change rendering the moment v4 honours them;
+   removed to keep parity, decide per item whether to re-add: `shadow-2xs` (18 places), `scrollbar-none` (3: IngredientPicker, RecipeChatBox, RecipeFilter),
+   `scrollbar-thin` (AIProviderSwitcher), `rounded-tl-xs`/`rounded-tr-xs` (RecipeChatBox bubble corners), `group-hover:scale-108` (IngredientPicker, PantryShelf),
+   `bottom-22 lg:bottom-26` and `lg:w-68` (LandingPage floating cards), `border-stone-100/12` (LandingPage pill).
+   Screenshots: `visual.yml` renders `main` and the PR with the same Playwright script and posts a per-page diff table + diff images (informational;
+   set `VISUAL_FAIL_ABOVE_PCT` to gate). Known, expected change: `space-x-*`/`divide-*` now use logical margins, so RTL (fa/ar) rows gain their gap.
 
 ## Later
 6. **Grafana** in the compose `monitoring` profile (provisioned Prometheus datasource + a dashboard: request rate/p95/5xx from `django_http_*`, RabbitMQ queue depth, Flower task metrics) and a k8s optional manifest. *Done when* `compose-smoke.sh` checks Grafana health + datasource.
@@ -37,3 +48,4 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
 8. **Supply chain:** SBOM (`docker buildx --sbom`), keyless image signing (cosign) in `release.yml`, pin every action by SHA, image vulnerability scan with a SHA-pinned scanner.
 9. **Load/soak:** nightly k6 against the compose stack with thresholds (p95 latency, error rate) and a check that the `ai` queue drains.
 10. **GitOps:** Argo CD/Flux pointing at `k8s/overlays/prod`, image tag bumps from `release.yml`; multi-arch (arm64) images.
+11. **React Router 6 → 7.** `npm audit` reports two moderate advisories in production dependencies (`react-router`, `react-router-dom`: open redirect via backslash in `<Link>`/`useNavigate`, CVE-2025-68470 bypass); the fix exists only in v7. *Done when* `npm audit` is fully clean and e2e + `e2e-csp` are green.
