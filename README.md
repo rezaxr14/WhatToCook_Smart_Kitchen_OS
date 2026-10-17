@@ -217,12 +217,14 @@ Target: **100% passing tests** covering:
   (`tests/test_throttling.py`)
 
 Frontend production build + end-to-end Playwright suite (23 tests across the 3D
-landing journey, full user flows, i18n/RTL and responsive viewports):
+landing journey, full user flows, i18n/RTL and responsive viewports), plus 11 CSP
+tests that run the production build under nginx's exact Content-Security-Policy:
 
 ```bash
 cd frontend
 npm run build          # typecheck + vite build
 npm run test:e2e       # starts Vite automatically; backend on :8000 required
+npm run test:e2e:csp   # builds + serves the bundle with the real CSP; fails on any violation
 # refresh the journey screenshots in docs/screenshots (dev servers running):
 node scripts/recapture-journey.cjs && node scripts/recapture-landing.cjs
 ```
@@ -325,6 +327,14 @@ buckets and `Retry-After` responses — see `GetFood/rate_limits.py` (rates
 tunable via env), `GetFood/throttles.py`, and `WhatToCook/settings.py`
 (`USE_RATE_LIMITS=1` enables; on by default). Cache uses a local in-memory
 backend when Redis is absent.
+
+**Security headers** (`frontend/nginx.conf` + `frontend/nginx/*.conf`): every response
+carries `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`
+and a `Content-Security-Policy`. The React app gets a strict CSP (`script-src 'self'`, no inline
+scripts, only Google Fonts and Unsplash as external origins); Django-rendered pages
+(`/admin/`, `/legacy/`, `/api/docs/`) get a baseline CSP; `/media/` is sandboxed. Check any
+deployment with `bash scripts/check-security-headers.sh https://your-host`. HSTS is left to the TLS
+terminator (Django sends it when `SECURE_HSTS` is on behind HTTPS).
 
 ## 🖼️ Curated dish photography
 

@@ -16,7 +16,12 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    `/api/schema/` and `/api/docs/`; all 30 function views annotated (shapes live in `GetFood/api_schemas.py`); `/legacy/` aliases excluded.
    `ci.yml` runs `spectacular --validate --fail-on-warn`; `tests/test_openapi.py` asserts the AI endpoints are listed and every `api/` route is documented.
    Note for item 3: the Swagger UI page uses inline scripts, so the CSP needs an exception (or a nonce) for `/api/docs/`.
-3. **Security headers.** CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` in `frontend/nginx.conf` (check the 3D scene, fonts and Gemini-less flows still work). *Done when* `smoke.yml` curls the headers and `e2e.yml` stays green.
+3. ~~**Security headers.**~~ **Done** (pending CI on the PR): `frontend/nginx.conf` + `frontend/nginx/*.conf` send nosniff, Referrer-Policy,
+   X-Frame-Options, Permissions-Policy and a CSP on every location (strict for the SPA, baseline for Django pages, sandboxed `/media/`).
+   Found and fixed while auditing: the inline `onload` font trick (fonts would have stayed `media=print`) and the scanner's sample-photo
+   `fetch()` to Unsplash (needs `connect-src`). `smoke.yml` runs `scripts/check-security-headers.sh`; `e2e.yml` also runs `npm run test:e2e:csp`
+   (production build under the real CSP, since the main e2e uses the Vite dev server which has no CSP). Not done on purpose: HSTS (TLS
+   terminator's job), `style-src` without `'unsafe-inline'` (React/framer-motion/drei write inline styles), strict CSP on Django pages.
 4. **Frontend bundle.** The main chunk is ~1.06 MB (Vite warns >500 kB): route-level `React.lazy` + `manualChunks` for `three`/react. *Done when* the build has no chunk warning (or a documented budget) and e2e is green.
 5. **Tailwind 3 → 4.** Clears the dev-only `npm audit` highs. *Done when* `npm audit --audit-level=high` (including dev) is clean, e2e is green, and screenshots of the main pages are compared.
 

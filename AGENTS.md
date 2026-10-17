@@ -11,7 +11,8 @@ merge). Push a branch/PR and read the jobs; don't spend hours fighting a local D
 | You changed | Run locally (fast) | CI proves it |
 |---|---|---|
 | Python / API | `make test` · `make lint` · `make cov` | `ci.yml` lint, backend (SQLite **and** Postgres), coverage gate |
-| Frontend | `make web` | `ci.yml` frontend, `e2e.yml` (Playwright) |
+| Frontend | `make web` | `ci.yml` frontend, `e2e.yml` (Playwright, incl. the CSP suite on the production build) |
+| nginx headers / CSP (`frontend/nginx*`) | `bash scripts/check-security-headers.sh <url>` against any nginx | `smoke.yml` → `compose-smoke.sh` (curls every header), `e2e.yml` (`test:e2e:csp`) |
 | Compose / entrypoint / Dockerfile | `docker compose config -q` | `smoke.yml` → `scripts/compose-smoke.sh`, `ci.yml` docker build |
 | `k8s/**` | `make k8s-render` | `ci.yml` kubeconform (incl. CRDs), `smoke.yml` → kind |
 | Backups / DB | `make drill` (needs Postgres env) | `ci.yml` backup/restore drill |
@@ -24,6 +25,7 @@ merge). Push a branch/PR and read the jobs; don't spend hours fighting a local D
 - **AI fallbacks are never cached** (`ai_cache.is_degraded`). The Celery task *returns its recipes*, so the status endpoint works even when nothing is cached. Failed tasks → `status: "error"` (no exception text to clients).
 - **Anonymous visitors act as `ChefDemo`** (`DEMO_USERNAME`, `_guest_user()`), never `User.objects.first()`.
 - **Shopping lists are owner-scoped.** Rows belong to a user or to one anonymous *session* (`_shopping_scope`/`_shopping_qs` in `views.py`); never look rows up by id alone and never add a shared fallback bucket. API errors never echo exception text (log it instead).
+- **Security headers live in nginx only.** `frontend/nginx.conf` includes `nginx/security-headers.conf` plus exactly one CSP snippet **in every location** (nginx drops inherited `add_header` as soon as a location declares its own), and proxied locations include `hide-upstream-security-headers.conf` so Django's copies aren't sent twice. The SPA's strict CSP (`nginx/csp-spa.conf`, one `add_header` line) is read by `vite preview`; `npm run test:e2e:csp` fails on any violation. A new external origin (font, image, `fetch`) must be added to that file; never add inline scripts or `on*=` handlers. Django-rendered pages (`/admin/`, `/legacy/`, `/api/docs/`) get only the baseline CSP because they rely on inline scripts.
 - **Secrets.** With `DEBUG=false` the app refuses placeholder/short `SECRET_KEY` and well-known Postgres passwords (`settings.py`). `.env` is optional locally; every setting has a working default.
 - **Containers run as uid 10001.** Never use `healthcheck: disable: true` in compose: newer Compose releases fail `up --wait` ("has no healthcheck configured"). Give each role a real check; the PID-1 checks (beat, bot) depend on the entrypoint `exec`-ing the process (idle bot stays the entrypoint shell and traps SIGTERM).
 - **Boot safety.** `bootstrap_db` migrates + seeds under a Postgres advisory lock so replicas can start together. Don't reintroduce a bare `migrate` in entrypoints.
