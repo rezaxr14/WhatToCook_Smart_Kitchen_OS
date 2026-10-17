@@ -4,9 +4,11 @@ import react from '@vitejs/plugin-react';
 
 const backendTarget = process.env.VITE_BACKEND_URL || 'http://127.0.0.1:8000';
 
-// Same-origin backend routes (nginx does this in production, see nginx.conf).
+// Same-origin backend routes (nginx does this in production, see nginx.conf). Vite matches proxy keys as
+// string *prefixes*: a bare '/ai' also swallowed the SPA route /ai-chef (hard refresh -> Django 404), and the
+// backend has no root-level /ai/ route anyway, so it is not proxied.
 const proxy = Object.fromEntries(
-  ['/api', '/media', '/ai', '/legacy'].map((path) => [
+  ['/api', '/media', '/legacy'].map((path) => [
     path,
     { target: backendTarget, changeOrigin: true, secure: false },
   ])
