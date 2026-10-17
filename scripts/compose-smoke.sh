@@ -40,6 +40,8 @@ grep -q "beat: Starting" <<<"$beat_log" && ok "celery beat started" || { echo "$
 docker compose exec -T web sh -c 'touch /app/media/.write-test && rm /app/media/.write-test' && ok "media volume writable by the non-root user" \
   || fail "media volume not writable (volume created by an older root-owned image? run: docker compose run --rm --user root --entrypoint chown web -R 10001:10001 /app/media)"
 
+bash scripts/check-security-headers.sh "${FRONT_URL:-http://localhost:4173}"
+
 echo "▶ optional monitoring profile"
 docker compose --profile monitoring up -d --wait --wait-timeout 120
 curl -fsS http://localhost:9090/-/ready >/dev/null && ok "Prometheus ready (http://localhost:9090)" || fail "Prometheus not ready"

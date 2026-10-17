@@ -1,6 +1,7 @@
 name: E2E (Playwright)
 
-# Boots Chromium + the Django API (SQLite, seeded) and runs the 23 Playwright tests.
+# Boots Chromium + the Django API (SQLite, seeded) and runs the 23 Playwright tests (Vite dev server),
+# then the CSP suite (frontend/e2e-csp) against the production build with nginx's exact Content-Security-Policy.
 # On pushes, PRs, nightly (catches upstream drift) and on demand.
 on:
   push:
@@ -51,6 +52,9 @@ jobs:
       - name: Run Playwright (starts Vite itself)
         working-directory: frontend
         run: npm run test:e2e
+      - name: Playwright against the production build under the real CSP
+        working-directory: frontend
+        run: npm run test:e2e:csp
       - name: API log
         if: failure()
         run: cat api.log
