@@ -48,9 +48,9 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def _get_resolved_image(self, obj):
         if obj.image and hasattr(obj.image, "url") and obj.image.name:
-            request = self.context.get("request")
-            if request:
-                return request.build_absolute_uri(obj.image.url)
+            # A same-origin path ("/media/..."), never an absolute URL: that would be built from the request's
+            # Host, which proxies rewrite (Vite changeOrigin) or strip the port from (nginx $host), and the
+            # SPA's CSP (img-src 'self') would then block the image.
             return obj.image.url
         return find_best_image(obj.name)
 
