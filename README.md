@@ -217,14 +217,15 @@ Target: **100% passing tests** covering:
   (`tests/test_throttling.py`)
 
 Frontend production build + end-to-end Playwright suite (23 tests across the 3D
-landing journey, full user flows, i18n/RTL and responsive viewports), plus 11 CSP
-tests that run the production build under nginx's exact Content-Security-Policy:
+landing journey, full user flows, i18n/RTL and responsive viewports), plus a CSP
+suite (production build under nginx's exact Content-Security-Policy, plus lazy-chunk recovery):
 
 ```bash
 cd frontend
 npm run build          # typecheck + vite build
 npm run test:e2e       # starts Vite automatically; backend on :8000 required
 npm run test:e2e:csp   # builds + serves the bundle with the real CSP; fails on any violation
+npm run check:bundle   # after `npm run build`: bundle budget (initial graph, per-chunk limits, no three.js up front)
 # refresh the journey screenshots in docs/screenshots (dev servers running):
 node scripts/recapture-journey.cjs && node scripts/recapture-landing.cjs
 ```

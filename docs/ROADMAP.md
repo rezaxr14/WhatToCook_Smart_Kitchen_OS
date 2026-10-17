@@ -22,7 +22,13 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    `fetch()` to Unsplash (needs `connect-src`). `smoke.yml` runs `scripts/check-security-headers.sh`; `e2e.yml` also runs `npm run test:e2e:csp`
    (production build under the real CSP, since the main e2e uses the Vite dev server which has no CSP). Not done on purpose: HSTS (TLS
    terminator's job), `style-src` without `'unsafe-inline'` (React/framer-motion/drei write inline styles), strict CSP on Django pages.
-4. **Frontend bundle.** The main chunk is ~1.06 MB (Vite warns >500 kB): route-level `React.lazy` + `manualChunks` for `three`/react. *Done when* the build has no chunk warning (or a documented budget) and e2e is green.
+4. ~~**Frontend bundle.**~~ **Done** (pending CI on the PR): entry chunk 1,060 kB (313 kB gz) → 208 kB (66 kB gz); critical path (entry + modulepreloads)
+   is 190 kB gz. Root cause was one `import * as THREE` in `journey/state.ts` (eagerly imported by the landing page) putting ~360 kB of three into
+   every route; fixed by inlining `smoothstep` (verified identical to three's on 200k cases). Also: 7 pages `React.lazy`, `manualChunks`
+   (react / motion / i18n / query / three), a one-time reload on `vite:preloadError` (stale tab after a deploy). No chunk warning: the lazy 3D
+   vendor chunk (~920 kB, only loaded by the landing scene) has a documented 1,000 kB budget; `npm run check:bundle` (CI + `make web`) holds every
+   other chunk to 300 kB and the initial graph to 220 kB gz, and fails if three appears up front. Not done: prefetching route chunks on hover,
+   an error boundary for a chunk that stays unreachable (offline) - today that shows a blank page, as the lazy 3D scene already did.
 5. **Tailwind 3 → 4.** Clears the dev-only `npm audit` highs. *Done when* `npm audit --audit-level=high` (including dev) is clean, e2e is green, and screenshots of the main pages are compared.
 
 ## Later
