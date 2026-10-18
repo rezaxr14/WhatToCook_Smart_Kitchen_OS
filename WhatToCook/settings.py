@@ -406,6 +406,11 @@ AI_CACHE_RETENTION_DAYS = int(os.getenv("AI_CACHE_RETENTION_DAYS", "7"))
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_ACKS_LATE = True
+# Flower (and the Grafana "Celery" panels built on it) is fed entirely by Celery events, which workers only emit
+# when asked: without this, flower_events_total / flower_task_runtime_seconds / flower_worker_online stay empty.
+# Cheap (events go to the celeryev exchange and are dropped when nobody is listening); CELERY_SEND_EVENTS=false opts out.
+CELERY_WORKER_SEND_TASK_EVENTS = _env_bool("CELERY_SEND_EVENTS", "true")
+CELERY_TASK_SEND_SENT_EVENT = _env_bool("CELERY_SEND_EVENTS", "true")
 # /api/health/ also reports broker reachability (informational: never fails the probe).
 HEALTH_CHECK_BROKER = not _IS_TESTING and _env_bool("HEALTH_CHECK_BROKER", "true")
 CELERY_ACCEPT_CONTENT = ['json']
