@@ -1,0 +1,13 @@
+# Provisioned at start-up, so the dashboard works with no clicking. The uid is referenced by the dashboard JSON.
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s # = scrape_interval in prometheus.yml, so $__rate_interval is sized correctly

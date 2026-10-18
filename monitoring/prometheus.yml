@@ -14,12 +14,17 @@ scrape_configs:
 
   - job_name: rabbitmq
     static_configs:
-      - targets: ["rabbitmq:15692"] # built-in rabbitmq_prometheus plugin
+      - targets: ["rabbitmq:15692"] # built-in rabbitmq_prometheus plugin (cluster-wide totals only)
+
+  # Per-queue series (ai / maintenance / celery) live on a separate endpoint; the default one aggregates
+  # across all queues. Cardinality is small here (3 queues), so scrape it for the Grafana queue panels.
+  - job_name: rabbitmq-per-object
+    metrics_path: /metrics/per-object
+    static_configs:
+      - targets: ["rabbitmq:15692"]
 
   - job_name: celery-flower
     static_configs:
       - targets: ["flower:5555"]
-    # Flower is behind basic auth by default:
-    # basic_auth:
-    #   username: admin
-    #   password: change-me
+    # FLOWER_BASIC_AUTH protects the Flower UI/API but NOT /metrics (Flower 2.0.1 serves it unauthenticated),
+    # so no credentials are needed here. Task series appear once workers emit events (CELERY_SEND_EVENTS, default on).

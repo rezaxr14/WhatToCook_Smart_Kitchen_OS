@@ -186,6 +186,37 @@ services:
       - "127.0.0.1:9090:9090"
     restart: unless-stopped
 
+  grafana:
+    # Dashboards over Prometheus. UI: http://localhost:3000 (login: GRAFANA_ADMIN_USER / GRAFANA_ADMIN_PASSWORD).
+    # The datasource and the "WhatToCook / Overview" dashboard are provisioned from ./monitoring/grafana (read-only):
+    # change the JSON, not the UI.
+    profiles: ["monitoring"]
+    image: grafana/grafana:13.2.4
+    container_name: whattocook_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/whattocook-overview.json
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q '\"database\": \"ok\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
   telegram_bot:
     <<: *backend-common
     container_name: whattocook_telegram_bot
@@ -209,3 +240,4 @@ volumes:
   media_data:
   rabbitmq_data:
   prometheus_data:
+  grafana_data:
