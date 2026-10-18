@@ -92,7 +92,7 @@ jobs:
 
       - name: Compare
         run: bash frontend/scripts/compare-screenshots.sh shots/base shots/head shots/diff
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: visual-comparison
