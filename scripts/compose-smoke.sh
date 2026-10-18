@@ -46,6 +46,7 @@ echo "▶ optional monitoring profile"
 docker compose --profile monitoring up -d --wait --wait-timeout 120
 curl -fsS http://localhost:9090/-/ready >/dev/null && ok "Prometheus ready (http://localhost:9090)" || fail "Prometheus not ready"
 curl -fsS -u "${FLOWER_BASIC_AUTH:-admin:change-me}" http://localhost:5555/healthcheck >/dev/null && ok "Flower up (http://localhost:5555)" || fail "Flower not up"
+python3 scripts/check_grafana.py "${GRAFANA_URL:-http://localhost:3000}" "${GRAFANA_ADMIN_USER:-admin}:${GRAFANA_ADMIN_PASSWORD:-change-me}"
 
 echo; echo "All checks passed."
 [ "${KEEP:-1}" = "0" ] && docker compose --profile monitoring down -v
