@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Smoke test (API, RabbitMQ -> worker -> Redis, beat, metrics, non-root, monitoring profile)
         run: KEEP=0 bash scripts/compose-smoke.sh
       - name: Diagnostics
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Ensure kind is available
         run: |
           if ! command -v kind >/dev/null; then
