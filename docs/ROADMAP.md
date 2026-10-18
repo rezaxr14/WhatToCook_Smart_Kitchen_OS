@@ -43,7 +43,17 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    set `VISUAL_FAIL_ABOVE_PCT` to gate). Known, expected change: `space-x-*`/`divide-*` now use logical margins, so RTL (fa/ar) rows gain their gap.
 
 ## Later
-6. **Grafana** in the compose `monitoring` profile (provisioned Prometheus datasource + a dashboard: request rate/p95/5xx from `django_http_*`, RabbitMQ queue depth, Flower task metrics) and a k8s optional manifest. *Done when* `compose-smoke.sh` checks Grafana health + datasource.
+6. ~~**Grafana**~~ **Done** (pending CI on the PR): `grafana` in the compose `monitoring` profile (pinned `grafana/grafana:13.2.4`, localhost-only, real healthcheck,
+   no anonymous access) with a provisioned Prometheus datasource and the "WhatToCook / Overview" dashboard (22 panels, 25 queries: scrape health,
+   request rate by status class, latency p50/p95/p99 and p95 per view, exceptions, Celery outcomes/runtime/workers, RabbitMQ backlog/unacked/consumers
+   per queue); `k8s/optional/grafana.yaml`, a Flower ServiceMonitor and a per-queue RabbitMQ endpoint on the existing one. `compose-smoke.sh` runs
+   `scripts/check_grafana.py`: health, datasource health, dashboard provisioned with every panel, every query executed through Grafana, all four scrape
+   targets up, API counters flowing and a Celery worker online. Found on the way: **nothing enabled Celery events**, so Flower's task metrics (and any
+   Celery panel) would have been empty; fixed with `CELERY_WORKER_SEND_TASK_EVENTS` (env `CELERY_SEND_EVENTS`). Per-queue visibility needs RabbitMQ's
+   `/metrics/per-object` endpoint (the default one only aggregates), hence a second Prometheus job. Verified against a real Prometheus 3.5.0, not
+   against Grafana or RabbitMQ themselves (neither could run in the sandbox): RabbitMQ series names are documentation-verified, Grafana's behaviour is
+   what the smoke test proves. Not done: alert rules (Prometheus/Alertmanager), a Postgres/Redis exporter, a Flower scrape secret (not needed: its
+   /metrics is unauthenticated).
 7. **Domain events on RabbitMQ** (e.g. `pantry.updated`, `recipe.generated`) with an idempotent consumer. Choose **Kafka only if** you need replay or many independent consumers; for fan-out/work-queue semantics RabbitMQ already fits. Needs a product decision first.
 8. **Supply chain:** SBOM (`docker buildx --sbom`), keyless image signing (cosign) in `release.yml`, pin every action by SHA, image vulnerability scan with a SHA-pinned scanner.
 9. **Load/soak:** nightly k6 against the compose stack with thresholds (p95 latency, error rate) and a check that the `ai` queue drains.

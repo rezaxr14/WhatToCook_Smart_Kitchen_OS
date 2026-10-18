@@ -146,7 +146,7 @@ docker compose up -d --build
 - **API docs (Swagger UI)**: [http://localhost:8000/api/docs/](http://localhost:8000/api/docs/), machine-readable schema at [`/api/schema/`](http://localhost:8000/api/schema/) (`?format=json` for JSON)
 - **Django Admin Panel**: [http://localhost:8000/admin/](http://localhost:8000/admin/) or [http://localhost:4173/admin/](http://localhost:4173/admin/)
 - **Legacy Server-Rendered Pages**: [http://localhost:8000/legacy/](http://localhost:8000/legacy/)
-- **Flower / Prometheus** (optional, `docker compose --profile monitoring up -d`): [http://localhost:5555](http://localhost:5555) · [http://localhost:9090](http://localhost:9090)
+- **Flower / Prometheus / Grafana** (optional, `docker compose --profile monitoring up -d`): [http://localhost:5555](http://localhost:5555) · [http://localhost:9090](http://localhost:9090) · [http://localhost:3000](http://localhost:3000) (Grafana login: `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD`, default `admin` / `change-me`)
 - **RabbitMQ Management UI**: [http://localhost:15672](http://localhost:15672) (bound to localhost; log in with `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASS` from your `.env`, default `whattocook` / `secret`)
 
 ---
@@ -263,6 +263,7 @@ RabbitMQ is pinned to **4.2** because 4.3+ rejects the transient non-exclusive q
 - **Structured logs**: JSON in production (`LOG_FORMAT=json`, default when `DEBUG=false`), plain text in dev. Every request gets an `X-Request-ID` (an incoming one from your ingress is reused) that appears in each log line and in the response header.
 - **Metrics**: `GET /metrics` (django-prometheus; multiprocess-safe under gunicorn). Not proxied by nginx/Ingress — scrape it in-cluster or on the compose-published API port; set `METRICS_TOKEN` to additionally require `Authorization: Bearer <token>`. RabbitMQ's built-in Prometheus endpoint is on `:15692`.
 - **Prometheus** for local use: `docker compose --profile monitoring up -d` → <http://localhost:9090> (scrapes the API, RabbitMQ and Flower; see `monitoring/prometheus.yml`). On Kubernetes use `k8s/optional/servicemonitor.yaml` (Prometheus Operator).
+- **Grafana** (same profile) opens on the provisioned **WhatToCook / Overview** dashboard: scrape health, request rate by status class, latency p50/p95/p99 and p95 per view, exceptions, Celery task outcomes/runtime/workers, and RabbitMQ backlog, unacked and consumers per queue. The datasource and dashboard are provisioned read-only from `monitoring/grafana/`: edit the JSON, not the UI. Celery panels need worker events (`CELERY_SEND_EVENTS`, on by default); per-queue panels come from RabbitMQ's `/metrics/per-object` endpoint (a second Prometheus job). `python3 scripts/check_grafana.py` verifies the whole chain (compose smoke runs it). On Kubernetes: `k8s/optional/grafana.yaml` (its header shows how to load the dashboard ConfigMap).
 - **Sentry** (optional): set `SENTRY_DSN` (plus `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`); Django and Celery are instrumented automatically.
 
 ## ☸️ Kubernetes
@@ -274,7 +275,7 @@ k8s/base/                 Postgres + RabbitMQ (StatefulSets), Redis, web, celery
                           telegram-bot, frontend, Ingress, PodDisruptionBudget
 k8s/overlays/dev/         kind/minikube: throwaway generated secrets, DEBUG on
 k8s/overlays/prod/        TLS (cert-manager), strict ALLOWED_HOSTS, NetworkPolicies, nightly pg_dump
-k8s/optional/             HPA, KEDA queue-based scaling, Flower, ServiceMonitors, ExternalSecret example
+k8s/optional/             HPA, KEDA queue-based scaling, Flower, Grafana, ServiceMonitors, ExternalSecret example
 k8s/secret.example.yaml   template for the whattocook-secrets Secret
 ```
 
@@ -312,7 +313,7 @@ Notes:
 |---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | push / PR | **Lint** (ruff), **backend tests on SQLite and Postgres** with a **coverage gate** (`.coveragerc`), migrations in sync, a **backup/restore drill** (dump with the CronJob's pipeline → restore into a fresh DB → compare), **frontend** typecheck + build, `docker compose config` (incl. proxy + monitoring profile), Kubernetes overlays rendered and validated with kubeconform (incl. KEDA / Prometheus Operator / cert-manager CRDs), **Docker images** build and the backend image runs as uid 10001 |
 | [`security.yml`](.github/workflows/security.yml) | push / PR / weekly | `pip-audit`, `npm audit` (runtime deps, high+), **CodeQL** for Python and TypeScript |
-| [`smoke.yml`](.github/workflows/smoke.yml) | push / PR | Boots the **real stacks on GitHub's runners**: the docker compose stack (`scripts/compose-smoke.sh`: API health, RabbitMQ → worker → Redis round trip, beat, `/metrics`, uid 10001, monitoring profile) and the Kubernetes dev overlay on **kind** (`scripts/kind-smoke.sh`), with pod diagnostics on failure |
+| [`smoke.yml`](.github/workflows/smoke.yml) | push / PR | Boots the **real stacks on GitHub's runners**: the docker compose stack (`scripts/compose-smoke.sh`: API health, RabbitMQ → worker → Redis round trip, beat, `/metrics`, uid 10001, monitoring profile incl. Grafana datasource/dashboard/queries and Celery events) and the Kubernetes dev overlay on **kind** (`scripts/kind-smoke.sh`), with pod diagnostics on failure |
 | [`e2e.yml`](.github/workflows/e2e.yml) | push / PR / nightly | Playwright suite (23 tests) against a seeded API |
 | [`release.yml`](.github/workflows/release.yml) | `v*.*.*` tag | Publishes `ghcr.io/<owner>/whattocook-{backend,frontend}` |
 
