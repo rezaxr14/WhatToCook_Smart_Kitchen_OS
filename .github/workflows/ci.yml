@@ -161,7 +161,7 @@ jobs:
             -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
             rendered-dev.yaml rendered-prod.yaml \
             k8s/optional/hpa.yaml k8s/optional/flower.yaml k8s/optional/keda-celery.yaml \
-            k8s/optional/servicemonitor.yaml k8s/secret.example.yaml \
+            k8s/optional/servicemonitor.yaml k8s/optional/grafana.yaml k8s/secret.example.yaml \
             k8s/overlays/prod/cluster-issuer.example.yaml
 
   docker:

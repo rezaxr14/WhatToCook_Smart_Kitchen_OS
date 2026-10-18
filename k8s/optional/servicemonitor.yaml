@@ -27,3 +27,22 @@ spec:
   endpoints:
     - port: prometheus
       interval: 15s
+    # Per-queue series (ai / maintenance / celery); the default endpoint only aggregates across queues.
+    - port: prometheus
+      path: /metrics/per-object
+      interval: 15s
+---
+# Celery task metrics come from Flower (k8s/optional/flower.yaml). Flower 2.0.1 serves /metrics without credentials
+# even when FLOWER_BASIC_AUTH is set, so no basicAuth is needed. Workers must emit events (CELERY_SEND_EVENTS, default on).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: whattocook-flower
+  namespace: whattocook
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: flower
+  endpoints:
+    - port: http
+      interval: 15s
