@@ -6,8 +6,8 @@ omit =
     GetFood/management/commands/seed_*
 
 [report]
-# Ratchet: raise this as coverage improves (measured 93% on 2026-10-16 on SQLite; weakest: WhatToCook/settings.py,
-# GetFood/utils.py and GetFood/tasks.py, all < 85%).
-fail_under = 90
+# Ratchet: raise this as coverage improves (measured 94% on 2026-10-19 on SQLite; weakest: WhatToCook/settings.py and
+# GetFood/utils.py, both < 75%, plus the wsgi/asgi entry points that tests never import).
+fail_under = 91
 skip_empty = True
 show_missing = False

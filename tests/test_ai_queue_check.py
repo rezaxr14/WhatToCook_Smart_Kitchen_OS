@@ -206,3 +206,24 @@ class RunTests(SimpleTestCase):
         stack = FakeStack(5, results={"total": 5, "states": {"SUCCESS": 4, "FAILURE": 1}, "bad": 0})
         with self.assertRaisesRegex(Died, "not all SUCCESS"):
             self.go(stack)
+
+
+class AppConsistencyTests(SimpleTestCase):
+    """The checker must watch the queue the app really routes the AI task to, with the task it really enqueues."""
+
+    def test_the_queue_it_watches_is_where_settings_route_the_task(self):
+        from django.conf import settings
+
+        self.assertEqual(settings.CELERY_TASK_ROUTES["GetFood.tasks.generate_ai_suggestions_task"]["queue"], chk.QUEUE)
+
+    def test_the_task_it_publishes_exists_and_is_that_routed_task(self):
+        from GetFood.tasks import generate_ai_suggestions_task
+
+        self.assertEqual(generate_ai_suggestions_task.name, "GetFood.tasks.generate_ai_suggestions_task")
+        self.assertIn("from GetFood.tasks import generate_ai_suggestions_task", chk.enqueue_code(1, "x"))
+
+    def test_the_default_credentials_match_compose(self):
+        compose = (Path(__file__).resolve().parent.parent / "docker-compose.yml").read_text(encoding="utf-8")
+        self.assertIn("RABBITMQ_DEFAULT_USER:-whattocook", compose)
+        self.assertIn("RABBITMQ_DEFAULT_PASS:-secret", compose)
+        self.assertIn("127.0.0.1:15672:15672", compose)  # the management port the check talks to

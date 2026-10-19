@@ -42,6 +42,9 @@ logs: ## follow web + celery logs
 smoke: ## end-to-end check of the compose stack (CI runs this too)
 	bash scripts/compose-smoke.sh
 
+load-smoke: ## 25 s k6 smoke against a local API (needs k6; start it with: THROTTLING_ENABLED=false make run)
+	k6 run -e PROFILE=smoke -e BASE_URL=$${BASE_URL:-http://127.0.0.1:8000} load/k6/main.js
+
 k8s-render: ## render the Kubernetes overlays
 	kubectl kustomize k8s/overlays/dev >/dev/null && kubectl kustomize k8s/overlays/prod >/dev/null && echo ok
 

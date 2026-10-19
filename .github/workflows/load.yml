@@ -1,0 +1,118 @@
+name: Load & soak (nightly)
+
+# Boots the real compose stack on a GitHub runner in PRODUCTION settings (DEBUG=false, random secrets), with rate
+# limits off and NO Gemini key (the AI provider fails instantly into the deterministic fallback: nothing here can spend
+# LLM quota), then:
+#   1. soaks it with k6 (load/k6/main.js: catalog, can-cook, shopping list, AI suggestions, SPA shell), and
+#   2. while that load is running, bursts tasks onto the `ai` queue and proves it drains (scripts/check_ai_queue.py).
+# Afterwards it turns rate limiting back ON and proves a 429 still comes back through nginx (load/k6/throttle.js).
+# Thresholds live in load/k6/main.js. Not a PR gate: it is slow, and a runner's noise would make it a flaky one.
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      steady:
+        description: "Length of the steady-state phase (k6 duration, e.g. 2m for a quick run, 10m default)"
+        default: "10m"
+      tasks:
+        description: "Tasks in the ai-queue burst"
+        default: "300"
+
+concurrency:
+  group: load
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  soak:
+    name: k6 soak + ai queue drain
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # Pinned release, verified against the checksum published with it (k6-<version>-checksums.txt).
+      K6_VERSION: v2.3.0
+      K6_SHA256: 39c3117b6af817592dcd0ce4242105c0a7af10948c2a425306f0be8f7a8a8ab1
+      STEADY: ${{ inputs.steady || '10m' }}
+      TASKS: ${{ inputs.tasks || '300' }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      - name: Validate inputs
+        run: |
+          [[ "$STEADY" =~ ^[0-9]+[sm]$ ]] || { echo "steady must look like 90s or 10m, got: $STEADY"; exit 1; }
+          [[ "$TASKS" =~ ^[0-9]+$ ]] || { echo "tasks must be a number, got: $TASKS"; exit 1; }
+
+      - name: Install k6 (pinned release, checksum verified)
+        run: |
+          curl -fsSL --max-time 120 -o k6.tgz "https://github.com/grafana/k6/releases/download/${K6_VERSION}/k6-${K6_VERSION}-linux-amd64.tar.gz"
+          echo "${K6_SHA256}  k6.tgz" | sha256sum -c -
+          tar -xzf k6.tgz --strip-components=1 -C "$RUNNER_TEMP" "k6-${K6_VERSION}-linux-amd64/k6"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/k6" version
+
+      - name: Configure the stack (production settings, no rate limits, no LLM key)
+        run: |
+          # Drop the keys we set, then append them: no duplicate-key ambiguity between dotenv implementations.
+          grep -vE '^(DEBUG|SECRET_KEY|ALLOWED_HOSTS|POSTGRES_PASSWORD|GEMINI_API_KEY|THROTTLING_ENABLED)=' .env.example > .env
+          {
+            echo "DEBUG=false"
+            echo "SECRET_KEY=$(openssl rand -hex 32)"
+            echo "ALLOWED_HOSTS=localhost,127.0.0.1,web"
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "GEMINI_API_KEY="
+            echo "THROTTLING_ENABLED=false"
+          } >> .env
+
+      - name: Start the stack
+        run: |
+          docker compose up -d --build --wait --wait-timeout 300
+          curl -fsS --retry 10 --retry-delay 3 --retry-connrefused --max-time 10 http://localhost:4173/api/health/
+
+      - name: Soak with k6 and drain the ai queue under that load
+        shell: bash
+        run: |
+          set +e
+          mkdir -p load-results
+          k6 run --quiet --no-usage-report \
+            -e BASE_URL=http://localhost:4173 -e INCLUDE_SPA=true -e RAMP=1m -e STEADY="$STEADY" \
+            --summary-export=load-results/summary.json load/k6/main.js > load-results/k6.log 2>&1 &
+          K6_PID=$!
+          sleep 75   # the 1m ramp has reached the steady rate: the burst must land while the API is under load
+          python3 scripts/check_ai_queue.py --tasks "$TASKS" --deadline 90 2>&1 | tee load-results/ai-queue.log
+          QUEUE_RC=${PIPESTATUS[0]}
+          wait "$K6_PID"
+          K6_RC=$?
+          tail -70 load-results/k6.log
+          echo "k6 exit: $K6_RC, ai queue check exit: $QUEUE_RC"
+          [ "$K6_RC" -eq 0 ] && [ "$QUEUE_RC" -eq 0 ]
+
+      - name: Rate limits still hold behind nginx (throttling back ON, the production default)
+        run: |
+          sed -i 's/^THROTTLING_ENABLED=.*/THROTTLING_ENABLED=true/' .env
+          docker compose up -d --force-recreate --no-deps --wait --wait-timeout 180 web
+          # nginx resolves `web` once at start: recreate it too, or it may keep pointing at the old container's IP.
+          docker compose up -d --force-recreate --no-deps --wait --wait-timeout 120 frontend
+          curl -fsS --retry 10 --retry-delay 3 --retry-connrefused --max-time 10 http://localhost:4173/api/health/
+          k6 run --quiet --no-usage-report -e BASE_URL=http://localhost:4173 load/k6/throttle.js
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: load-results
+          path: load-results/
+          if-no-files-found: ignore
+          retention-days: 30
+
+      - name: Diagnostics
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose exec -T rabbitmq rabbitmq-diagnostics -q list_queues name messages_ready messages_unacknowledged consumers || true
+          docker compose logs --no-color --tail=150 web celery
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
