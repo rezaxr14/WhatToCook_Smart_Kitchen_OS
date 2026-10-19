@@ -58,3 +58,62 @@ class ThrottlingTests(TestCase):
         self.assertEqual(body["error"], "rate_limited")
         self.assertIsInstance(body["retry_after"], int)
         self.assertIsInstance(body["detail"], str)
+
+
+class ThrottlingKillSwitchTests(TestCase):
+    """THROTTLING_ENABLED=false (load tests, local debugging) must mean "never throttle", not "every scoped view 500s"."""
+
+    def setUp(self):
+        cache.clear()
+        self.client = APIClient()
+
+    def _codes(self, n=8):
+        return [self.client.get("/api/recipes/").status_code for _ in range(n)]  # catalog scope
+
+    @override_settings(REST_FRAMEWORK=_rates(), THROTTLING_ENABLED=True)
+    def test_control_the_same_rates_do_throttle_when_enabled(self):
+        self.assertIn(429, self._codes())
+
+    @override_settings(REST_FRAMEWORK=_rates(), THROTTLING_ENABLED=False)
+    def test_disabled_scoped_endpoints_answer_200_and_never_429(self):
+        self.assertEqual(set(self._codes()), {200})
+
+    @override_settings(REST_FRAMEWORK=_rates(), THROTTLING_ENABLED=False)
+    def test_disabled_also_covers_post_scopes(self):
+        from django.contrib.auth.models import User
+
+        from GetFood.views import DEMO_USERNAME
+
+        User.objects.create_user(DEMO_USERNAME)  # the guest the anonymous pantry endpoints act as
+        codes = {self.client.post("/api/pantry/add/", {"name": "salt"}, format="json").status_code for _ in range(8)}
+        self.assertEqual(codes, {200})
+
+    @override_settings(REST_FRAMEWORK=_rates(), THROTTLING_ENABLED=True)
+    def test_a_scope_without_a_rate_is_a_loud_configuration_error_not_an_import_error(self):
+        from django.core.exceptions import ImproperlyConfigured
+
+        from GetFood.throttles import _throttle_class
+
+        with self.assertRaisesMessage(ImproperlyConfigured, "No default throttle rate set for 'nonexistent'"):
+            _throttle_class("nonexistent")()
+
+    def test_the_environment_variable_reaches_the_setting_and_keeps_the_rate_table(self):
+        """Settings are evaluated at import, so check them in a fresh process (without 'test' in argv)."""
+        import json
+        import os
+        import subprocess
+        import sys
+
+        code = (
+            "import json,django;django.setup();from django.conf import settings as s;"
+            "print(json.dumps([s.THROTTLING_ENABLED, bool(s.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'])]))"
+        )
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        for value, expected in (("false", False), ("true", True), (None, True)):
+            env = {**os.environ, "DJANGO_SETTINGS_MODULE": "WhatToCook.settings", "USE_POSTGRES": "false", "DEBUG": "true"}
+            env.pop("THROTTLING_ENABLED", None)
+            if value is not None:
+                env["THROTTLING_ENABLED"] = value
+            out = subprocess.run([sys.executable, "-c", code], cwd=root, env=env, capture_output=True, text=True, timeout=60)
+            self.assertEqual(out.returncode, 0, out.stderr)
+            self.assertEqual(json.loads(out.stdout.strip().splitlines()[-1]), [expected, True], f"THROTTLING_ENABLED={value}")

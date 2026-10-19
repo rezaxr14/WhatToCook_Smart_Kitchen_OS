@@ -367,10 +367,12 @@ if _IS_TESTING:
     REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
         scope: "1000000/min" for scope in DEFAULT_RATES
     }
-elif not _env_bool("THROTTLING_ENABLED", "true"):
-    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {}
 else:
     REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = load_rates()
+
+# Off only for load tests / local debugging (GetFood.throttles honours it). The rate table stays populated so a
+# mistyped scope still fails loudly instead of silently going unthrottled.
+THROTTLING_ENABLED = _env_bool("THROTTLING_ENABLED", "true")
 
 # Celery: RabbitMQ is the message broker (task queue); Redis stores task results
 # and backs the Django cache. Defaults target bare-metal dev on localhost;

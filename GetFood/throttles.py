@@ -29,6 +29,7 @@ JSON shape and attaches a ``Retry-After`` header so clients can back off:
 from __future__ import annotations
 
 from django.conf import settings as dj_settings
+from django.core.exceptions import ImproperlyConfigured
 from rest_framework.exceptions import Throttled
 from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
@@ -47,17 +48,17 @@ class WtcScopeThrottle(SimpleRateThrottle):
     scope = "catalog"
 
     def get_rate(self):
+        # Kill switch (THROTTLING_ENABLED=false): load tests and local debugging. DRF treats a rate of None as
+        # "never throttle". It must not be done by emptying the rate table: that makes every scope an error below.
+        if not getattr(dj_settings, "THROTTLING_ENABLED", True):
+            return None
         rates = dj_settings.REST_FRAMEWORK.get("DEFAULT_THROTTLE_RATES", {})
         if not self.scope:
-            raise KeyError("Throttle scope is not set.")
+            raise ImproperlyConfigured("Throttle scope is not set.")
         try:
             return rates[self.scope]
         except KeyError:
-            from rest_framework.exceptions import ImproperlyConfigured
-
-            raise ImproperlyConfigured(
-                f"No default throttle rate set for '{self.scope}' scope"
-            ) from None
+            raise ImproperlyConfigured(f"No default throttle rate set for '{self.scope}' scope") from None
 
     def get_cache_key(self, request, view):
         if request.user and request.user.is_authenticated:

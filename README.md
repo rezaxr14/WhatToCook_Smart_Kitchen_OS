@@ -328,8 +328,8 @@ Frontend `npm audit` (dev dependencies included) has no highs since the Tailwind
 All API traffic is rate-limited per endpoint scope with anon/user-aware
 buckets and `Retry-After` responses — see `GetFood/rate_limits.py` (rates
 tunable via env), `GetFood/throttles.py`, and `WhatToCook/settings.py`
-(`USE_RATE_LIMITS=1` enables; on by default). Cache uses a local in-memory
-backend when Redis is absent.
+(on by default; `THROTTLING_ENABLED=false` switches it off for load tests and local debugging only,
+never in production). Cache uses a local in-memory backend when Redis is absent.
 
 **Security headers** (`frontend/nginx.conf` + `frontend/nginx/*.conf`): every response
 carries `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`
