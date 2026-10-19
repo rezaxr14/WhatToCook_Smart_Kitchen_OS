@@ -15,7 +15,11 @@ updates:
       npm-minor-and-patch:
         update-types: [minor, patch]
   - package-ecosystem: github-actions
-    directory: /
+    # The local composite action (.github/actions/scan-image) pins trivy-action by SHA too; Dependabot only looks at
+    # .github/workflows unless told about it. (The scanner *version* input is bumped by hand, see that action.)
+    directories:
+      - /
+      - /.github/actions/*
     schedule:
       interval: weekly
   - package-ecosystem: docker

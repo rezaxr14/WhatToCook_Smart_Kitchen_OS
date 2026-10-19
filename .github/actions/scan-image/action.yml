@@ -1,0 +1,23 @@
+name: Scan image for vulnerabilities
+description: >
+  Trivy scan that fails on HIGH/CRITICAL vulnerabilities which have a fix available. This is the ONE place the scanner
+  and its policy are pinned, shared by release.yml (gate before publishing) and security.yml (every PR + weekly).
+inputs:
+  image-ref:
+    description: Image to scan (a local tag, or a registry reference with a digest)
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        image-ref: ${{ inputs.image-ref }}
+        # The action downloads the scanner at run time and defaults to whatever it was released with, so the
+        # scanner version is pinned here too. Dependabot does not bump this: update it deliberately.
+        version: v0.76.0
+        severity: HIGH,CRITICAL
+        ignore-unfixed: "true" # only fail on what can actually be fixed by an update
+        vuln-type: os,library
+        exit-code: "1"
+        trivyignores: .trivyignore
+        format: table

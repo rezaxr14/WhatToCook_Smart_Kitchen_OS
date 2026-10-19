@@ -1,0 +1,7 @@
+# Vulnerabilities the image scan (.github/actions/scan-image) should NOT fail on.
+# One CVE id per line. Every entry needs a comment saying why it is safe to ignore and WHEN to remove it:
+#
+#   # CVE-2099-12345: only reachable through <x>, which this image does not use. Re-check <date>.
+#   CVE-2099-12345
+#
+# The scan already skips vulnerabilities that have no fix yet (ignore-unfixed), so this file should stay short.
