@@ -1,6 +1,9 @@
 name: Release images
 
 # Push a tag like v1.0.0 to publish ghcr.io/<owner>/whattocook-backend and -frontend.
+# Each image is: built locally and scanned BEFORE anything is published (HIGH/CRITICAL fixable CVEs fail the release),
+# published with an SBOM (SPDX) and SLSA provenance attestation, signed keylessly with cosign, and the signature is
+# verified right after signing. Verify as a consumer: see "Supply chain" in the README.
 # Pull access follows the repository's visibility (make the packages public in
 # GitHub -> Packages if you want anonymous pulls).
 on:
@@ -11,6 +14,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write # keyless cosign signing: GitHub's OIDC identity is the signing identity (no keys to store)
 
 jobs:
   publish:
@@ -43,11 +47,52 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
-      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      - name: Build the image locally (not pushed) so it can be scanned first
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: ${{ matrix.context }}
+          load: true
+          push: false
+          tags: whattocook-${{ matrix.name }}:scan
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+      - name: Scan the image (a fixable HIGH/CRITICAL vulnerability stops the release before anything is published)
+        uses: ./.github/actions/scan-image
+        with:
+          image-ref: whattocook-${{ matrix.name }}:scan
+      - name: Publish the image with SBOM and provenance attestations
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: ${{ matrix.context }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          sbom: true # SPDX SBOM attached to the image as an attestation
+          provenance: mode=max # SLSA build provenance
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,scope=${{ matrix.name }},mode=max
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.1.3 # the installer's own default is older; pin the tool, not just the action
+      - name: Sign the image (keyless) and verify the signature
+        env:
+          IMAGE: ghcr.io/${{ env.OWNER }}/whattocook-${{ matrix.name }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          # Sign the digest, never a tag: tags move, digests do not.
+          cosign sign --yes "${IMAGE}@${DIGEST}"
+          # Prove it verifies against THIS workflow's identity before calling the release done.
+          cosign verify "${IMAGE}@${DIGEST}" \
+            --certificate-identity "https://github.com/${GITHUB_WORKFLOW_REF}" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+      - name: Confirm the attestations are attached to the published image
+        env:
+          IMAGE: ghcr.io/${{ env.OWNER }}/whattocook-${{ matrix.name }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker buildx imagetools inspect "${IMAGE}@${DIGEST}" --raw | grep -q 'attestation-manifest' \
+            || { echo "no attestation manifest on ${IMAGE}@${DIGEST}"; exit 1; }
+          docker buildx imagetools inspect "${IMAGE}@${DIGEST}" --format '{{ json .SBOM }}' | grep -q spdxVersion \
+            || { echo "no SPDX SBOM on ${IMAGE}@${DIGEST}"; exit 1; }
+          echo "SBOM and provenance attestations present on ${IMAGE}@${DIGEST}"
