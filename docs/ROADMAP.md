@@ -55,7 +55,16 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    what the smoke test proves. Not done: alert rules (Prometheus/Alertmanager), a Postgres/Redis exporter, a Flower scrape secret (not needed: its
    /metrics is unauthenticated).
 7. **Domain events on RabbitMQ** (e.g. `pantry.updated`, `recipe.generated`) with an idempotent consumer. Choose **Kafka only if** you need replay or many independent consumers; for fan-out/work-queue semantics RabbitMQ already fits. Needs a product decision first.
-8. **Supply chain:** SBOM (`docker buildx --sbom`), keyless image signing (cosign) in `release.yml`, pin every action by SHA, image vulnerability scan with a SHA-pinned scanner.
+8. ~~**Supply chain**~~ **Done** (pending CI and a real release run): all 34 action references pinned to commit SHAs (each resolved from the upstream repo with
+   `git ls-remote`, cross-checked against the moving major tag; trivy-action's and cosign-installer's own nested actions are already SHA-pinned upstream);
+   `release.yml` now builds locally -> scans (Trivy v0.76.0, fixable HIGH/CRITICAL fails, **before** anything is published) -> publishes with `sbom: true` and
+   `provenance: mode=max` -> signs the digest keylessly (cosign v3.1.3, OIDC, no keys) -> verifies against the workflow identity -> confirms the SPDX SBOM is
+   attached. The scan is one local composite action shared with `security.yml`'s new `image-scan` job (every PR + weekly); `.trivyignore` requires a reason
+   per entry. Also: `security.yml` now audits dev dependencies (item 5's done-when), Dependabot covers the composite action. 15 tests in
+   `tests/test_workflows.py`, mutation-tested with 9 regressions. **Not verified (could not run here):** the scan on the real images (the vulnerability DB is
+   not reachable from the sandbox, so the first CI run may report real findings: fix by updating the base image/dependency, or add a justified `.trivyignore`
+   entry), and the release job itself (cosign v3 against ghcr.io, `imagetools` output shape): run `release.yml` once via `workflow_dispatch` and read the log.
+   Not done: base images pinned by digest, SARIF upload to code scanning, attaching the SBOM to GitHub releases, multi-arch (item 10).
 9. **Load/soak:** nightly k6 against the compose stack with thresholds (p95 latency, error rate) and a check that the `ai` queue drains.
 10. **GitOps:** Argo CD/Flux pointing at `k8s/overlays/prod`, image tag bumps from `release.yml`; multi-arch (arm64) images.
 11. **React Router 6 → 7.** `npm audit` reports two moderate advisories in production dependencies (`react-router`, `react-router-dom`: open redirect via backslash in `<Link>`/`useNavigate`, CVE-2025-68470 bypass); the fix exists only in v7. *Done when* `npm audit` is fully clean and e2e + `e2e-csp` are green.

@@ -339,6 +339,15 @@ scripts, only Google Fonts and Unsplash as external origins); Django-rendered pa
 deployment with `bash scripts/check-security-headers.sh https://your-host`. HSTS is left to the TLS
 terminator (Django sends it when `SECURE_HSTS` is on behind HTTPS).
 
+**Supply chain**: every GitHub Action is pinned to a full commit SHA (`# vX.Y.Z` comment; Dependabot keeps both in sync). `release.yml` builds each image locally and scans it with a pinned Trivy before publishing (fixable HIGH/CRITICAL fails the release; the same scan runs on every PR and weekly in `security.yml`, defined once in `.github/actions/scan-image`), publishes with an SPDX SBOM and SLSA provenance, signs the digest keylessly with cosign and verifies the signature. Verify a published image:
+
+```bash
+cosign verify ghcr.io/rezaxr14/whattocook-backend:1.0.0 \
+  --certificate-identity-regexp '^https://github.com/rezaxr14/WhatToCook_Smart_Kitchen_OS/\.github/workflows/release\.yml@refs/tags/v' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+docker buildx imagetools inspect ghcr.io/rezaxr14/whattocook-backend:1.0.0 --format '{{ json .SBOM }}'
+```
+
 ## 🖼️ Curated dish photography
 
 Every recipe, dish suggestion and pantry ingredient resolves to an
