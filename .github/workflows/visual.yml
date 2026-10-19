@@ -32,10 +32,10 @@ jobs:
       USE_POSTGRES: "false"
       BASE_SHA: ${{ github.event.pull_request.base.sha || inputs.base_ref || 'origin/main' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.11"
           cache: pip
@@ -48,7 +48,7 @@ jobs:
           nohup python manage.py runserver 127.0.0.1:8000 --noreload > api.log 2>&1 &
           for i in $(seq 1 40); do curl -fs http://127.0.0.1:8000/api/health/ >/dev/null && exit 0; sleep 1; done
           echo "API did not start"; cat api.log; exit 1
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: 20
           cache: npm
@@ -92,7 +92,7 @@ jobs:
 
       - name: Compare
         run: bash frontend/scripts/compare-screenshots.sh shots/base shots/head shots/diff
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: visual-comparison
