@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router';
 import { ArrowLeft, Clock, ChefHat, Check, ShoppingBag, Flame, Sparkles, Plus, ShoppingCart } from 'lucide-react';
 import { Recipe } from '../types/recipe';
 import { recipeApi } from '../api/recipeApi';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { ChefHat, ShoppingBag, CheckCircle, AlertCircle, Sparkles, ArrowRight, ShoppingCart } from 'lucide-react';
 import { CanCookResponse } from '../types/recipe';
 import { recipeApi } from '../api/recipeApi';

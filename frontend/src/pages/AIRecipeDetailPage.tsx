@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router';
 import { ArrowLeft, Sparkles, ChefHat, Clock, Check, Flame, Award, Lightbulb, ShoppingCart } from 'lucide-react';
 import { AIRecipeDetail, AIRecipeInstruction } from '../types/ai';
 import { aiApi } from '../api/aiApi';

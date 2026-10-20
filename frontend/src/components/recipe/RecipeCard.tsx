@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Clock, ChefHat, Check, AlertCircle, ArrowRight } from 'lucide-react';
 import { Recipe, MatchedRecipe } from '../../types/recipe';
 import { StyledCard } from '../common/StyledCard';

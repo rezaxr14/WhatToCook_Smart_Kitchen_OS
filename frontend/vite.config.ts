@@ -36,7 +36,7 @@ function manualChunks(id: string): string | undefined {
   const pkg = id.match(/node_modules\/((?:@[^/]+\/)?[^/]+)/)?.[1];
   if (!pkg) return undefined;
   if (THREE_PACKAGES.has(pkg) || pkg.startsWith('@react-three/')) return 'vendor-three';
-  if (['react', 'react-dom', 'scheduler', 'react-router', 'react-router-dom', '@remix-run/router'].includes(pkg)) return 'vendor-react';
+  if (['react', 'react-dom', 'scheduler', 'react-router', 'cookie', 'set-cookie-parser'].includes(pkg)) return 'vendor-react';
   if (['framer-motion', 'motion-dom', 'motion-utils'].includes(pkg)) return 'vendor-motion';
   if (pkg.includes('i18next')) return 'vendor-i18n';
   if (pkg.startsWith('@tanstack/')) return 'vendor-query';

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, Sparkles, Play, Pause, ArrowRight, X, RotateCcw, Film } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Sparkles, ChefHat, Clock, ArrowRight, RefreshCw, ShoppingBag } from 'lucide-react';
 import { AISuggestedDish, AIProvider } from '../types/ai';

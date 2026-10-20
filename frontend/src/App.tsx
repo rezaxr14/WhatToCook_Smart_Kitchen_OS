@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { ToastProvider } from './context/ToastContext';
@@ -92,9 +92,11 @@ const AppRoutes: React.FC = () => {
   );
 };
 
+// useTransitions={false}: React Router 7 wraps router updates in React.startTransition by default, which would keep the old
+// page on screen (no spinner) while a lazy route chunk loads. Keep the v6 behaviour; opt in on purpose.
 const AppContent: React.FC = () => {
   return (
-    <Router>
+    <Router useTransitions={false}>
       <AppRoutes />
     </Router>
   );
