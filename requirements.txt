@@ -13,3 +13,6 @@ django-prometheus~=2.4
 sentry-sdk~=2.30
 drf-spectacular~=0.30
 drf-spectacular-sidecar~=2026.10
+# Not imported by the app: pinned so the image does not keep the setuptools that python:3.11-slim ships (79.0.1), whose vendored
+# jaraco.context 5.3.0 and wheel 0.45.1 Trivy flags. 84.0.0 vendors fixed copies; 80.x is out (CVE-2026-59890, fixed in 83.0.0).
+setuptools~=84.0.0

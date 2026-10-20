@@ -12,7 +12,11 @@ COPY . .
 RUN npm run build
 
 # ---------- Stage 2: serve with nginx ----------
-FROM nginx:alpine
+FROM nginx:alpine AS serve
+
+# The tag floats and Alpine publishes security fixes (libexpat, libx11, ...) before nginx rebuilds its image: take them now.
+# CI builds this stage with --no-cache-filter so a cached copy of this layer cannot hide a newer fix.
+RUN apk upgrade --no-cache
 
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
