@@ -65,6 +65,14 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    not reachable from the sandbox, so the first CI run may report real findings: fix by updating the base image/dependency, or add a justified `.trivyignore`
    entry), and the release job itself (cosign v3 against ghcr.io, `imagetools` output shape): run `release.yml` once via `workflow_dispatch` and read the log.
    Not done: base images pinned by digest, SARIF upload to code scanning, attaching the SBOM to GitHub releases, multi-arch (item 10).
+   **First CI scan (2026-10-20) reported four fixable HIGH findings; fixed:** frontend (alpine 3.24.2): libexpat CVE-2026-77214 and libx11 CVE-2026-88806 ->
+   `apk upgrade --no-cache` as the first instruction of a named `serve` stage, which the scan builds (and only the scan builds) rebuild without cache
+   (`no-cache-filters`), so a cached layer cannot hide a later fix and the published image is still exactly what was scanned. Backend: jaraco.context 5.3.0
+   and wheel 0.45.1 *vendored inside the setuptools 79.0.1 that python:3.11-slim ships* -> `setuptools~=84.0.0` in `requirements.txt` (80.10.2 clears those
+   but carries CVE-2026-59890, fixed in 83.0.0; 82+ no longer ships `pkg_resources`, which nothing of ours imports: a test guards that). Verified: a clean
+   venv from `requirements.txt` has the fixed vendored copies, the suite passes (318) and the Celery CLI loads (Python 3.12 here, 3.11 in the image).
+   **Not verified:** the Trivy re-scan itself (DB unreachable) and that Alpine's repo already carries libexpat 2.9.0-r0 / libx11 1.8.14-r0 (index unreachable;
+   Trivy's own table names them as the fixed versions). `.trivyignore` stays empty.
 9. ~~**Load/soak**~~ **Done** (pending the first CI run, which is also the calibration run): `.github/workflows/load.yml` (nightly + `workflow_dispatch`, never a
    PR gate) boots the compose stack in production settings (DEBUG=false, random secrets), rate limits off and an **empty `GEMINI_API_KEY`** (the provider fails
    instantly into the fallback: nothing can spend LLM quota), soaks it with k6 v2.3.0 (pinned by sha256) and, **while that load runs**, bursts tasks onto the

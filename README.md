@@ -340,7 +340,7 @@ scripts, only Google Fonts and Unsplash as external origins); Django-rendered pa
 deployment with `bash scripts/check-security-headers.sh https://your-host`. HSTS is left to the TLS
 terminator (Django sends it when `SECURE_HSTS` is on behind HTTPS).
 
-**Supply chain**: every GitHub Action is pinned to a full commit SHA (`# vX.Y.Z` comment; Dependabot keeps both in sync). `release.yml` builds each image locally and scans it with a pinned Trivy before publishing (fixable HIGH/CRITICAL fails the release; the same scan runs on every PR and weekly in `security.yml`, defined once in `.github/actions/scan-image`), publishes with an SPDX SBOM and SLSA provenance, signs the digest keylessly with cosign and verifies the signature. Verify a published image:
+**Supply chain**: every GitHub Action is pinned to a full commit SHA (`# vX.Y.Z` comment; Dependabot keeps both in sync). `release.yml` builds each image locally and scans it with a pinned Trivy before publishing (fixable HIGH/CRITICAL fails the release; the same scan runs on every PR and weekly in `security.yml`, defined once in `.github/actions/scan-image`), publishes with an SPDX SBOM and SLSA provenance, signs the digest keylessly with cosign and verifies the signature. Base tags float, so a new fixable finding is fixed by taking the update (`apk upgrade` in the frontend's `serve` stage, a pinned `setuptools` in `requirements.txt`), not by a `.trivyignore` entry. Verify a published image:
 
 ```bash
 cosign verify ghcr.io/rezaxr14/whattocook-backend:1.0.0 \
