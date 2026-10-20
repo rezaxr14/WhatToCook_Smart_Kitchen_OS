@@ -82,7 +82,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: whattocook_redis
     # Ephemeral cache + Celery result store is fine: results are advisory,
     # durable data lives in Postgres. (The task queue itself lives in RabbitMQ.)
