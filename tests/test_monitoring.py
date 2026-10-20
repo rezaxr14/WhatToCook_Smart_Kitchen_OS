@@ -206,3 +206,139 @@ class ConfigCoherenceTests(TestCase):
     def test_example_secret_documents_the_grafana_password(self):
         secret = yaml.safe_load((ROOT / "k8s" / "secret.example.yaml").read_text())
         self.assertIn("GRAFANA_ADMIN_PASSWORD", secret["stringData"])
+
+
+def _compose_allowed_hosts():
+    compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text())
+    raw = compose["x-backend-common"]["environment"]["ALLOWED_HOSTS"]
+    match = re.fullmatch(r"\$\{ALLOWED_HOSTS:-([^}]*)\}", raw)
+    assert match, f"expected a ${{ALLOWED_HOSTS:-default}} interpolation, got {raw!r}"
+    return [h.strip() for h in match.group(1).split(",")]
+
+
+class PrometheusCanReachTheApiTests(TestCase):
+    """The first real CI run of the Grafana check failed: Prometheus scrapes web:8000, so it sends `Host: web:8000`, and Django
+    answers 400 to a host that is not in ALLOWED_HOSTS (the DEBUG default is localhost-only). The API target was permanently down."""
+
+    def scrape_host(self):
+        prom = yaml.safe_load((ROOT / "monitoring" / "prometheus.yml").read_text())
+        job = next(j for j in prom["scrape_configs"] if j["job_name"] == "whattocook-api")
+        return job["static_configs"][0]["targets"][0]  # e.g. "web:8000"
+
+    def test_the_compose_default_allows_the_host_prometheus_sends(self):
+        self.assertIn(self.scrape_host().split(":")[0], _compose_allowed_hosts())
+
+    def test_the_compose_default_keeps_what_the_healthchecks_and_browsers_use(self):
+        self.assertTrue({"localhost", "127.0.0.1"} <= set(_compose_allowed_hosts()))  # Dockerfile HEALTHCHECK uses 127.0.0.1
+
+    def test_metrics_answers_200_to_that_host_under_the_compose_default(self):
+        with self.settings(ALLOWED_HOSTS=_compose_allowed_hosts()):
+            response = self.client.get("/metrics", HTTP_HOST=self.scrape_host())
+        self.assertEqual(response.status_code, 200)
+
+    def test_control_without_web_the_same_scrape_is_a_400(self):
+        with self.settings(ALLOWED_HOSTS=["localhost", "127.0.0.1", "0.0.0.0"]), self.assertLogs("django.security.DisallowedHost", "ERROR"):
+            response = self.client.get("/metrics", HTTP_HOST=self.scrape_host())
+        self.assertEqual(response.status_code, 400)
+
+    def test_env_example_no_longer_claims_a_wildcard_default_and_says_to_keep_web(self):
+        text = (ROOT / ".env.example").read_text()
+        self.assertNotIn('Default "*"', text)
+        self.assertIn('Keep "web"', text)
+
+
+class ScrapeDiagnosticsTests(TestCase):
+    """When the scrape check gives up it must say which target is down and why (it used to print only the list of jobs)."""
+
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location("check_grafana", ROOT / "scripts" / "check_grafana.py")
+        self.cg = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.cg)
+
+    @staticmethod
+    def targets(*rows):
+        return {"status": "success", "data": {"activeTargets": [
+            {"labels": {"job": job}, "scrapeUrl": url, "health": health, "lastError": error} for job, url, health, error in rows]}}
+
+    def test_each_job_gets_its_health_url_and_last_error(self):
+        result = self.targets(("rabbitmq", "http://rabbitmq:15692/metrics", "up", ""),
+                              ("celery-flower", "http://flower:5555/metrics", "down", "connection refused"))
+        text = self.cg.describe_targets(200, result, ["rabbitmq", "celery-flower"])
+        self.assertIn("rabbitmq: up  http://rabbitmq:15692/metrics", text)
+        self.assertIn("celery-flower: down  http://flower:5555/metrics  lastError: connection refused", text)
+
+    def test_a_400_from_the_api_points_at_allowed_hosts(self):
+        result = self.targets(("whattocook-api", "http://web:8000/metrics", "down", "server returned HTTP status 400 Bad Request"))
+        self.assertIn("ALLOWED_HOSTS", self.cg.describe_targets(200, result, ["whattocook-api"]))
+
+    def test_the_allowed_hosts_hint_is_only_for_the_api_job(self):
+        result = self.targets(("celery-flower", "http://flower:5555/metrics", "down", "server returned HTTP status 400 Bad Request"))
+        self.assertNotIn("ALLOWED_HOSTS", self.cg.describe_targets(200, result, ["celery-flower"]))
+
+    def test_a_401_points_at_the_metrics_token(self):
+        result = self.targets(("whattocook-api", "http://web:8000/metrics", "down", "server returned HTTP status 401 Unauthorized"))
+        self.assertIn("METRICS_TOKEN", self.cg.describe_targets(200, result, ["whattocook-api"]))
+
+    def test_a_job_with_no_active_target_is_named(self):
+        text = self.cg.describe_targets(200, self.targets(), ["rabbitmq"])
+        self.assertIn("rabbitmq: no active target", text)
+
+    def test_an_unreadable_targets_endpoint_is_reported_not_raised(self):
+        text = self.cg.describe_targets(502, "bad gateway", ["rabbitmq"])
+        self.assertIn("could not read Prometheus targets", text)
+        self.assertIn("502", text)
+
+    def test_poll_appends_the_explanation_when_it_gives_up(self):
+        import contextlib
+        import io
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit):
+            self.cg.poll("target down", lambda: None, 0, explain=lambda: "      rabbitmq: down  http://x  lastError: boom")
+        self.assertIn("target down (gave up after 0s)", out.getvalue())
+        self.assertIn("lastError: boom", out.getvalue())
+
+    def test_poll_without_an_explanation_still_fails_cleanly(self):
+        import contextlib
+        import io
+
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), self.assertRaises(SystemExit):
+            self.cg.poll("target down", lambda: None, 0)
+        self.assertEqual(out.getvalue().count("\n"), 1)
+
+    def test_the_scrape_check_wires_the_explanation_in(self):
+        source = (ROOT / "scripts" / "check_grafana.py").read_text()
+        self.assertTrue("targets_up, args.wait, explain_targets" in source, "the scrape poll must be given explain_targets")
+        self.assertTrue("/api/v1/targets?state=active" in source, "the explanation must read Prometheus's active targets")
+        self.assertTrue("first_readable(" in source and "args.prometheus" in source, "Prometheus is tried directly before the Grafana proxy")
+        self.assertTrue("{args.prometheus.rstrip('/')}/api/v1/targets?state=active" in source, "the direct source must ask for the ACTIVE targets")
+
+    def test_the_first_readable_source_wins_and_a_failing_one_falls_through(self):
+        good = (200, {"status": "success", "data": {"activeTargets": []}})
+        calls = []
+        self.assertEqual(self.cg.first_readable(lambda: calls.append("direct") or (0, "connection refused"), lambda: calls.append("proxy") or good), good)
+        self.assertEqual(calls, ["direct", "proxy"])
+        calls.clear()
+        self.assertEqual(self.cg.first_readable(lambda: calls.append("direct") or good, lambda: calls.append("proxy") or (403, "forbidden")), good)
+        self.assertEqual(calls, ["direct"], "no second request when the first source answered")
+
+    def test_an_error_status_from_prometheus_is_not_readable_so_the_next_source_is_tried(self):
+        good = (200, {"status": "success", "data": {"activeTargets": []}})
+        self.assertEqual(self.cg.first_readable(lambda: (200, {"status": "error", "error": "boom"}), lambda: good), good)
+
+    def test_prometheus_url_is_a_real_command_line_option(self):
+        import subprocess
+        import sys
+
+        out = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_grafana.py"), "--help"], capture_output=True, text=True, timeout=30)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertRegex(out.stdout, r"--prometheus PROMETHEUS\b")  # the exact option (argparse also accepts abbreviations)
+
+    def test_the_grafana_proxy_is_kept_as_the_fallback_source(self):
+        source = (ROOT / "scripts" / "check_grafana.py").read_text()
+        self.assertTrue("/api/datasources/proxy/uid/{DATASOURCE_UID}/api/v1/targets?state=active" in source, "the proxy fallback is gone")
+
+    def test_when_no_source_is_readable_the_last_failure_is_what_gets_reported(self):
+        self.assertEqual(self.cg.first_readable(lambda: (0, "refused"), lambda: (403, "forbidden")), (403, "forbidden"))
+        self.assertEqual(self.cg.first_readable(lambda: (200, {"status": "error"})), (200, {"status": "error"}))

@@ -26,6 +26,10 @@ x-backend-common: &backend-common
     CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER:-whattocook}:${RABBITMQ_DEFAULT_PASS:-secret}@rabbitmq:5672//
     CELERY_RESULT_BACKEND: redis://redis:6379/0
     REDIS_URL: redis://redis:6379/1
+    # Prometheus (monitoring profile) scrapes web:8000, so its Host header is "web". Django answers 400 to a host that is not
+    # allowed, and the settings default for DEBUG is localhost-only: without "web" the API target is permanently down.
+    # If you set ALLOWED_HOSTS in .env, keep "web" in it.
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}
 
 services:
   web:

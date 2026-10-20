@@ -71,8 +71,10 @@ def panel_queries(dashboard):
             yield panel["title"], target["expr"]
 
 
-def poll(description, fn, wait):
-    """Call fn() until it returns a truthy value (returned) or `wait` seconds pass (-> fail)."""
+def poll(description, fn, wait, explain=None):
+    """Call fn() until it returns a truthy value (returned) or `wait` seconds pass (-> fail).
+
+    `explain()` (optional) returns extra text for the failure message: what the stack looked like when we gave up."""
     deadline = time.time() + wait
     last = None
     while True:
@@ -80,8 +82,55 @@ def poll(description, fn, wait):
         if last:
             return last
         if time.time() >= deadline:
-            fail(f"{description} (gave up after {wait}s)")
+            detail = explain() if explain else ""
+            fail(f"{description} (gave up after {wait}s)" + (f"\n{detail}" if detail else ""))
         time.sleep(3)
+
+
+def first_readable(*fetchers):
+    """Try each fetcher (-> (status, json)) until one returns a Prometheus success answer; else the last failure."""
+    outcome = (0, "no source tried")
+    for fetch in fetchers:
+        outcome = fetch()
+        status, result = outcome
+        if status == 200 and isinstance(result, dict) and result.get("status") == "success":
+            return outcome
+    return outcome
+
+
+def get_json(url, timeout=10):
+    """Unauthenticated GET -> (http_status, parsed_json_or_text): Prometheus itself, published on localhost in compose."""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            status, body = resp.status, resp.read().decode()
+    except urllib.error.HTTPError as err:
+        status, body = err.code, err.read().decode()
+    except (urllib.error.URLError, OSError) as err:
+        return 0, str(err)
+    try:
+        return status, json.loads(body)
+    except ValueError:
+        return status, body
+
+
+def describe_targets(status, result, jobs):
+    """Prometheus /api/v1/targets (through Grafana's proxy) -> one line per expected job: health and the last scrape error."""
+    if status != 200 or not isinstance(result, dict) or result.get("status") != "success":
+        return f"      (could not read Prometheus targets through Grafana: HTTP {status}: {str(result)[:200]})"
+    active = result.get("data", {}).get("activeTargets", [])
+    lines = []
+    for job in jobs:
+        mine = [t for t in active if t.get("labels", {}).get("job") == job]
+        if not mine:
+            lines.append(f"      {job}: no active target (is the job in monitoring/prometheus.yml?)")
+        for t in mine:
+            error = t.get("lastError") or ""
+            lines.append(f"      {job}: {t.get('health', '?')}  {t.get('scrapeUrl', '?')}" + (f"  lastError: {error}" if error else ""))
+            if job == "whattocook-api" and "400" in error:
+                lines.append("        -> the API rejects the scrape's Host header: add the target's host (web) to ALLOWED_HOSTS")
+            if "401" in error:
+                lines.append("        -> unauthorized: METRICS_TOKEN is set; put the same token in monitoring/prometheus.yml")
+    return "\n".join(lines)
 
 
 def scalar(result):
@@ -95,6 +144,7 @@ def main():
     parser.add_argument("url", nargs="?", default="http://localhost:3000")
     parser.add_argument("credentials", nargs="?", default=f"{os.getenv('GRAFANA_ADMIN_USER', 'admin')}:{os.getenv('GRAFANA_ADMIN_PASSWORD', 'change-me')}")
     parser.add_argument("--wait", type=int, default=90, help="seconds to wait for Grafana / scrape targets / data")
+    parser.add_argument("--prometheus", default="http://localhost:9090", help="Prometheus base URL, only used to explain a failed scrape check")
     args = parser.parse_args()
     g = Grafana(args.url, args.credentials)
 
@@ -152,7 +202,15 @@ def main():
         up = {r["metric"].get("job"): r["value"][1] == "1" for r in result["data"]["result"]}
         missing = [j for j in SCRAPE_JOBS if not up.get(j)]
         return {"up": up} if not missing else None
-    poll(f"Prometheus is not scraping all of {SCRAPE_JOBS} (check `docker compose --profile monitoring ps` and monitoring/prometheus.yml)", targets_up, args.wait)
+    def explain_targets():
+        # Prometheus directly first (published on localhost in compose), then through Grafana's datasource proxy.
+        status, result = first_readable(
+            lambda: get_json(f"{args.prometheus.rstrip('/')}/api/v1/targets?state=active"),
+            lambda: g.get(f"/api/datasources/proxy/uid/{DATASOURCE_UID}/api/v1/targets?state=active"),
+        )
+        return describe_targets(status, result, SCRAPE_JOBS)
+    poll(f"Prometheus is not scraping all of {SCRAPE_JOBS} (check `docker compose --profile monitoring ps` and monitoring/prometheus.yml)",
+         targets_up, args.wait, explain_targets)
     ok("Prometheus scrapes " + ", ".join(SCRAPE_JOBS))
 
     poll("no django_http_* series: the API is not exporting request metrics",
