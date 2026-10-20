@@ -54,6 +54,19 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    against Grafana or RabbitMQ themselves (neither could run in the sandbox): RabbitMQ series names are documentation-verified, Grafana's behaviour is
    what the smoke test proves. Not done: alert rules (Prometheus/Alertmanager), a Postgres/Redis exporter, a Flower scrape secret (not needed: its
    /metrics is unauthenticated).
+   **First CI run of the smoke check (2026-10-20) failed: `Prometheus is not scraping all of [...]` (90 s), without saying which target.** Cause found by
+   reproducing it with the real Prometheus 3.5.0 against the real app: the API job was permanently down. Prometheus scrapes `web:8000`, so it sends
+   `Host: web:8000`; Django answers 400 to a host not in `ALLOWED_HOSTS`, and the DEBUG default is `localhost,127.0.0.1,0.0.0.0` (compose never set it).
+   So the compose monitoring profile had never scraped the API; nothing asserted it until this check. Fixed: compose sets
+   `ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0,web}` (a user-set value in `.env` wins, so `.env.example` now says to keep `web`; it also
+   claimed a `"*"` default that has not existed). `check_grafana.py` now explains a failed scrape check: every expected job's health, URL and
+   `lastError` read from Prometheus (directly on `--prometheus`, default localhost:9090, then through Grafana's proxy), with a hint for 400 (ALLOWED_HOSTS)
+   and 401 (METRICS_TOKEN). Verified: with the real binary a rejected Host gives `down` + `HTTP status 400 Bad Request` and an allowed one gives
+   `up == 1`; tests pin the compose default against `monitoring/prometheus.yml` and send the scrape's Host to `/metrics`; 17 mutations caught.
+   **Not verified:** the other three jobs (`rabbitmq`, `rabbitmq-per-object`, `celery-flower`) in compose: they were never the reported failure, but the
+   log did not say, so if one of them is also down the check now names it. `docker compose` itself (the interpolation) was not run.
+   **Open question, not changed:** `k8s/optional/servicemonitor.yaml` scrapes the API by pod address, so under the prod overlay's strict `ALLOWED_HOSTS`
+   (`whattocook.example.com,web`) the same 400 is likely there too; probes avoid it with `httpHeaders: Host: web`, a ServiceMonitor has no equivalent.
 7. **Domain events on RabbitMQ** (e.g. `pantry.updated`, `recipe.generated`) with an idempotent consumer. Choose **Kafka only if** you need replay or many independent consumers; for fan-out/work-queue semantics RabbitMQ already fits. Needs a product decision first.
 8. ~~**Supply chain**~~ **Done** (pending CI and a real release run): all 34 action references pinned to commit SHAs (each resolved from the upstream repo with
    `git ls-remote`, cross-checked against the moving major tag; trivy-action's and cosign-installer's own nested actions are already SHA-pinned upstream);
