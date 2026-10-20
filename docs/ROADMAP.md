@@ -108,4 +108,14 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    above: the thresholds and arrival rates are a first guess for a 2-vCPU runner. Read the first run's `load-results` artifact, then tighten them.
    Not done: pushing k6 metrics to Prometheus/Grafana, trend history across nights, a notification on failure, authenticated-user scenarios.
 10. **GitOps:** Argo CD/Flux pointing at `k8s/overlays/prod`, image tag bumps from `release.yml`; multi-arch (arm64) images.
-11. **React Router 6 → 7.** `npm audit` reports two moderate advisories in production dependencies (`react-router`, `react-router-dom`: open redirect via backslash in `<Link>`/`useNavigate`, CVE-2025-68470 bypass); the fix exists only in v7. *Done when* `npm audit` is fully clean and e2e + `e2e-csp` are green.
+11. ~~**React Router 6 → 7**~~ **Done** (pending the e2e / `e2e-csp` run on the PR, which is this item's own done-criterion): `react-router@^7.18.4`, `react-router-dom` and
+   `@remix-run/router` removed (v7 folds the dom package into `react-router`; the 13 imports changed mechanically). `npm audit` is 0 vulnerabilities, dev dependencies
+   included (it listed two moderate advisories; vulnerable range is <= 7.17.0). **Version choice:** `latest` is 8.5.0, which needs React >= 19.2.7 and Node >= 22.22; this
+   app is on React 18 and builds on `node:20-alpine`, so 7.18.4 (npm's `version-7` tag, five weeks old, Node >= 20, React >= 18). **Decision for you to revisit:**
+   `<Router useTransitions={false}>`. v7 wraps router updates in `React.startTransition` by default; with every route lazy-loaded that would keep the old page on screen
+   (no `RouteFallback` spinner) while a chunk loads, so the migration keeps today's behaviour; remove the prop to opt in. Cost: `vendor-react` 165.0 -> 182.9 kB raw, initial
+   graph 196.5 kB gzip against the 220 kB budget (v7 adds `cookie` and `set-cookie-parser`, both assigned to `vendor-react`). `tests/test_frontend_deps.py` pins the version window
+   (>= 7.18, < 8), no leftovers of the old packages, the chunk rule, `useTransitions={false}`, and Node pins against the router's `engines`; 12 mutations caught.
+   **Verified here:** `tsc -b` + `vite build` (exit 0), `check:bundle`, `npm audit`, `playwright test --list` for all three configs (23 + 18 + 18 tests). **Not verified:** any
+   browser behaviour: Playwright was not run (by design), so navigation, the lazy-route fallback and the CSP chunk checks are proven only by CI. Separate observation: Node 20 reached
+   end-of-life in April 2026 (Dockerfile and four workflows); a Node bump is not part of this item.

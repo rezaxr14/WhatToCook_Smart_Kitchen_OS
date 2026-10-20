@@ -322,7 +322,7 @@ Dependabot keeps pip, npm, GitHub Actions and Docker base images current.
 
 **Developer tooling:** `make help` lists the common tasks (`make test`, `make cov`, `make smoke`, `make drill`, …); `pre-commit install` adds the same lint gate locally; [`AGENTS.md`](AGENTS.md) documents the invariants and what CI proves (read it before changing queues, compose, k8s or secrets); [`docs/ROADMAP.md`](docs/ROADMAP.md) lists what to build next.
 Container-image vulnerability scanning is intentionally not wired through a third-party action (the `trivy-action` tags were hijacked in March 2026); if you add one, pin it to a full commit SHA.
-Frontend `npm audit` (dev dependencies included) has no highs since the Tailwind 4 migration. Two *moderate* `react-router` advisories remain (open redirect via backslash in `<Link>`/`useNavigate`); the fix only exists in React Router 7 (roadmap item 11).
+Frontend `npm audit` (dev dependencies included) is fully clean: no highs since the Tailwind 4 migration, and the two moderate `react-router` advisories (open redirect via backslash in `<Link>`/`useNavigate`) went with the React Router 7 migration (roadmap item 11).
 
 ## 🛡️ Production hardening
 

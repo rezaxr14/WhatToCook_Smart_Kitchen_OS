@@ -16,7 +16,8 @@ import { join } from 'node:path';
 
 const KB = 1000; // Vite reports sizes in kB = 1000 bytes
 const BUDGET = {
-  // Measured 185 kB on 2026-10-17 (was 313 kB for the entry chunk alone before route splitting).
+  // Measured 196.5 kB on 2026-10-20 after React Router 7 (185 kB on 2026-10-17 with v6: vendor-react grew 165.0 -> 182.9 kB raw;
+  // 313 kB for the entry chunk alone before route splitting).
   initialGzipKb: 220,
   // Any single chunk, minified. Largest non-3D chunk today: ~208 kB.
   chunkRawKb: 300,
