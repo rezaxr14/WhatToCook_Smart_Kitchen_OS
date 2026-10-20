@@ -315,6 +315,7 @@ Notes:
 | [`security.yml`](.github/workflows/security.yml) | push / PR / weekly | `pip-audit`, `npm audit` (runtime deps, high+), **CodeQL** for Python and TypeScript |
 | [`smoke.yml`](.github/workflows/smoke.yml) | push / PR | Boots the **real stacks on GitHub's runners**: the docker compose stack (`scripts/compose-smoke.sh`: API health, RabbitMQ → worker → Redis round trip, beat, `/metrics`, uid 10001, monitoring profile incl. Grafana datasource/dashboard/queries and Celery events) and the Kubernetes dev overlay on **kind** (`scripts/kind-smoke.sh`), with pod diagnostics on failure |
 | [`e2e.yml`](.github/workflows/e2e.yml) | push / PR / nightly | Playwright suite (23 tests) against a seeded API |
+| [`load.yml`](.github/workflows/load.yml) | nightly / manual | **Load & soak**: the compose stack in production settings, k6 (`load/k6/main.js`) with p95 / error-rate / isolation thresholds, the `ai` queue drained under that load (`scripts/check_ai_queue.py`), then a `429` still returned through nginx (`load/k6/throttle.js`) |
 | [`release.yml`](.github/workflows/release.yml) | `v*.*.*` tag | Publishes `ghcr.io/<owner>/whattocook-{backend,frontend}` |
 
 Dependabot keeps pip, npm, GitHub Actions and Docker base images current.
@@ -347,6 +348,13 @@ cosign verify ghcr.io/rezaxr14/whattocook-backend:1.0.0 \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 docker buildx imagetools inspect ghcr.io/rezaxr14/whattocook-backend:1.0.0 --format '{{ json .SBOM }}'
 ```
+
+**Load & soak** (`.github/workflows/load.yml`, nightly and on demand; never a PR gate). The soak runs with rate limits **off** and an **empty** `GEMINI_API_KEY`,
+so it measures the app and cannot spend LLM quota. Thresholds live in `load/k6/main.js`. Locally: install [k6](https://k6.io/docs/get-started/installation/), start the
+API with `THROTTLING_ENABLED=false make run`, then `make load-smoke` (25 s). `POST /api/ai/suggestions/` answers inline and only enqueues when the inline call fails,
+so HTTP load never fills the `ai` queue; `python3 scripts/check_ai_queue.py` (compose stack up) publishes a burst of the real task, and asserts the queue drains
+and every result lands in Redis. **Not verified until the first run on a runner:** the numbers (thresholds and arrival rates are a first guess for 2 vCPUs); read the
+`load-results` artifact (`summary.json`, `k6.log`, `ai-queue.log`) and tighten them.
 
 ## 🖼️ Curated dish photography
 

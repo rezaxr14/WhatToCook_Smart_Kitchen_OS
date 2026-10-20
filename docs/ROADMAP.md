@@ -65,6 +65,26 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    not reachable from the sandbox, so the first CI run may report real findings: fix by updating the base image/dependency, or add a justified `.trivyignore`
    entry), and the release job itself (cosign v3 against ghcr.io, `imagetools` output shape): run `release.yml` once via `workflow_dispatch` and read the log.
    Not done: base images pinned by digest, SARIF upload to code scanning, attaching the SBOM to GitHub releases, multi-arch (item 10).
-9. **Load/soak:** nightly k6 against the compose stack with thresholds (p95 latency, error rate) and a check that the `ai` queue drains.
+9. ~~**Load/soak**~~ **Done** (pending the first CI run, which is also the calibration run): `.github/workflows/load.yml` (nightly + `workflow_dispatch`, never a
+   PR gate) boots the compose stack in production settings (DEBUG=false, random secrets), rate limits off and an **empty `GEMINI_API_KEY`** (the provider fails
+   instantly into the fallback: nothing can spend LLM quota), soaks it with k6 v2.3.0 (pinned by sha256) and, **while that load runs**, bursts tasks onto the
+   `ai` queue and proves it drains. `load/k6/main.js`: open-model arrival-rate scenarios (catalog, can-cook, per-session shopping list, AI suggestions, SPA
+   shell); thresholds on error rate, p95 per endpoint (catalog/stats 500 ms, can-cook 1.5 s, shopping 800 ms, AI 2 s), dropped iterations, and any
+   cross-session shopping-list leak (the owner-scoping invariant under concurrency). `load/k6/throttle.js`: afterwards rate limiting is switched back on and a
+   `429` + `Retry-After` + JSON body must still come back through nginx. `scripts/check_ai_queue.py`: no Gemini key in web or worker (aborts *before*
+   publishing), management API up with a consumer on `ai`, N messages published to `ai`, ready=0/unacked=0 on consecutive polls with N acks, all N results
+   SUCCESS with the degraded fallback in Redis. 48 tests (`tests/test_load.py`, `test_ai_queue_check.py`, `test_throttling.py`), mutation-tested (9 on the
+   checker, 15 on the workflow/scripts, 3 on the throttle fix).
+   **Found on the way:** (1) `THROTTLING_ENABLED=false` made **every scoped endpoint return 500** (an emptied rate table, then an `ImportError` in the error path);
+   fixed and tested, and README no longer documents a `USE_RATE_LIMITS` variable that never existed. (2) **HTTP load never reaches the `ai` queue**:
+   `ai_suggestions_api` answers inline and only enqueues when the inline call raises, and the provider layer swallows provider errors into the fallback, so a
+   queue-drain check driven by HTTP would pass trivially. The check therefore publishes the burst itself with the real task. If you want the *endpoint* to
+   enqueue under load, that needs a product-code switch (e.g. an `AI_FORCE_ASYNC` flag): not done, decide first.
+   **Verified here:** k6 ran the `smoke` profile of both scripts against a production-mode gunicorn (SQLite) and exits 0; the same scripts exit 99 under an
+   impossible threshold, with throttling left on, and (throttle.js) with throttling off; the checker's generated code ran against the real task (eager mode);
+   RabbitMQ management field names are documentation-verified; `actionlint` + `shellcheck` are clean on `load.yml` (they do flag three pre-existing SC2034 unused-loop-variable warnings in `e2e.yml` and `visual.yml`, untouched here). **Not verified (needs a runner):** the
+   workflow itself (compose with DEBUG=false, nginx behind it, the throttle phase's `up --force-recreate`), the real RabbitMQ stats lag, and every number
+   above: the thresholds and arrival rates are a first guess for a 2-vCPU runner. Read the first run's `load-results` artifact, then tighten them.
+   Not done: pushing k6 metrics to Prometheus/Grafana, trend history across nights, a notification on failure, authenticated-user scenarios.
 10. **GitOps:** Argo CD/Flux pointing at `k8s/overlays/prod`, image tag bumps from `release.yml`; multi-arch (arm64) images.
 11. **React Router 6 → 7.** `npm audit` reports two moderate advisories in production dependencies (`react-router`, `react-router-dom`: open redirect via backslash in `<Link>`/`useNavigate`, CVE-2025-68470 bypass); the fix exists only in v7. *Done when* `npm audit` is fully clean and e2e + `e2e-csp` are green.

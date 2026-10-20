@@ -20,6 +20,7 @@ merge). Push a branch/PR and read the jobs; don't spend hours fighting a local D
 | `k8s/**` | `make k8s-render` | `ci.yml` kubeconform (incl. CRDs), `smoke.yml` → kind |
 | Backups / DB | `make drill` (needs Postgres env) | `ci.yml` backup/restore drill |
 | Dependencies | `pip-audit -r requirements.txt` · `cd frontend && npm audit --omit=dev` | `security.yml` (+ CodeQL) |
+| Load / throttling / `ai` queue (`load/`, `scripts/check_ai_queue.py`, `GetFood/throttles.py`) | `manage.py test tests.test_load tests.test_ai_queue_check tests.test_throttling` · `make load-smoke` (needs k6 and `THROTTLING_ENABLED=false make run`) | `load.yml` (nightly + `workflow_dispatch`, **not** a PR gate): k6 soak, `ai` drain under load, 429 behind nginx |
 
 ## Invariants (each one cost us a bug; don't undo them)
 - **`db.sqlite3` is tracked on purpose**: it is the initial dataset (images etc.). Don't untrack or regenerate it. `.dockerignore` keeps it out of images.
@@ -39,6 +40,8 @@ merge). Push a branch/PR and read the jobs; don't spend hours fighting a local D
 - **Containers run as uid 10001.** Never use `healthcheck: disable: true` in compose: newer Compose releases fail `up --wait` ("has no healthcheck configured"). Give each role a real check; the PID-1 checks (beat, bot) depend on the entrypoint `exec`-ing the process (idle bot stays the entrypoint shell and traps SIGTERM).
 - **Boot safety.** `bootstrap_db` migrates + seeds under a Postgres advisory lock so replicas can start together. Don't reintroduce a bare `migrate` in entrypoints.
 - **Kubernetes.** `k8s/base` + `overlays/{dev,prod}`. Probes send `Host: web`; `media` PVC is RWO (>1 web replica needs RWX); beat and the Telegram bot are single-replica `Recreate`. Secrets are never committed (`k8s/secret.yaml` is git-ignored).
+- **The load test must never be able to spend LLM quota, and `THROTTLING_ENABLED=false` exists only for it.** `load.yml` writes an *empty* `GEMINI_API_KEY` (never `cp .env.example .env`: it holds a placeholder key) and turns throttling off for the soak only (the kill switch is a real setting honoured in `GetFood/throttles.py`: `get_rate()` returns `None`; never empty the rate table, that 500s every scoped view). `check_ai_queue.py` aborts before publishing if a key is configured in web or worker. `load.yml` stays out of `pull_request`/`push`. (`tests/test_load.py`)
+- **HTTP load does not reach the `ai` queue.** The endpoint answers inline and enqueues only if the inline call raises; the provider layer converts provider errors into the fallback. Prove the queue with `scripts/check_ai_queue.py` (publishes the real task), not with k6.
 - **Supply chain.** No third-party scanner actions for now (`trivy-action` tags were hijacked in March 2026). If you add one, pin a full commit SHA.
 - **Windows checkouts.** `.gitattributes` forces LF for scripts/YAML/Dockerfile; `make` is unavailable in PowerShell, call the underlying commands.
 - **Prove, don't claim.** If you didn't run it (or CI didn't), say "not verified".
