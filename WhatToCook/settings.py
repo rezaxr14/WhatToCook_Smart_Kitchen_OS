@@ -61,6 +61,20 @@ if not ALLOWED_HOSTS:
         "ALLOWED_HOSTS must be set when DEBUG=false (see .env.example)."
     )
 
+
+def _with_pod_ip(hosts, pod_ip):
+    """Kubernetes: a ServiceMonitor scrapes every pod by its IP, so Prometheus sends `Host: <podIP>:8000`, which a strict ALLOWED_HOSTS
+    answers with 400 (its scrape config cannot override Host, and the operator has no field for it). The Deployment hands each pod
+    its own IP (downward API) and only that one address is added; the explicit list above still has to be non-empty."""
+    pod_ip = (pod_ip or "").strip()
+    if not pod_ip:
+        return hosts
+    entry = f"[{pod_ip}]" if ":" in pod_ip else pod_ip  # Django matches IPv6 hosts with their brackets
+    return hosts if entry in hosts else [*hosts, entry]
+
+
+ALLOWED_HOSTS = _with_pod_ip(ALLOWED_HOSTS, os.getenv("POD_IP"))
+
 # ---------------------------------------------------------------------------
 # Production security hardening (all tunable through the environment)
 # ---------------------------------------------------------------------------

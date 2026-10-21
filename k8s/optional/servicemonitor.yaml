@@ -1,6 +1,8 @@
 # OPTIONAL: Prometheus Operator scrape configs (kube-prometheus-stack).
 # Apply with:  kubectl apply -f k8s/optional/servicemonitor.yaml
 # Add a `release: <your-helm-release>` label if your Prometheus selects monitors by it.
+# Scrapes each pod by IP, so the Host header is `<podIP>:8000`: the web Deployment sets POD_IP and settings.py allows it (a strict ALLOWED_HOSTS
+# would otherwise answer 400). The operator has no field to change Host and Prometheus reserves the header.
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:

@@ -342,3 +342,53 @@ class ScrapeDiagnosticsTests(TestCase):
     def test_when_no_source_is_readable_the_last_failure_is_what_gets_reported(self):
         self.assertEqual(self.cg.first_readable(lambda: (0, "refused"), lambda: (403, "forbidden")), (403, "forbidden"))
         self.assertEqual(self.cg.first_readable(lambda: (200, {"status": "error"})), (200, {"status": "error"}))
+
+
+class PodIpScrapeTests(TestCase):
+    """A ServiceMonitor scrapes each pod by IP (`Host: <podIP>:8000`); neither the operator nor Prometheus can change that header, so
+    each pod allows its own IP (downward API -> POD_IP -> ALLOWED_HOSTS). Without it /metrics answers 400 under the prod overlay."""
+
+    HOSTS = ["whattocook.example.com", "web"]  # what k8s/overlays/prod sets
+
+    def with_pod_ip(self, ip):
+        from WhatToCook.settings import _with_pod_ip
+
+        return _with_pod_ip(list(self.HOSTS), ip)
+
+    def test_the_pod_ip_is_added_and_nothing_else_changes(self):
+        self.assertEqual(self.with_pod_ip("10.42.0.7"), [*self.HOSTS, "10.42.0.7"])
+        self.assertEqual(self.with_pod_ip("10.42.0.7 "), [*self.HOSTS, "10.42.0.7"])
+
+    def test_ipv6_is_added_with_brackets_the_way_django_matches_it(self):
+        self.assertEqual(self.with_pod_ip("fd00::7"), [*self.HOSTS, "[fd00::7]"])
+
+    def test_no_pod_ip_changes_nothing_and_a_duplicate_is_not_added_twice(self):
+        for empty in (None, "", "  "):
+            self.assertEqual(self.with_pod_ip(empty), self.HOSTS)
+        self.assertEqual(self.with_pod_ip("web"), self.HOSTS)
+
+    def test_metrics_answers_200_to_the_pod_ip_and_400_to_another_ip(self):
+        with self.settings(ALLOWED_HOSTS=self.with_pod_ip("10.42.0.7")):
+            self.assertEqual(self.client.get("/metrics", HTTP_HOST="10.42.0.7:8000").status_code, 200)
+            with self.assertLogs("django.security.DisallowedHost", "ERROR"):
+                self.assertEqual(self.client.get("/metrics", HTTP_HOST="10.42.0.8:8000").status_code, 400)
+
+    def test_metrics_answers_200_to_an_ipv6_pod_ip(self):
+        with self.settings(ALLOWED_HOSTS=self.with_pod_ip("fd00::7")):
+            self.assertEqual(self.client.get("/metrics", HTTP_HOST="[fd00::7]:8000").status_code, 200)
+
+    def test_control_the_pod_ip_is_a_400_without_the_fix(self):
+        with self.settings(ALLOWED_HOSTS=self.HOSTS), self.assertLogs("django.security.DisallowedHost", "ERROR"):
+            self.assertEqual(self.client.get("/metrics", HTTP_HOST="10.42.0.7:8000").status_code, 400)
+
+    def test_settings_wires_the_function_to_the_env_var_the_deployment_sets(self):
+        source = (ROOT / "WhatToCook" / "settings.py").read_text(encoding="utf-8")
+        self.assertRegex(source, r'(?m)^ALLOWED_HOSTS = _with_pod_ip\(ALLOWED_HOSTS, os\.getenv\("POD_IP"\)\)$')
+        web = next(d for d in yaml.safe_load_all((ROOT / "k8s" / "base" / "web.yaml").read_text()) if d and d["kind"] == "Deployment")
+        container = next(c for c in web["spec"]["template"]["spec"]["containers"] if c["name"] == "web")
+        pod_ip = next(e for e in container["env"] if e["name"] == "POD_IP")
+        self.assertEqual(pod_ip["valueFrom"], {"fieldRef": {"fieldPath": "status.podIP"}})
+
+    def test_the_wiring_sits_after_the_empty_check_so_the_pod_ip_cannot_satisfy_it(self):
+        source = (ROOT / "WhatToCook" / "settings.py").read_text(encoding="utf-8")
+        self.assertLess(source.index("ALLOWED_HOSTS must be set when DEBUG=false"), source.index("ALLOWED_HOSTS = _with_pod_ip("))

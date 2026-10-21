@@ -74,6 +74,11 @@ spec:
           ports:
             - name: http
               containerPort: 8000
+          env:
+            # A ServiceMonitor scrapes by pod IP and sends `Host: <podIP>:8000`; settings.py adds this one address to ALLOWED_HOSTS.
+            - name: POD_IP
+              valueFrom:
+                fieldRef: {fieldPath: status.podIP}
           envFrom:
             - configMapRef:
                 name: whattocook-config
