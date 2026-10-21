@@ -77,7 +77,7 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    `tests/test_workflows.py`, mutation-tested with 9 regressions. **Not verified (could not run here):** the scan on the real images (the vulnerability DB is
    not reachable from the sandbox, so the first CI run may report real findings: fix by updating the base image/dependency, or add a justified `.trivyignore`
    entry), and the release job itself (cosign v3 against ghcr.io, `imagetools` output shape): run `release.yml` once via `workflow_dispatch` and read the log.
-   Not done: base images pinned by digest, SARIF upload to code scanning, attaching the SBOM to GitHub releases, multi-arch (item 10).
+   Not done (base images are pinned since 2026-10-21, see item 10): SARIF upload to code scanning, attaching the SBOM to GitHub releases, multi-arch (item 10).
    **First CI scan (2026-10-20) reported four fixable HIGH findings; fixed:** frontend (alpine 3.24.2): libexpat CVE-2026-77214 and libx11 CVE-2026-88806 ->
    `apk upgrade --no-cache` as the first instruction of a named `serve` stage, which the scan builds (and only the scan builds) rebuild without cache
    (`no-cache-filters`), so a cached layer cannot hide a later fix and the published image is still exactly what was scanned. Backend: jaraco.context 5.3.0
@@ -127,6 +127,7 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    pinned by digest** (no registry was reachable to resolve one; the workflow says so at the call site and a test insists it does until it is pinned). Pin it with `image:
    docker.io/tonistiigi/binfmt@sha256:<digest>`. Native arm64 runners would avoid it but need a per-platform push-and-merge design. (2) Pull-request scans (`ci.yml`, `security.yml`) stay amd64-only.
    (3) Base images (`python:3.11-slim`, `nginx:alpine`, `node:20-alpine`) are still not pinned by digest, for the same reason. (4) `ci.yml` downloads kubeconform from `releases/latest`: unpinned.
+   **Update 2026-10-21:** the `v0.0.1-rc.2` tag run of `release.yml` succeeded (every `publish` step, then `gitops-bump` pushed `gitops/release-0.0.1-rc.2`); CI passed on the bump PR. PR #31 was opened **by hand**, not by the job, so `gh pr create` in `gitops-bump` is still unproven (`GITOPS_TOKEN` is set; check the setting *Allow GitHub Actions to create and approve pull requests*). Gaps (1) and (3) are closed for `tonistiigi/binfmt`, `python:3.11-slim` and `nginx:alpine` (digests of the multi-arch indexes); `node:20-alpine` is pinned in the Node bump. Still tag-only, not digest-pinned: the service images in `docker-compose.yml` and `k8s/` (postgres, redis, rabbitmq, flower, prometheus, grafana), and `postgres:15-alpine` in `ci.yml`.
    (5) `k8s/overlays/prod` still carries the placeholder host `whattocook.example.com`: replace it **before** applying the Application. (6) Open question from item 6 still stands: the optional
    ServiceMonitor likely hits the same `ALLOWED_HOSTS` 400 under the prod overlay.
 11. ~~**React Router 6 → 7**~~ **Done** (pending the e2e / `e2e-csp` run on the PR, which is this item's own done-criterion): `react-router@^7.18.4`, `react-router-dom` and
