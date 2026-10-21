@@ -36,7 +36,7 @@
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
-    "@types/node": "^24.19.1",
+    "@types/node": "^26.6.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/styled-components": "^5.1.34",
