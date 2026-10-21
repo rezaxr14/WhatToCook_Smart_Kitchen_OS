@@ -107,7 +107,28 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    workflow itself (compose with DEBUG=false, nginx behind it, the throttle phase's `up --force-recreate`), the real RabbitMQ stats lag, and every number
    above: the thresholds and arrival rates are a first guess for a 2-vCPU runner. Read the first run's `load-results` artifact, then tighten them.
    Not done: pushing k6 metrics to Prometheus/Grafana, trend history across nights, a notification on failure, authenticated-user scenarios.
-10. **GitOps:** Argo CD/Flux pointing at `k8s/overlays/prod`, image tag bumps from `release.yml`; multi-arch (arm64) images.
+10. ~~**GitOps + multi-arch**~~ **Done as code; nothing here has run yet: it needs a tag push and a cluster.** Argo CD was chosen (the roadmap said Argo CD/Flux; no Flux manifests).
+   **Multi-arch:** `release.yml` builds `linux/amd64` + `linux/arm64` in one index (QEMU for arm64 only, `docker/setup-qemu-action` v4.4.0 pinned by SHA), scans **both** architectures
+   before publishing, and afterwards checks the published index really contains both (the check's jq filter is tested against single-arch, attestation-only and windows-only
+   indexes). The SPA is built once on the native builder (`FROM --platform=$BUILDPLATFORM`): its output is architecture-independent and emulating Node would be slow. All 61
+   backend requirements resolve to **prebuilt aarch64 wheels** for Python 3.11 (checked with `pip download --platform manylinux2014_aarch64`; no sdist, so no compiler under QEMU).
+   Each scan build has its own GHA cache scope (two exports to one scope overwrite each other); the publish build reads both and does not bypass the cache, so what ships is
+   what was scanned. Job timeout 30 -> 60 min. **GitOps:** `k8s/gitops/argocd/` has an `AppProject` (exactly the kinds the prod overlay renders, no Secret, no wildcard) and an
+   `Application` (path `k8s/overlays/prod`, `main`, automated prune + self-heal, **no `resources-finalizer`**: deleting the Application must not delete the database); both validated
+   strictly against the real Argo CD v3.5.6 CRD schemas (and the validator was shown to reject a misspelled field and a wrong type). The two PVCs in git (`media`,
+   `postgres-backups`) carry `Prune=false`. The new `gitops-bump` job (tags only, `contents`/`pull-requests` write + `packages` read, no `id-token`) resolves each published
+   digest, **cosign-verifies it against the release workflow's identity**, runs `scripts/set_image_digests.py` and opens a **pull request** (never a push to `main`); merging it is the
+   deployment. The script writes `newTag` + `digest`; checked with real kustomize 5.8.3 that this renders `image:1.2.3@sha256:...` for all six image references (five backend, one frontend), idempotently, and that a
+   re-bump replaces rather than stacks. `tests/test_gitops.py`: 41 tests, 49 mutations caught.
+   **Not verified (all need a tag or a cluster):** the QEMU build and the arm64 Trivy scan of a loaded foreign-architecture image; that `docker buildx imagetools inspect` prints a
+   `Digest:` line the way the bump job parses it (a wrong parse cannot slip through: `cosign verify` fails on a digest that was not signed); `gh pr create` (needs the setting
+   *Allow GitHub Actions to create and approve pull requests*); Argo CD itself (never applied to a cluster; Argo's bundled kustomize was not checked, only 5.8.3). Rehearse with a
+   pre-release tag such as `v0.0.1-rc.1`. **Known gaps, deliberately not hidden:** (1) `setup-qemu-action` runs `docker.io/tonistiigi/binfmt:latest --privileged` and that image is **not
+   pinned by digest** (no registry was reachable to resolve one; the workflow says so at the call site and a test insists it does until it is pinned). Pin it with `image:
+   docker.io/tonistiigi/binfmt@sha256:<digest>`. Native arm64 runners would avoid it but need a per-platform push-and-merge design. (2) Pull-request scans (`ci.yml`, `security.yml`) stay amd64-only.
+   (3) Base images (`python:3.11-slim`, `nginx:alpine`, `node:20-alpine`) are still not pinned by digest, for the same reason. (4) `ci.yml` downloads kubeconform from `releases/latest`: unpinned.
+   (5) `k8s/overlays/prod` still carries the placeholder host `whattocook.example.com`: replace it **before** applying the Application. (6) Open question from item 6 still stands: the optional
+   ServiceMonitor likely hits the same `ALLOWED_HOSTS` 400 under the prod overlay.
 11. ~~**React Router 6 → 7**~~ **Done** (pending the e2e / `e2e-csp` run on the PR, which is this item's own done-criterion): `react-router@^7.18.4`, `react-router-dom` and
    `@remix-run/router` removed (v7 folds the dom package into `react-router`; the 13 imports changed mechanically). `npm audit` is 0 vulnerabilities, dev dependencies
    included (it listed two moderate advisories; vulnerable range is <= 7.17.0). **Version choice:** `latest` is 8.5.0, which needs React >= 19.2.7 and Node >= 22.22; this
