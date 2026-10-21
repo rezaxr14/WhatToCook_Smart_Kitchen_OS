@@ -53,12 +53,13 @@ class MultiArchReleaseTests(SimpleTestCase):
         self.assertEqual(qemu["with"]["platforms"], "arm64", "amd64 is native; emulate only what is needed")
         self.assertLess(i, find("publish", "docker/setup-buildx-action", key="uses")[0])
 
-    def test_the_unpinned_binfmt_image_is_flagged_where_it_is_used(self):
-        # setup-qemu-action runs docker.io/tonistiigi/binfmt:latest --privileged; until it is pinned by digest the gap must stay visible.
+    def test_the_binfmt_image_that_runs_privileged_is_pinned_by_digest(self):
+        # setup-qemu-action runs this image with --privileged on the runner. Dependabot does not read an action's image: input,
+        # so the pin is ours to bump by hand (the command is in the comment above the step).
         text = RELEASE.read_text(encoding="utf-8")
         qemu = find("publish", "docker/setup-qemu-action", key="uses")[1]
-        pinned = qemu.get("with", {}).get("image", "").startswith("docker.io/tonistiigi/binfmt@sha256:")
-        self.assertTrue(pinned or "NOT pinned by digest" in text, "pin the binfmt image or say it is not pinned")
+        self.assertRegex(qemu.get("with", {}).get("image", ""), r"^docker\.io/tonistiigi/binfmt@sha256:[0-9a-f]{64}$")
+        self.assertNotIn("NOT pinned by digest", text, "the note is stale once the image is pinned")
 
     def test_publish_builds_both_platforms_in_one_index(self):
         _, publish = find("publish", "Publish the multi-arch image")
