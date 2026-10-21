@@ -17,6 +17,16 @@ def version(text):
     return tuple(int(x) for x in re.findall(r"\d+", text)[:3])
 
 
+def node_pins():
+    """{file: [Node major, ...]} for the frontend Dockerfile's FROM node: line(s) and every setup-node node-version in the workflows."""
+    pins = {"frontend/Dockerfile": [int(m) for m in re.findall(r"(?m)^FROM (?:--platform=\S+ )?node:(\d+)", (FRONTEND / "Dockerfile").read_text())]}
+    for wf in (ROOT / ".github" / "workflows").glob("*.yml"):
+        found = [int(m) for m in re.findall(r"node-version:\s*(\d+)", wf.read_text())]
+        if found:
+            pins[f".github/workflows/{wf.name}"] = found
+    return pins
+
+
 def source_files():
     for folder in ("src", "e2e", "e2e-csp", "e2e-visual"):
         base = FRONTEND / folder
@@ -50,11 +60,7 @@ class ReactRouterVersionTests(SimpleTestCase):
 
     def test_node_is_new_enough_for_the_router_everywhere_it_is_pinned(self):
         needed = version(LOCK["node_modules/react-router"]["engines"]["node"])[0]
-        pins = {"frontend/Dockerfile": [int(m) for m in re.findall(r"(?m)^FROM (?:--platform=\S+ )?node:(\d+)", (FRONTEND / "Dockerfile").read_text())]}
-        for wf in (ROOT / ".github" / "workflows").glob("*.yml"):
-            found = [int(m) for m in re.findall(r"node-version:\s*(\d+)", wf.read_text())]
-            if found:
-                pins[f".github/workflows/{wf.name}"] = found
+        pins = node_pins()
         self.assertIn("frontend/Dockerfile", pins)
         self.assertTrue(pins["frontend/Dockerfile"], "no FROM node: line found")
         for where, majors in pins.items():
@@ -76,3 +82,23 @@ class ReactRouterBehaviourTests(SimpleTestCase):
         app = (FRONTEND / "src" / "App.tsx").read_text(encoding="utf-8")
         self.assertIn("<Router useTransitions={false}>", app)
         self.assertIn("lazy(", app, "if routes are no longer lazy, revisit useTransitions")
+
+
+class NodeVersionTests(SimpleTestCase):
+    """Roadmap item 12: Node 20 reached end-of-life on 2026-04-30 (nodejs/Release schedule.json). Node 24 is in LTS until 2028-04-30."""
+
+    OLDEST_SUPPORTED = 22  # 22 is in maintenance until 2027-04-30; raise this when that date passes
+
+    def test_the_image_and_every_workflow_run_the_same_node_major(self):
+        majors = {m for found in node_pins().values() for m in found}
+        self.assertEqual(len(majors), 1, f"CI would test one Node and ship another: {node_pins()}")
+
+    def test_that_node_is_not_end_of_life(self):
+        for where, found in node_pins().items():
+            for major in found:
+                self.assertGreaterEqual(major, self.OLDEST_SUPPORTED, f"{where} uses Node {major}, which is end-of-life or about to be")
+
+    def test_types_node_matches_the_runtime_major_in_the_manifest_and_the_lockfile(self):
+        (major,) = {m for found in node_pins().values() for m in found}
+        self.assertEqual(version(PACKAGE["devDependencies"]["@types/node"])[0], major)
+        self.assertEqual(version(LOCK["node_modules/@types/node"]["version"])[0], major, "the lockfile resolves other types than the manifest asks for")
