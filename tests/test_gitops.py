@@ -129,8 +129,9 @@ class MultiArchReleaseTests(SimpleTestCase):
 
     def test_the_spa_is_built_once_on_the_native_builder_and_only_nginx_is_per_architecture(self):
         dockerfile = (ROOT / "frontend" / "Dockerfile").read_text(encoding="utf-8")
-        self.assertRegex(dockerfile, r"(?m)^FROM --platform=\$BUILDPLATFORM node:\d+-alpine AS build$")
-        self.assertRegex(dockerfile, r"(?m)^FROM nginx:alpine AS serve$", "the serving stage must not be pinned to the build platform")
+        # an optional @sha256 pin is fine on either image: the platform rule is what matters here
+        self.assertRegex(dockerfile, r"(?m)^FROM --platform=\$BUILDPLATFORM node:\d+-alpine(@sha256:[0-9a-f]{64})? AS build$")
+        self.assertRegex(dockerfile, r"(?m)^FROM nginx:alpine(@sha256:[0-9a-f]{64})? AS serve$", "the serving stage must not be pinned to the build platform")
 
 
 # ------------------------------------------------------------------------------------------------- gitops-bump job ----

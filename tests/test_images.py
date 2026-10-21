@@ -1,8 +1,10 @@
 """Guards for the fixes that keep the image scan (.github/actions/scan-image) green without .trivyignore entries.
 
-Both base images float on tags (nginx:alpine, python:3.11-slim), so new fixable HIGH/CRITICAL findings appear without any
-change of ours. The answer is to take the fix (upgrade the package), not to ignore it; these tests keep that answer from
-being edited away. The scan itself runs in CI (it needs Docker and the Trivy database).
+The base images are pinned by digest (name:tag@sha256:..., the multi-arch index), so a rebuild cannot change them silently;
+new fixable HIGH/CRITICAL findings still appear (Alpine publishes fixes before nginx rebuilds, and a pinned Python base
+only moves when Dependabot moves its digest). The answer is to take the fix (upgrade the package or the digest), not to
+ignore it; these tests keep that answer from being edited away. The scan itself runs in CI (it needs Docker and the Trivy
+database).
 """
 import re
 from pathlib import Path
@@ -12,6 +14,13 @@ from django.test import SimpleTestCase
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND_DOCKERFILE = (ROOT / "frontend" / "Dockerfile").read_text(encoding="utf-8")
+DOCKERFILES = ("Dockerfile", "frontend/Dockerfile")
+FROM_LINE = re.compile(r"(?m)^FROM\s+(?:--platform=\S+\s+)?(?P<ref>\S+)(?:\s+AS\s+(?P<alias>\S+))?\s*$")
+# name:tag@sha256:<64 hex>. The tag is kept on purpose: Dependabot needs it to propose the next digest, and a reader needs it to know what this is.
+PINNED_REF = re.compile(r"^[a-z0-9][a-z0-9./_-]*:[\w][\w.-]*@sha256:[0-9a-f]{64}$")
+# External base images that are deliberately NOT pinned yet, and why. test_the_exception_list_only_names_images_that_are_still_unpinned
+# fails once an entry is pinned, so this list cannot go stale.
+UNPINNED_ON_PURPOSE = {"node": "pinned once, in the Node 20 end-of-life bump, so the digest is not replaced right after it is written"}
 REQUIREMENTS = (ROOT / "requirements.txt").read_text(encoding="utf-8")
 
 
@@ -35,7 +44,7 @@ class FrontendImageTests(SimpleTestCase):
 
     def test_the_serving_stage_is_named_and_upgrades_os_packages_before_anything_else(self):
         header, body = self.final_stage()
-        self.assertEqual(header, "nginx:alpine AS serve")
+        self.assertRegex(header, r"^nginx:alpine@sha256:[0-9a-f]{64} AS serve$")
         instructions = [line for line in body.splitlines() if re.match(r"(RUN|COPY|ADD) ", line)]
         self.assertEqual(instructions[0], "RUN apk upgrade --no-cache", "upgrade first, so everything after it sits on the fixed packages")
 
@@ -84,3 +93,35 @@ class BackendImageTests(SimpleTestCase):
             if p.resolve() != self_path and pattern.search(p.read_text(encoding="utf-8"))
         ]
         self.assertEqual(offenders, [])
+
+
+class BaseImagePinTests(SimpleTestCase):
+    @staticmethod
+    def external_bases():
+        """(dockerfile, image reference) for every FROM that names a registry image (not a stage of the same file, not scratch)."""
+        found = []
+        for name in DOCKERFILES:
+            stages = set()
+            for m in FROM_LINE.finditer((ROOT / name).read_text(encoding="utf-8")):
+                if m["ref"] != "scratch" and m["ref"] not in stages:
+                    found.append((name, m["ref"]))
+                if m["alias"]:
+                    stages.add(m["alias"])
+        return found
+
+    def test_the_parser_finds_the_three_base_images_so_the_checks_below_cannot_pass_on_nothing(self):
+        self.assertEqual(sorted(ref.split(":")[0] for _, ref in self.external_bases()), ["nginx", "node", "python"])
+
+    def test_every_external_base_image_is_pinned_by_digest_and_keeps_its_tag(self):
+        for name, ref in self.external_bases():
+            if ref.split(":")[0] in UNPINNED_ON_PURPOSE:
+                continue
+            with self.subTest(dockerfile=name, ref=ref):
+                self.assertRegex(ref, PINNED_REF, f"{name}: pin as image:tag@sha256:<digest of the multi-arch index>")
+
+    def test_the_exception_list_only_names_images_that_are_still_unpinned(self):
+        refs = {ref.split(":")[0]: ref for _, ref in self.external_bases()}
+        for image in UNPINNED_ON_PURPOSE:
+            with self.subTest(image=image):
+                self.assertIn(image, refs, "the exception names an image no Dockerfile uses any more: remove it")
+                self.assertNotIn("@sha256:", refs[image], f"{image} is pinned now: remove it from UNPINNED_ON_PURPOSE")

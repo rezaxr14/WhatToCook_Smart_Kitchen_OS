@@ -14,9 +14,10 @@ COPY . .
 RUN npm run build
 
 # ---------- Stage 2: serve with nginx ----------
-FROM nginx:alpine AS serve
+FROM nginx:alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d AS serve
 
-# The tag floats and Alpine publishes security fixes (libexpat, libx11, ...) before nginx rebuilds its image: take them now.
+# The base is pinned by digest (the multi-arch index), so a rebuild cannot silently change it. Alpine still publishes security
+# fixes (libexpat, libx11, ...) before nginx rebuilds its image: take them now.
 # CI builds this stage with --no-cache-filter so a cached copy of this layer cannot hide a newer fix.
 RUN apk upgrade --no-cache
 
