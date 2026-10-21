@@ -50,7 +50,7 @@ class ReactRouterVersionTests(SimpleTestCase):
 
     def test_node_is_new_enough_for_the_router_everywhere_it_is_pinned(self):
         needed = version(LOCK["node_modules/react-router"]["engines"]["node"])[0]
-        pins = {"frontend/Dockerfile": [int(m) for m in re.findall(r"(?m)^FROM node:(\d+)", (FRONTEND / "Dockerfile").read_text())]}
+        pins = {"frontend/Dockerfile": [int(m) for m in re.findall(r"(?m)^FROM (?:--platform=\S+ )?node:(\d+)", (FRONTEND / "Dockerfile").read_text())]}
         for wf in (ROOT / ".github" / "workflows").glob("*.yml"):
             found = [int(m) for m in re.findall(r"node-version:\s*(\d+)", wf.read_text())]
             if found:

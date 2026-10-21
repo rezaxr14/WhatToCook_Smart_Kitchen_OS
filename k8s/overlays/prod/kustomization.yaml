@@ -2,7 +2,8 @@
 #   1. create the `whattocook-secrets` Secret out-of-band (kubectl, Sealed Secrets or
 #      External Secrets - see ../../optional/external-secret.example.yaml)
 #   2. replace whattocook.example.com below and in the Ingress patch
-#   3. pin the image tags (kustomize edit set image ...)
+#   3. image tags: the release workflow's `gitops-bump` pull request pins them (newTag + digest, via
+#      scripts/set_image_digests.py); Argo CD (k8s/gitops/argocd) then follows this overlay on main
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 

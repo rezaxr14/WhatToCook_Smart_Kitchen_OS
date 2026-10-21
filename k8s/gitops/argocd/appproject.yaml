@@ -1,0 +1,33 @@
+# Argo CD AppProject for WhatToCook production: what the Application is allowed to deploy, from where, to where.
+# Apply once, to the cluster that runs Argo CD:   kubectl apply -f k8s/gitops/argocd/
+#
+# The allow-lists below are exactly the kinds `kustomize build k8s/overlays/prod` renders (a test keeps them in step). There is
+# deliberately NO Secret here: the `whattocook-secrets` Secret is created out of band (see k8s/overlays/prod/kustomization.yaml),
+# so Argo CD can neither read it from git nor overwrite it. If you add External Secrets or Sealed Secrets, allow their kind here.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: whattocook
+  namespace: argocd
+spec:
+  description: WhatToCook production (k8s/overlays/prod)
+  sourceRepos:
+    - https://github.com/rezaxr14/WhatToCook_Smart_Kitchen_OS.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: whattocook
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - { group: "", kind: ConfigMap }
+    - { group: "", kind: PersistentVolumeClaim }
+    - { group: "", kind: Service }
+    - { group: apps, kind: Deployment }
+    - { group: apps, kind: StatefulSet }
+    - { group: batch, kind: CronJob }
+    - { group: networking.k8s.io, kind: Ingress }
+    - { group: networking.k8s.io, kind: NetworkPolicy }
+    - { group: policy, kind: PodDisruptionBudget }
+  orphanedResources:
+    warn: true

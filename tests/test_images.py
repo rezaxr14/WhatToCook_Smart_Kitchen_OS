@@ -45,18 +45,22 @@ class FrontendImageTests(SimpleTestCase):
                 m = matrix(wf, job)
                 self.assertEqual(m["frontend"]["no-cache-filters"], "serve")
                 self.assertEqual(m["backend"]["no-cache-filters"], "", "the backend Dockerfile has no such stage")
-                scan_build = build_steps(wf, job)[0]
-                self.assertEqual(scan_build["with"]["no-cache-filters"], "${{ matrix.no-cache-filters }}")
+                scans = [b for b in build_steps(wf, job) if not b["with"]["push"]]
+                self.assertTrue(scans, "no scan build found")
+                for scan_build in scans:  # release.yml scans amd64 and arm64
+                    self.assertEqual(scan_build["with"]["no-cache-filters"], "${{ matrix.no-cache-filters }}")
 
     def test_the_stage_the_workflows_name_exists_in_the_dockerfile(self):
         stage = matrix("security.yml", "image-scan")["frontend"]["no-cache-filters"]
         self.assertIn(f" AS {stage}\n", FRONTEND_DOCKERFILE)
 
     def test_the_published_image_is_not_rebuilt_fresh_it_is_what_was_scanned(self):
-        scan_build, publish = build_steps("release.yml", "publish")
-        self.assertFalse(scan_build["with"]["push"])
-        self.assertTrue(publish["with"]["push"])
-        self.assertNotIn("no-cache-filters", publish["with"], "a second fresh build could differ from the image that passed the scan")
+        builds = build_steps("release.yml", "publish")
+        scans = [b for b in builds if not b["with"]["push"]]
+        publishes = [b for b in builds if b["with"]["push"]]
+        self.assertGreaterEqual(len(scans), 1)
+        self.assertEqual(len(publishes), 1, "exactly one build publishes")
+        self.assertNotIn("no-cache-filters", publishes[0]["with"], "a second fresh build could differ from the image that passed the scan")
 
 
 class BackendImageTests(SimpleTestCase):

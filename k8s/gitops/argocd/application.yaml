@@ -1,0 +1,38 @@
+# Argo CD Application: the cluster follows k8s/overlays/prod on `main`.
+#
+# How a release reaches the cluster: pushing a v*.*.* tag runs .github/workflows/release.yml, which builds, scans, signs and publishes
+# the images, then opens a pull request that pins k8s/overlays/prod to the new tag AND digest (job gitops-bump). Merging that pull
+# request is the deployment; Argo CD notices the commit and syncs. Nothing else writes to the cluster.
+#
+# BEFORE you apply this: k8s/overlays/prod still carries the placeholder host `whattocook.example.com`; set your real host (ALLOWED_HOSTS,
+# CSRF_TRUSTED_ORIGINS, Ingress) and create the `whattocook-secrets` Secret, or the first sync deploys a stack that cannot serve traffic.
+#
+# Deliberately absent: the resources-finalizer. With it, deleting this Application would cascade-delete everything it deployed, including
+# the database. Without it, deleting the Application leaves the workloads running.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: whattocook-prod
+  namespace: argocd
+spec:
+  project: whattocook
+  source:
+    repoURL: https://github.com/rezaxr14/WhatToCook_Smart_Kitchen_OS.git
+    targetRevision: main
+    path: k8s/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: whattocook
+  syncPolicy:
+    automated:
+      prune: true # resources removed from git are removed from the cluster (the two PVCs opt out: Prune=false)
+      selfHeal: true # manual `kubectl edit` drift is reverted
+    syncOptions:
+      - PruneLast=true # delete obsolete resources only after the new ones are healthy
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
