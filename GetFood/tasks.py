@@ -13,9 +13,9 @@ from datetime import timedelta
 from django.conf import settings
 from django.utils import timezone
 
-from . import ai_cache
+from . import ai_cache, events
 from .ai_service import generate_recipe_suggestions
-from .models import AISuggestionCache
+from .models import AISuggestionCache, DomainEvent
 
 logger = logging.getLogger(__name__)
 
@@ -64,4 +64,27 @@ def cleanup_expired_ai_cache(max_age_days=None):
     cutoff = timezone.now() - timedelta(days=days)
     deleted, _ = AISuggestionCache.objects.filter(created_at__lt=cutoff).delete()
     logger.info("AI cache cleanup removed %s rows older than %s days", deleted, days)
+    return {"deleted": deleted, "older_than_days": days}
+
+
+@shared_task(
+    autoretry_for=(Exception,),   # a database hiccup is retried; a malformed event is not an exception (consume() rejects it)
+    retry_backoff=True,
+    retry_backoff_max=60,
+    retry_jitter=True,
+    max_retries=3,
+    ignore_result=True,
+)
+def process_domain_event(event):
+    """Consumer for the events the signals in ``GetFood.events`` publish. Idempotent: redelivery records nothing twice."""
+    return events.consume(event)
+
+
+@shared_task
+def cleanup_old_domain_events(max_age_days=None):
+    """Housekeeping (Celery beat): drop recorded events older than ``DOMAIN_EVENT_RETENTION_DAYS`` (default 30)."""
+    days = max_age_days if max_age_days is not None else settings.DOMAIN_EVENT_RETENTION_DAYS
+    cutoff = timezone.now() - timedelta(days=days)
+    deleted, _ = DomainEvent.objects.filter(recorded_at__lt=cutoff).delete()
+    logger.info("domain event cleanup removed %s rows older than %s days", deleted, days)
     return {"deleted": deleted, "older_than_days": days}

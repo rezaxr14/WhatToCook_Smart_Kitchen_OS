@@ -112,6 +112,22 @@ class ShoppingListItem(models.Model):
         return f"{self.name} ({'✓' if self.checked else '○'})"
 
 
+class DomainEvent(models.Model):
+    """One consumed domain event (roadmap item 7). The unique event_id makes the consumer idempotent: a redelivered event is a no-op."""
+
+    event_id = models.UUIDField(unique=True)
+    event_type = models.CharField(max_length=64, db_index=True)
+    payload = models.JSONField()
+    occurred_at = models.DateTimeField()
+    recorded_at = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        ordering = ["recorded_at"]
+
+    def __str__(self):
+        return f"{self.event_type} {self.event_id}"
+
+
 @receiver(post_save, sender=AISuggestionCache)
 def clean_expired_ai_caches(sender, **kwargs):
     """Delete AI suggestions older than 3 days."""

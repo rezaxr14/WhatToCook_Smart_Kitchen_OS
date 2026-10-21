@@ -401,6 +401,8 @@ CELERY_RESULT_EXPIRES = int(os.getenv("CELERY_RESULT_EXPIRES", "3600"))
 CELERY_TASK_ROUTES = {
     "GetFood.tasks.generate_ai_suggestions_task": {"queue": "ai"},
     "GetFood.tasks.cleanup_expired_ai_cache": {"queue": "maintenance"},
+    "GetFood.tasks.process_domain_event": {"queue": "celery"},  # the default queue every worker already consumes
+    "GetFood.tasks.cleanup_old_domain_events": {"queue": "maintenance"},
 }
 # Keep Django's LOGGING (JSON in production) inside the worker too.
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
@@ -412,11 +414,19 @@ try:
             "task": "GetFood.tasks.cleanup_expired_ai_cache",
             "schedule": crontab(hour=3, minute=30),
         },
+        "cleanup-old-domain-events": {
+            "task": "GetFood.tasks.cleanup_old_domain_events",
+            "schedule": crontab(hour=3, minute=45),
+        },
     }
 except ImportError:  # celery is optional for bare-metal runs
     CELERY_BEAT_SCHEDULE = {}
 # How long expired AI suggestion rows are kept before the nightly cleanup task drops them.
 AI_CACHE_RETENTION_DAYS = int(os.getenv("AI_CACHE_RETENTION_DAYS", "7"))
+# Domain events (GetFood.events): signals publish pantry.updated / recipe.generated to RabbitMQ and an idempotent consumer records them.
+# Off under the test runner (no broker there); the tests that need it switch it on and mock the publish.
+DOMAIN_EVENTS_ENABLED = _env_bool("DOMAIN_EVENTS_ENABLED", "true") and not _IS_TESTING
+DOMAIN_EVENT_RETENTION_DAYS = int(os.getenv("DOMAIN_EVENT_RETENTION_DAYS", "30"))
 # Let the worker wait for RabbitMQ at boot instead of crashing, and dispatch
 # long AI tasks fairly; ack late so a crashed worker's task is redelivered.
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
