@@ -18,9 +18,6 @@ DOCKERFILES = ("Dockerfile", "frontend/Dockerfile")
 FROM_LINE = re.compile(r"(?m)^FROM\s+(?:--platform=\S+\s+)?(?P<ref>\S+)(?:\s+AS\s+(?P<alias>\S+))?\s*$")
 # name:tag@sha256:<64 hex>. The tag is kept on purpose: Dependabot needs it to propose the next digest, and a reader needs it to know what this is.
 PINNED_REF = re.compile(r"^[a-z0-9][a-z0-9./_-]*:[\w][\w.-]*@sha256:[0-9a-f]{64}$")
-# External base images that are deliberately NOT pinned yet, and why. test_the_exception_list_only_names_images_that_are_still_unpinned
-# fails once an entry is pinned, so this list cannot go stale.
-UNPINNED_ON_PURPOSE = {"node": "pinned once, in the Node 20 end-of-life bump, so the digest is not replaced right after it is written"}
 REQUIREMENTS = (ROOT / "requirements.txt").read_text(encoding="utf-8")
 
 
@@ -114,14 +111,5 @@ class BaseImagePinTests(SimpleTestCase):
 
     def test_every_external_base_image_is_pinned_by_digest_and_keeps_its_tag(self):
         for name, ref in self.external_bases():
-            if ref.split(":")[0] in UNPINNED_ON_PURPOSE:
-                continue
             with self.subTest(dockerfile=name, ref=ref):
                 self.assertRegex(ref, PINNED_REF, f"{name}: pin as image:tag@sha256:<digest of the multi-arch index>")
-
-    def test_the_exception_list_only_names_images_that_are_still_unpinned(self):
-        refs = {ref.split(":")[0]: ref for _, ref in self.external_bases()}
-        for image in UNPINNED_ON_PURPOSE:
-            with self.subTest(image=image):
-                self.assertIn(image, refs, "the exception names an image no Dockerfile uses any more: remove it")
-                self.assertNotIn("@sha256:", refs[image], f"{image} is pinned now: remove it from UNPINNED_ON_PURPOSE")
