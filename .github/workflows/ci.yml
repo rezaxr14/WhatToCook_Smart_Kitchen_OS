@@ -153,9 +153,14 @@ jobs:
           kubectl kustomize k8s/overlays/dev > rendered-dev.yaml
           kubectl kustomize k8s/overlays/prod > rendered-prod.yaml
       - name: Validate against Kubernetes + CRD schemas
+        env:
+          # Pinned release (2026-06-04), verified before unpacking. Bump both together: the sha256 of kubeconform-linux-amd64.tar.gz is in the release's CHECKSUMS file.
+          KUBECONFORM_VERSION: v0.8.0
+          KUBECONFORM_SHA256: 9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883
         run: |
-          curl -fsSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
-            | tar xz kubeconform
+          curl -fsSL --max-time 120 -o kubeconform.tgz "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          echo "${KUBECONFORM_SHA256}  kubeconform.tgz" | sha256sum -c -
+          tar -xzf kubeconform.tgz kubeconform
           ./kubeconform -strict -summary -kubernetes-version 1.30.0 \
             -schema-location default \
             -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
