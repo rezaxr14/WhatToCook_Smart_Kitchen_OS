@@ -139,3 +139,25 @@ class ReleaseTests(SimpleTestCase):
         self.assertLess(publish, sign)
         self.assertLess(sign, attest)
         self.assertIn("spdxVersion", self.steps[attest]["run"])
+
+
+class DownloadedToolTests(SimpleTestCase):
+    """A tool fetched from `releases/latest` changes under CI without a commit of ours (and runs unverified). Pin a release and its sha256."""
+
+    def test_no_workflow_or_action_downloads_releases_latest(self):
+        for path in WORKFLOWS + ACTIONS:
+            with self.subTest(path=path.name):
+                self.assertNotIn("releases/latest", path.read_text(encoding="utf-8"))
+
+    def test_kubeconform_is_pinned_to_a_release_and_verified_before_it_is_unpacked(self):
+        step = next(s for s in steps("ci.yml", "deploy-config") if s.get("name", "").startswith("Validate against Kubernetes"))
+        self.assertRegex(step["env"]["KUBECONFORM_VERSION"], r"^v\d+\.\d+\.\d+$")
+        self.assertRegex(step["env"]["KUBECONFORM_SHA256"], r"^[0-9a-f]{64}$")
+        run = step["run"]
+        self.assertIn("${KUBECONFORM_VERSION}", run)
+        self.assertIn("${KUBECONFORM_SHA256}", run)
+        self.assertIn("--max-time", run)
+        self.assertNotRegex(run, r"curl[^\n]*\|\s*tar", "download to a file, verify it, then unpack: never pipe an unverified download into tar")
+        self.assertLess(run.index("sha256sum -c"), run.index("tar -xzf"), "verify before unpacking")
+        self.assertLess(run.index("tar -xzf"), run.index("./kubeconform -strict"))
+
