@@ -54,6 +54,16 @@ class PinnedActionTests(SimpleTestCase):
                 if m and m["ref"].startswith("./"):
                     self.assertTrue((ROOT / m["ref"] / "action.yml").exists(), f"{path.name}: {m['ref']}")
 
+    def test_dependabot_leaves_node_majors_to_a_deliberate_bump(self):
+        updates = load(GH / "dependabot.yml")["updates"]
+        major = ["version-update:semver-major"]
+        docker = next(u for u in updates if u["package-ecosystem"] == "docker" and u["directory"] == "/frontend")
+        npm = next(u for u in updates if u["package-ecosystem"] == "npm")
+        self.assertIn({"dependency-name": "node", "update-types": major}, docker["ignore"])
+        self.assertIn({"dependency-name": "@types/node", "update-types": major}, npm["ignore"])
+        root_docker = next(u for u in updates if u["package-ecosystem"] == "docker" and u["directory"] == "/")
+        self.assertNotIn("node", [i["dependency-name"] for i in root_docker.get("ignore", [])], "the Python image is not Node")
+
     def test_dependabot_watches_the_composite_action_directory(self):
         updates = load(GH / "dependabot.yml")["updates"]
         gha = next(u for u in updates if u["package-ecosystem"] == "github-actions")
