@@ -4,12 +4,17 @@ Django signals publish small JSON events to RabbitMQ (through Celery, on the exi
 idempotent consumer records each one once. RabbitMQ delivers at least once, so the consumer must tolerate a replay:
 the unique ``event_id`` on :class:`~GetFood.models.DomainEvent` is what makes recording the same event twice a no-op.
 
-Publishing is best effort by design: it happens after the surrounding transaction commits and a broker outage is
-logged, never raised, so a pantry edit cannot fail because RabbitMQ is down. The price is that an event can be lost
-in that window (there is no outbox); the event log is an audit trail, not the source of truth.
+Publishing is best effort by design: it happens after the surrounding transaction commits, on a small background thread
+(an unreachable broker makes kombu retry the connection for about six seconds, which the request must never wait for), and a
+failure is logged, never raised. A pantry edit therefore cannot fail or slow down because RabbitMQ is down. The price is that
+an event can be lost (broker down, backlog full, process killed): there is no outbox, so the event log is an audit trail, not
+the source of truth.
 """
+import atexit
 import logging
+import threading
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timezone as dt_timezone
 
 from django.conf import settings
@@ -29,6 +34,13 @@ EVENT_TYPES = frozenset({PANTRY_UPDATED, RECIPE_GENERATED})
 
 PANTRY_ACTIONS = {"post_add": "added", "post_remove": "removed", "post_clear": "cleared"}
 
+# Publishes run on these threads. With the broker down each one blocks ~6s, so the backlog is capped: past MAX_PENDING an event is
+# dropped (and logged) instead of piling up memory behind a dead broker.
+MAX_PENDING = 200
+_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="domain-events")
+_idle = threading.Condition()
+_pending = 0
+
 
 def build_event(event_type, payload):
     return {"id": str(uuid.uuid4()), "type": event_type, "occurred_at": timezone.now().isoformat(), "payload": payload}
@@ -44,12 +56,37 @@ def publish(event_type, payload):
 
 
 def _send(event):
-    from .tasks import process_domain_event  # late: tasks imports this module
+    """Hand the event to a background thread: the caller (a request, or a Celery task) never waits for the broker."""
+    global _pending
+    with _idle:
+        if _pending >= MAX_PENDING:
+            logger.warning("dropped %s event %s: %s publishes are already waiting on the broker", event["type"], event["id"], _pending)
+            return
+        _pending += 1
+    _executor.submit(_publish, event)
 
+
+def _publish(event):
+    global _pending
     try:
-        process_domain_event.apply_async(args=[event], retry=False)  # retry=False: a down broker must not stall the request
+        from .tasks import process_domain_event  # late: tasks imports this module
+
+        process_domain_event.apply_async(args=[event], retry=False)
     except Exception:
         logger.warning("could not publish %s event %s", event["type"], event["id"], exc_info=True)
+    finally:
+        with _idle:
+            _pending -= 1
+            _idle.notify_all()
+
+
+def flush(timeout=5.0):
+    """Wait until every queued publish has finished (tests, clean shutdown). True when nothing is left waiting."""
+    with _idle:
+        return _idle.wait_for(lambda: _pending == 0, timeout)
+
+
+atexit.register(flush, 2.0)  # a clean shutdown still pushes what is already queued
 
 
 def consume(event):

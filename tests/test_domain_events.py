@@ -5,6 +5,8 @@ No broker is involved: the publish is mocked (``apply_async``) and the consumer 
 import logging
 import subprocess
 import sys
+import threading
+import time
 import uuid
 import warnings
 from pathlib import Path
@@ -43,8 +45,10 @@ class PantrySignalTests(TestCase):
 
     def published(self, action):
         """Run `action`, commit, and return the events handed to the broker (in order)."""
-        with mock.patch(SEND) as send, self.captureOnCommitCallbacks(execute=True):
-            action()
+        with mock.patch(SEND) as send:
+            with self.captureOnCommitCallbacks(execute=True):
+                action()
+            self.assertTrue(events.flush())  # the publish runs on a background thread, so wait for it while the mock is still in place
         return [call.kwargs["args"][0] for call in send.call_args_list]
 
     def test_adding_publishes_one_event_with_the_added_ids(self):
@@ -84,6 +88,7 @@ class PantrySignalTests(TestCase):
             send.assert_not_called()
             self.assertEqual(len(callbacks), 1)
             callbacks[0]()
+            self.assertTrue(events.flush())
             send.assert_called_once()
 
     def test_each_event_has_its_own_id_and_a_timestamp(self):
@@ -95,8 +100,10 @@ class PantrySignalTests(TestCase):
     def test_the_real_endpoint_publishes_through_the_signal(self):
         client = APIClient()
         client.force_authenticate(self.user)
-        with mock.patch(SEND) as send, self.captureOnCommitCallbacks(execute=True):
-            self.assertEqual(client.post(reverse("api_pantry_add"), {"ingredient_id": self.egg.id}, format="json").status_code, 200)
+        with mock.patch(SEND) as send:
+            with self.captureOnCommitCallbacks(execute=True):
+                self.assertEqual(client.post(reverse("api_pantry_add"), {"ingredient_id": self.egg.id}, format="json").status_code, 200)
+            self.assertTrue(events.flush())
         (call,) = send.call_args_list
         self.assertEqual(call.kwargs["args"][0]["payload"]["ingredient_ids"], [self.egg.id])
 
@@ -108,8 +115,10 @@ class PantrySignalTests(TestCase):
 @override_settings(DOMAIN_EVENTS_ENABLED=True)
 class RecipeSignalTests(TestCase):
     def published(self, action):
-        with mock.patch(SEND) as send, self.captureOnCommitCallbacks(execute=True):
-            action()
+        with mock.patch(SEND) as send:
+            with self.captureOnCommitCallbacks(execute=True):
+                action()
+            self.assertTrue(events.flush())  # the publish runs on a background thread, so wait for it while the mock is still in place
         return [call.kwargs["args"][0] for call in send.call_args_list]
 
     def test_caching_suggestions_publishes_recipe_generated_with_the_count(self):
@@ -135,15 +144,64 @@ class RecipeSignalTests(TestCase):
 @override_settings(DOMAIN_EVENTS_ENABLED=True)
 class PublishFailureTests(TestCase):
     def test_a_broker_outage_is_logged_and_never_raised(self):
-        with self.assertLogs("GetFood.events", logging.WARNING) as logs:  # the send runs when the commit callbacks do
-            with mock.patch(SEND, side_effect=ConnectionError("rabbitmq is down")), self.captureOnCommitCallbacks(execute=True):
-                self.assertIsNotNone(events.publish("pantry.updated", {"user_id": 1}))
+        with self.assertLogs("GetFood.events", logging.WARNING) as logs:  # the publish fails on the background thread
+            with mock.patch(SEND, side_effect=ConnectionError("rabbitmq is down")):
+                with self.captureOnCommitCallbacks(execute=True):
+                    self.assertIsNotNone(events.publish("pantry.updated", {"user_id": 1}))
+                self.assertTrue(events.flush())
         self.assertIn("could not publish pantry.updated", logs.output[0])
 
     def test_the_publish_does_not_retry_so_a_down_broker_cannot_stall_the_request(self):
-        with mock.patch(SEND) as send, self.captureOnCommitCallbacks(execute=True):
-            events.publish("pantry.updated", {"user_id": 1})
+        with mock.patch(SEND) as send:
+            with self.captureOnCommitCallbacks(execute=True):
+                events.publish("pantry.updated", {"user_id": 1})
+            self.assertTrue(events.flush())
         self.assertIs(send.call_args.kwargs["retry"], False)
+
+
+@override_settings(DOMAIN_EVENTS_ENABLED=True)
+class SlowBrokerTests(TestCase):
+    """An unreachable broker blocks a publish for about six seconds (kombu retries the connection inside apply_async)."""
+
+    def setUp(self):
+        self.release = threading.Event()
+        self.addCleanup(self.release.set)  # never leave a worker thread blocked behind a failed test
+        self.addCleanup(events.flush)
+
+    def blocked_send(self, **kwargs):
+        self.release.wait(10)
+
+    def test_a_blocked_broker_does_not_delay_the_caller(self):
+        with mock.patch(SEND, side_effect=self.blocked_send):
+            started = time.monotonic()
+            with self.captureOnCommitCallbacks(execute=True):
+                events.publish("pantry.updated", {"user_id": 1})
+            elapsed = time.monotonic() - started
+            self.assertLess(elapsed, 1.0)
+            self.assertFalse(events.flush(timeout=0.05), "the publish is still waiting on the broker")
+            self.release.set()
+            started = time.monotonic()
+            self.assertTrue(events.flush())
+            self.assertLess(time.monotonic() - started, 2.0, "flush must wake up when the publish finishes, not run out its timeout")
+
+    def test_the_backlog_is_capped_and_the_overflow_is_logged_and_dropped(self):
+        with mock.patch(SEND, side_effect=self.blocked_send) as send, mock.patch.object(events, "MAX_PENDING", 2):
+            with self.assertLogs("GetFood.events", logging.WARNING) as logs:
+                with self.captureOnCommitCallbacks(execute=True):
+                    for n in range(3):
+                        events.publish("pantry.updated", {"user_id": n})
+            self.assertIn("dropped pantry.updated event", logs.output[0])
+            self.release.set()
+            self.assertTrue(events.flush())
+            self.assertEqual(send.call_count, 2)
+
+    def test_the_counter_returns_to_zero_after_failures_so_the_cap_does_not_leak(self):
+        with mock.patch(SEND, side_effect=ConnectionError("down")), self.assertLogs("GetFood.events", logging.WARNING):
+            with self.captureOnCommitCallbacks(execute=True):
+                for n in range(5):
+                    events.publish("pantry.updated", {"user_id": n})
+            self.assertTrue(events.flush())
+        self.assertEqual(events._pending, 0)
 
 
 class ConsumerTests(TestCase):
@@ -196,6 +254,7 @@ class ConsumerTests(TestCase):
         with override_settings(DOMAIN_EVENTS_ENABLED=True), mock.patch(SEND, side_effect=lambda **kw: sent.append(kw["args"][0])):
             with self.captureOnCommitCallbacks(execute=True):
                 pantry.ingredients.add(egg)
+            self.assertTrue(events.flush())
         (event,) = sent
         for _ in range(2):  # at-least-once delivery
             process_domain_event.apply(args=[event])
