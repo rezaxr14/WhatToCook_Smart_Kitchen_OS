@@ -1,7 +1,7 @@
 # ---------- Stage 1: build the SPA ----------
 # --platform=$BUILDPLATFORM: the output is plain JS/CSS, identical for every architecture, so it is built once on the native
 # builder (emulating Node under QEMU for arm64 would be many times slower) and only the nginx stage below is per-architecture.
-FROM --platform=$BUILDPLATFORM node:24-alpine@sha256:feb76650b7195319268c59cb2d419c732d6c499b13bf5296f16ab59eb1f0a4f3 AS build
+FROM --platform=$BUILDPLATFORM node:25-alpine@sha256:bdf2cca6fe3dabd014ea60163eca3f0f7015fbd5c7ee1b0e9ccb4ced6eb02ef4 AS build
 
 WORKDIR /app
 
