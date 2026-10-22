@@ -17,10 +17,12 @@ resources:
 images:
   - name: whattocook-backend
     newName: ghcr.io/rezaxr14/whattocook-backend
-    newTag: latest # pin a release tag
+    newTag: 0.0.1-rc.3
+    digest: sha256:74d3c130a6153a023139048c463c9c38341f4c7516a6d7e8daec0b71318ff227
   - name: whattocook-frontend
     newName: ghcr.io/rezaxr14/whattocook-frontend
-    newTag: latest # pin a release tag
+    newTag: 0.0.1-rc.3
+    digest: sha256:c06affd998f8716e8a3b5735a837be07bf795979dfbe845de0b624aefe6aa801
 
 patches:
   - target:
