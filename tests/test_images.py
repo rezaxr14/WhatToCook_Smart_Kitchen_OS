@@ -80,6 +80,13 @@ class BackendImageTests(SimpleTestCase):
         # CVE-2026-59890, fixed in 83.0.0 (pip-audit would fail on it).
         self.assertGreaterEqual(self.pinned_setuptools(), (83, 0, 0))
 
+    def test_djangorestframework_is_pinned_at_or_past_the_release_that_fixes_three_advisories(self):
+        # 3.17.2 and earlier: GHSA-33wh-fxxf-88vv, GHSA-3547-9m27-7rxg, GHSA-xw6w-gcfp-cf8m (Trivy HIGH, pip-audit fails), fixed in 3.18.2.
+        # `~=3.17.2` still allowed 3.17.x forever, so the pin has to name the fixed minor.
+        m = re.search(r"(?m)^djangorestframework~=(\d+)\.(\d+)\.(\d+)\s*$", REQUIREMENTS)
+        self.assertIsNotNone(m, "requirements.txt must pin djangorestframework with ~=X.Y.Z")
+        self.assertGreaterEqual(tuple(int(x) for x in m.groups()), (3, 18, 2))
+
     def test_nothing_of_ours_needs_pkg_resources_because_setuptools_82_and_later_do_not_ship_it(self):
         self_path = Path(__file__).resolve()
         pattern = re.compile(r"(?m)^\s*(?:import|from)\s+pkg_resources\b")
