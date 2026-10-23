@@ -1,5 +1,5 @@
 Django~=5.2.3
-djangorestframework~=3.17.2
+djangorestframework~=3.18.2
 django-cors-headers~=4.7.0
 psycopg2-binary~=2.9.10
 requests~=2.33.0
