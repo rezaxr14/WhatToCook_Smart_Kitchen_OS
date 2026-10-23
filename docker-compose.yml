@@ -165,7 +165,7 @@ services:
   flower:
     # Live view of workers, tasks and queues (http://localhost:5555).
     profiles: ["monitoring"]
-    image: mher/flower:2.0.1
+    image: mher/flower:2.2.0
     container_name: whattocook_flower
     environment:
       CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER:-whattocook}:${RABBITMQ_DEFAULT_PASS:-secret}@rabbitmq:5672//
