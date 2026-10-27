@@ -75,10 +75,11 @@ class BackendImageTests(SimpleTestCase):
         self.assertIsNotNone(m, "requirements.txt must pin setuptools (the base image's own copy carries flagged vendored packages)")
         return tuple(int(x) for x in m.groups())
 
-    def test_setuptools_is_pinned_past_the_flagged_vendored_packages_and_the_advisory(self):
+    def test_setuptools_is_pinned_past_the_flagged_vendored_packages_and_the_advisories(self):
         # 79.x-80.9 vendor jaraco.context 5.3.0 / wheel 0.45.1 (Trivy HIGH); 80.10.2 fixed those but is itself affected by
-        # CVE-2026-59890, fixed in 83.0.0 (pip-audit would fail on it).
-        self.assertGreaterEqual(self.pinned_setuptools(), (83, 0, 0))
+        # CVE-2026-59890, fixed in 83.0.0 (pip-audit would fail on it). 84.0.0 is affected by GHSA-xmj3-9gf7-h52w, fixed in
+        # 84.1.0 (`~=84.0.0` never allows it: the pin has to name the fixed minor).
+        self.assertGreaterEqual(self.pinned_setuptools(), (84, 1, 0))
 
     def test_djangorestframework_is_pinned_at_or_past_the_release_that_fixes_three_advisories(self):
         # 3.17.2 and earlier: GHSA-33wh-fxxf-88vv, GHSA-3547-9m27-7rxg, GHSA-xw6w-gcfp-cf8m (Trivy HIGH, pip-audit fails), fixed in 3.18.2.
