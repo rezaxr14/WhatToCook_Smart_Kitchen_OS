@@ -114,6 +114,11 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: pip install -r requirements.txt
       - name: Dump with the CronJob's pipeline, restore into a fresh DB, compare
+        # Dump and restore run in the pinned server image, as the prod CronJob does: the host's pg_dump 17+
+        # writes `SET transaction_timeout = 0`, which a Postgres 15 server rejects, and the runner's client
+        # drifts with its image. Explicit here so the drill never depends on whichever default the script has.
+        env:
+          DRILL_PG_CLIENT: docker
         run: bash scripts/backup-restore-drill.sh
 
   frontend:

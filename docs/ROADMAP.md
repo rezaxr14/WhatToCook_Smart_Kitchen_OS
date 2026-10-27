@@ -81,8 +81,11 @@ Items below are ordered by value/risk. Each has an acceptance test; add a CI che
    **First CI scan (2026-10-20) reported four fixable HIGH findings; fixed:** frontend (alpine 3.24.2): libexpat CVE-2026-77214 and libx11 CVE-2026-88806 ->
    `apk upgrade --no-cache` as the first instruction of a named `serve` stage, which the scan builds (and only the scan builds) rebuild without cache
    (`no-cache-filters`), so a cached layer cannot hide a later fix and the published image is still exactly what was scanned. Backend: jaraco.context 5.3.0
-   and wheel 0.45.1 *vendored inside the setuptools 79.0.1 that python:3.11-slim ships* -> `setuptools~=84.0.0` in `requirements.txt` (80.10.2 clears those
-   but carries CVE-2026-59890, fixed in 83.0.0; 82+ no longer ships `pkg_resources`, which nothing of ours imports: a test guards that). Verified: a clean
+   and wheel 0.45.1 *vendored inside the setuptools 79.0.1 that python:3.11-slim ships* -> `setuptools~=84.2.1` in `requirements.txt` (80.10.2 clears those
+   but carries CVE-2026-59890, fixed in 83.0.0; 82+ no longer ships `pkg_resources`, which nothing of ours imports: a test guards that). The pin is now
+   `~=84.2.1` because the 2026-10-26 scheduled `security.yml` run failed `pip-audit` on 84.0.0: GHSA-xmj3-9gf7-h52w (advisory published 2026-10-23, patch
+   84.1.0), which `~=84.0.0` could never reach — same caps-at-the-vulnerable-minor trap as `djangorestframework~=3.17.2`, and the reason
+   `BackendImageTests` now asserts the floor at 84.1.0 instead of only checking the pin exists. Verified: a clean
    venv from `requirements.txt` has the fixed vendored copies, the suite passes (318) and the Celery CLI loads (Python 3.12 here, 3.11 in the image).
    **Not verified:** the Trivy re-scan itself (DB unreachable) and that Alpine's repo already carries libexpat 2.9.0-r0 / libx11 1.8.14-r0 (index unreachable;
    Trivy's own table names them as the fixed versions). `.trivyignore` stays empty.
