@@ -11,6 +11,8 @@
 
 ---
 
+**Two ways to run WhatToCook.** This repo is the self-hosted **Django + Docker** stack described below. The **serverless port** rebuilds the same product on **Supabase (Postgres + Edge Functions)** with a **React Native (Expo) Android app** and a React web client — try the live web demo in your browser, browse the port's source, or install the Android build straight from its latest CI run.
+
 > 🚀 **Try it live:** [web demo](https://rezaxr14.github.io/WhatToCook_mobile_serverless/) · [serverless port — Supabase + React Native/Expo](https://github.com/rezaxr14/WhatToCook_mobile_serverless) · [Android APK](https://github.com/rezaxr14/WhatToCook_mobile_serverless/releases/download/android-device-latest/WhatToCook-android-device.apk)
 
 ## 🖼️ Screenshots
