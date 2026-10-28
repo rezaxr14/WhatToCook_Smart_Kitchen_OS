@@ -11,6 +11,8 @@
 
 ---
 
+> 🚀 **Try it live:** [web demo](https://rezaxr14.github.io/WhatToCook_mobile_serverless/) · [serverless port — Supabase + React Native/Expo](https://github.com/rezaxr14/WhatToCook_mobile_serverless) · [Android APK](https://github.com/rezaxr14/WhatToCook_mobile_serverless/releases/download/android-device-latest/WhatToCook-android-device.apk)
+
 ## 🖼️ Screenshots
 
 <p align="center">
