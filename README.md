@@ -8,6 +8,21 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Docker Alpine](https://img.shields.io/badge/Docker-Alpine_Lean-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com/)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![TanStack Query](https://img.shields.io/badge/TanStack_Query-5-FF4154?style=for-the-badge&logo=reactquery&logoColor=white)
+![React Three Fiber](https://img.shields.io/badge/React_Three_Fiber-3D_hero-000000?style=for-the-badge&logo=threedotjs&logoColor=white)
+![i18next](https://img.shields.io/badge/i18next-5_langs_%2B_RTL-26A69A?style=for-the-badge)
+![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?style=for-the-badge&logo=pwa&logoColor=white)
+![nginx](https://img.shields.io/badge/nginx-reverse_proxy-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![Django REST %2B Python](https://img.shields.io/badge/Django_REST_%2B_Python-3.11-A30000?style=for-the-badge&logo=django&logoColor=white)
+![Multimodal AI](https://img.shields.io/badge/Multimodal_AI-vision_%2B_streaming-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
+![Telegram](https://img.shields.io/badge/Telegram-AI_chef_bot-26A5E4?style=for-the-badge&logo=telegram&logoColor=white)
+![Grocery export](https://img.shields.io/badge/Grocery_export-WhatsApp_%2B_Telegram-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)
+![PostgreSQL 15](https://img.shields.io/badge/PostgreSQL_15-%2F_SQLite_fallback-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![RabbitMQ 4.2](https://img.shields.io/badge/RabbitMQ_4.2-%2B_Celery-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-%2B_JSON_logs-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-kustomize-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
 
 ---
 
