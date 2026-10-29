@@ -181,7 +181,7 @@ services:
   prometheus:
     # Scrapes the API (/metrics), RabbitMQ (:15692) and Flower. UI: http://localhost:9090
     profiles: ["monitoring"]
-    image: prom/prometheus:v3.5.0
+    image: prom/prometheus:v3.15.1
     container_name: whattocook_prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
