@@ -33,7 +33,7 @@ jobs:
             context: frontend
             no-cache-filters: serve # re-run `apk upgrade` on every scan
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Lowercase the registry namespace
         run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
       # Emulation for the arm64 build only (amd64 is native). The action runs this image with --privileged on the runner, so it is
@@ -161,7 +161,7 @@ jobs:
     steps:
       # Pull requests opened with the default GITHUB_TOKEN do not start other workflows (GitHub's rule), so CI would not run on the
       # bump. Add a GITOPS_TOKEN secret (fine-grained PAT or GitHub App token with contents + pull-requests write) to get CI on it.
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           token: ${{ secrets.GITOPS_TOKEN || github.token }}
