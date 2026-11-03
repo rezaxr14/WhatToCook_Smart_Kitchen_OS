@@ -1,0 +1,482 @@
+{
+  "Onion": {
+    "fa": "پیاز",
+    "ar": "بصل",
+    "tr": "Soğan",
+    "es": "Cebolla"
+  },
+  "Garlic": {
+    "fa": "سیر",
+    "ar": "ثوم",
+    "tr": "Sarımsak",
+    "es": "Ajo"
+  },
+  "Tomato": {
+    "fa": "گوجه‌فرنگی",
+    "ar": "طماطم",
+    "tr": "Domates",
+    "es": "Tomate"
+  },
+  "Potato": {
+    "fa": "سیب‌زمینی",
+    "ar": "بطاطس",
+    "tr": "Patates",
+    "es": "Patata"
+  },
+  "Avocado": {
+    "fa": "آووکادو",
+    "ar": "أفوكادو",
+    "tr": "Avokado",
+    "es": "Aguacate"
+  },
+  "Spinach": {
+    "fa": "اسفناج",
+    "ar": "سبانخ",
+    "tr": "Ispanak",
+    "es": "Espinaca"
+  },
+  "Broccoli": {
+    "fa": "کلم بروکلی",
+    "ar": "بروكلي",
+    "tr": "Brokoli",
+    "es": "Brócoli"
+  },
+  "Mushrooms": {
+    "fa": "قارچ",
+    "ar": "فطر",
+    "tr": "Mantar",
+    "es": "Champiñones"
+  },
+  "Bell Pepper": {
+    "fa": "فلفل دلمه‌ای",
+    "ar": "فلفل رومي",
+    "tr": "Dolmalık biber",
+    "es": "Pimiento"
+  },
+  "Carrot": {
+    "fa": "هویج",
+    "ar": "جزر",
+    "tr": "Havuç",
+    "es": "Zanahoria"
+  },
+  "Cucumber": {
+    "fa": "خیار",
+    "ar": "خيار",
+    "tr": "Salatalık",
+    "es": "Pepino"
+  },
+  "Lemon": {
+    "fa": "لیمو",
+    "ar": "ليمون",
+    "tr": "Limon",
+    "es": "Limón"
+  },
+  "Lime": {
+    "fa": "لایم",
+    "ar": "ليمون أخضر",
+    "tr": "Mısır limonu",
+    "es": "Lima"
+  },
+  "Fresh Basil": {
+    "fa": "ریحان تازه",
+    "ar": "ريحان طازج",
+    "tr": "Taze fesleğen",
+    "es": "Albahaca fresca"
+  },
+  "Ginger": {
+    "fa": "زنجبیل",
+    "ar": "زنجبيل",
+    "tr": "Zencefil",
+    "es": "Jengibre"
+  },
+  "Chili Pepper": {
+    "fa": "فلفل تند",
+    "ar": "فلفل حار",
+    "tr": "Acı biber",
+    "es": "Chile picante"
+  },
+  "Zucchini": {
+    "fa": "کدو سبز",
+    "ar": "كوسا",
+    "tr": "Kabak",
+    "es": "Calabacín"
+  },
+  "Cilantro": {
+    "fa": "گشنیز",
+    "ar": "كزبرة",
+    "tr": "Kişniş",
+    "es": "Cilantro"
+  },
+  "Green Onion": {
+    "fa": "پیازچه",
+    "ar": "بصل أخضر",
+    "tr": "Taze soğan",
+    "es": "Cebolleta"
+  },
+  "Lettuce": {
+    "fa": "کاهو",
+    "ar": "خس",
+    "tr": "Marul",
+    "es": "Lechuga"
+  },
+  "Celery": {
+    "fa": "کرفس",
+    "ar": "كرفس",
+    "tr": "Kereviz",
+    "es": "Apio"
+  },
+  "Banana": {
+    "fa": "موز",
+    "ar": "موز",
+    "tr": "Muz",
+    "es": "Plátano"
+  },
+  "Strawberries": {
+    "fa": "توت‌فرنگی",
+    "ar": "فراولة",
+    "tr": "Çilek",
+    "es": "Fresas"
+  },
+  "Blueberries": {
+    "fa": "بلوبری",
+    "ar": "توت أزرق",
+    "tr": "Yaban mersini",
+    "es": "Arándanos"
+  },
+  "Apple": {
+    "fa": "سیب",
+    "ar": "تفاح",
+    "tr": "Elma",
+    "es": "Manzana"
+  },
+  "Eggs": {
+    "fa": "تخم‌مرغ",
+    "ar": "بيض",
+    "tr": "Yumurta",
+    "es": "Huevos"
+  },
+  "Milk": {
+    "fa": "شیر",
+    "ar": "حليب",
+    "tr": "Süt",
+    "es": "Leche"
+  },
+  "Butter": {
+    "fa": "کره",
+    "ar": "زبدة",
+    "tr": "Tereyağı",
+    "es": "Mantequilla"
+  },
+  "Cheddar Cheese": {
+    "fa": "پنیر چدار",
+    "ar": "جبن شيدر",
+    "tr": "Çedar peyniri",
+    "es": "Queso cheddar"
+  },
+  "Parmesan": {
+    "fa": "پارمزان",
+    "ar": "بارميزان",
+    "tr": "Parmesan",
+    "es": "Parmesano"
+  },
+  "Mozzarella": {
+    "fa": "موزارلا",
+    "ar": "موزاريلا",
+    "tr": "Mozzarella",
+    "es": "Mozzarella"
+  },
+  "Feta Cheese": {
+    "fa": "پنیر فتا",
+    "ar": "جبن فيتا",
+    "tr": "Beyaz peynir",
+    "es": "Queso feta"
+  },
+  "Heavy Cream": {
+    "fa": "خامه",
+    "ar": "كريمة ثقيلة",
+    "tr": "Krema",
+    "es": "Nata para montar"
+  },
+  "Greek Yogurt": {
+    "fa": "ماست یونانی",
+    "ar": "زبادي يوناني",
+    "tr": "Süzme yoğurt",
+    "es": "Yogur griego"
+  },
+  "Sour Cream": {
+    "fa": "خامه ترش",
+    "ar": "كريمة حامضة",
+    "tr": "Ekşi krema",
+    "es": "Nata agria"
+  },
+  "Vanilla Ice Cream": {
+    "fa": "بستنی وانیلی",
+    "ar": "آيس كريم فانيليا",
+    "tr": "Vanilyalı dondurma",
+    "es": "Helado de vainilla"
+  },
+  "Chocolate Ice Cream": {
+    "fa": "بستنی شکلاتی",
+    "ar": "آيس كريم شوكولاتة",
+    "tr": "Çikolatalı dondurma",
+    "es": "Helado de chocolate"
+  },
+  "Cream Cheese": {
+    "fa": "پنیر خامه‌ای",
+    "ar": "جبن كريمي",
+    "tr": "Krem peynir",
+    "es": "Queso crema"
+  },
+  "Chicken Breast": {
+    "fa": "سینه مرغ",
+    "ar": "صدر دجاج",
+    "tr": "Tavuk göğsü",
+    "es": "Pechuga de pollo"
+  },
+  "Chicken Thighs": {
+    "fa": "ران مرغ",
+    "ar": "فخذ دجاج",
+    "tr": "Tavuk but",
+    "es": "Muslos de pollo"
+  },
+  "Ground Beef": {
+    "fa": "گوشت چرخ‌کرده",
+    "ar": "لحم بقري مفروم",
+    "tr": "Kıyma",
+    "es": "Carne molida"
+  },
+  "Beef Steak": {
+    "fa": "استیک گوساله",
+    "ar": "ستيك لحم بقري",
+    "tr": "Biftek",
+    "es": "Filete de ternera"
+  },
+  "Bacon": {
+    "fa": "بیکن",
+    "ar": "لحم مقدد",
+    "tr": "Domuz pastırması",
+    "es": "Panceta"
+  },
+  "Salmon Fillet": {
+    "fa": "فیله سالمون",
+    "ar": "فيليه سلمون",
+    "tr": "Somon fileto",
+    "es": "Filete de salmón"
+  },
+  "Shrimp": {
+    "fa": "میگو",
+    "ar": "روبيان",
+    "tr": "Karides",
+    "es": "Gambas"
+  },
+  "Canned Tuna": {
+    "fa": "تن ماهی کنسروی",
+    "ar": "تونة معلبة",
+    "tr": "Ton balığı konservesi",
+    "es": "Atún en lata"
+  },
+  "Pork Chop": {
+    "fa": "راسته خوک",
+    "ar": "ضلع خنزير",
+    "tr": "Domuz pirzola",
+    "es": "Chuleta de cerdo"
+  },
+  "Tofu": {
+    "fa": "توفو",
+    "ar": "توفو",
+    "tr": "Tofu",
+    "es": "Tofu"
+  },
+  "Ham": {
+    "fa": "ژامبون",
+    "ar": "لحم الخنزير المدخن",
+    "tr": "Jambon",
+    "es": "Jamón"
+  },
+  "Bread": {
+    "fa": "نان",
+    "ar": "خبز",
+    "tr": "Ekmek",
+    "es": "Pan"
+  },
+  "Sourdough Bread": {
+    "fa": "نان خمیرترش",
+    "ar": "خبز العجين المخمر",
+    "tr": "Ekşi mayalı ekmek",
+    "es": "Pan de masa madre"
+  },
+  "Pasta": {
+    "fa": "پاستا",
+    "ar": "معكرونة",
+    "tr": "Makarna",
+    "es": "Pasta"
+  },
+  "Spaghetti": {
+    "fa": "اسپاگتی",
+    "ar": "سباغيتي",
+    "tr": "Spagetti",
+    "es": "Espagueti"
+  },
+  "Rice": {
+    "fa": "برنج",
+    "ar": "أرز",
+    "tr": "Pirinç",
+    "es": "Arroz"
+  },
+  "Jasmine Rice": {
+    "fa": "برنج یاسمین",
+    "ar": "أرز ياسمين",
+    "tr": "Yasemin pirinci",
+    "es": "Arroz jazmín"
+  },
+  "Flour": {
+    "fa": "آرد",
+    "ar": "طحين",
+    "tr": "Un",
+    "es": "Harina"
+  },
+  "Rolled Oats": {
+    "fa": "جو دوسر پرک",
+    "ar": "شوفان",
+    "tr": "Yulaf ezmesi",
+    "es": "Copos de avena"
+  },
+  "Tortillas": {
+    "fa": "تورتیلا",
+    "ar": "خبز التورتيلا",
+    "tr": "Tortilla",
+    "es": "Tortillas"
+  },
+  "Burger Buns": {
+    "fa": "نان همبرگر",
+    "ar": "خبز البرغر",
+    "tr": "Hamburger ekmeği",
+    "es": "Panecillos de hamburguesa"
+  },
+  "Noodles": {
+    "fa": "نودل",
+    "ar": "نودلز",
+    "tr": "Erişte",
+    "es": "Fideos"
+  },
+  "Quinoa": {
+    "fa": "کینوا",
+    "ar": "كينوا",
+    "tr": "Kinoa",
+    "es": "Quinoa"
+  },
+  "Olive Oil": {
+    "fa": "روغن زیتون",
+    "ar": "زيت زيتون",
+    "tr": "Zeytinyağı",
+    "es": "Aceite de oliva"
+  },
+  "Vegetable Oil": {
+    "fa": "روغن نباتی",
+    "ar": "زيت نباتي",
+    "tr": "Bitkisel yağ",
+    "es": "Aceite vegetal"
+  },
+  "Tomato Sauce": {
+    "fa": "سس گوجه‌فرنگی",
+    "ar": "صلصة الطماطم",
+    "tr": "Domates sosu",
+    "es": "Salsa de tomate"
+  },
+  "Soy Sauce": {
+    "fa": "سس سویا",
+    "ar": "صوص الصويا",
+    "tr": "Soya sosu",
+    "es": "Salsa de soja"
+  },
+  "Honey": {
+    "fa": "عسل",
+    "ar": "عسل",
+    "tr": "Bal",
+    "es": "Miel"
+  },
+  "Sugar": {
+    "fa": "شکر",
+    "ar": "سكر",
+    "tr": "Şeker",
+    "es": "Azúcar"
+  },
+  "Salt": {
+    "fa": "نمک",
+    "ar": "ملح",
+    "tr": "Tuz",
+    "es": "Sal"
+  },
+  "Black Pepper": {
+    "fa": "فلفل سیاه",
+    "ar": "فلفل أسود",
+    "tr": "Karabiber",
+    "es": "Pimienta negra"
+  },
+  "Red Pepper Flakes": {
+    "fa": "فلفل قرمز پرک",
+    "ar": "رقائق الفلفل الأحمر",
+    "tr": "Pul biber",
+    "es": "Copos de guindilla"
+  },
+  "Oregano": {
+    "fa": "پونه کوهی",
+    "ar": "أوريغانو",
+    "tr": "Oregano",
+    "es": "Orégano"
+  },
+  "Cinnamon": {
+    "fa": "دارچین",
+    "ar": "قرفة",
+    "tr": "Tarçın",
+    "es": "Canela"
+  },
+  "Vanilla Extract": {
+    "fa": "عصاره وانیل",
+    "ar": "خلاصة الفانيليا",
+    "tr": "Vanilya özütü",
+    "es": "Extracto de vainilla"
+  },
+  "Maple Syrup": {
+    "fa": "شربت افرا",
+    "ar": "شراب القيقب",
+    "tr": "Akçaağaç şurubu",
+    "es": "Sirope de arce"
+  },
+  "Mustard": {
+    "fa": "خردل",
+    "ar": "خردل",
+    "tr": "Hardal",
+    "es": "Mostaza"
+  },
+  "Mayonnaise": {
+    "fa": "مایونز",
+    "ar": "مايونيز",
+    "tr": "Mayonez",
+    "es": "Mayonesa"
+  },
+  "Ketchup": {
+    "fa": "کچاپ",
+    "ar": "كاتشب",
+    "tr": "Ketçap",
+    "es": "Kétchup"
+  },
+  "Peanut Butter": {
+    "fa": "کره بادام‌زمینی",
+    "ar": "زبدة الفول السوداني",
+    "tr": "Fıstık ezmesi",
+    "es": "Crema de cacahuete"
+  },
+  "Cocoa Powder": {
+    "fa": "پودر کاکائو",
+    "ar": "مسحوق الكاكاو",
+    "tr": "Kakao",
+    "es": "Cacao en polvo"
+  },
+  "Baking Powder": {
+    "fa": "بیکینگ پودر",
+    "ar": "مسحوق الخبز",
+    "tr": "Kabartma tozu",
+    "es": "Levadura en polvo"
+  }
+}
