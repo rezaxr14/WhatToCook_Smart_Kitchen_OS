@@ -3,6 +3,7 @@
 No broker is involved: the publish is mocked (``apply_async``) and the consumer is called directly or eagerly.
 """
 import logging
+import os
 import subprocess
 import sys
 import threading
@@ -293,6 +294,11 @@ class WiringTests(TestCase):
             "print(m2m_changed.has_listeners(UserPantry.ingredients.through), post_save.has_listeners(AISuggestionCache))\n"
         )
         env = {"PATH": "", "DJANGO_SETTINGS_MODULE": "WhatToCook.settings", "USE_POSTGRES": "false", "DEBUG": "true", "SECRET_KEY": "x" * 50}
+        # Windows needs SYSTEMROOT to load the winsock provider that asyncio's
+        # _overlapped module imports during django.setup(). Linux ignores it.
+        for name in ("SYSTEMROOT", "windir"):
+            if os.environ.get(name):
+                env[name] = os.environ[name]
         result = subprocess.run([sys.executable, "-c", code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=60)
         self.assertEqual(result.stdout.strip(), "True True", result.stderr[-800:])
 
