@@ -17,9 +17,11 @@ import sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Auto-load .env file if present
+# Auto-load .env file if present. Set WHATTOCOOK_SKIP_ENV_FILE=1 to test the
+# process environment exactly as a container would see it (CI has no .env; the
+# hardening tests set this explicitly so a developer's local .env cannot leak in).
 _env_file = BASE_DIR / ".env"
-if _env_file.exists():
+if os.environ.get("WHATTOCOOK_SKIP_ENV_FILE") != "1" and _env_file.exists():
     with open(_env_file, "r", encoding="utf-8") as _f:
         for _line in _f:
             _line = _line.strip()
@@ -287,6 +289,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# The local photo tier is the source of truth; this public Supabase Storage
+# location is only the second tier when a local file is missing (for example a
+# deployment that copied the database but not `media/`). The dish and recipe
+# photos live in the `recipe-images` bucket, ingredient photos in
+# `ingredient-images`; both are public read-only buckets in the WhatToCook
+# project. Override in `.env` for another project.
+SUPABASE_URL = os.getenv("SUPABASE_URL", "https://lderdvhteofqemiivosz.supabase.co").rstrip("/")
+IMAGE_FALLBACK_BASE_URL = os.getenv(
+    "IMAGE_FALLBACK_BASE_URL", f"{SUPABASE_URL}/storage/v1/object/public"
+)
+IMAGE_BUCKET = os.getenv("IMAGE_BUCKET", "recipe-images")
+INGREDIENT_IMAGE_BUCKET = os.getenv("INGREDIENT_IMAGE_BUCKET", "ingredient-images")
+
+# Locale used for the `display_*` serializer fields when the request has no
+# recognized `Accept-Language` header.
+SUPPORTED_CONTENT_LANGUAGES = ("en", "tr", "fa", "ar", "es")
+DEFAULT_CONTENT_LANGUAGE = "en"
 
 # Redirects after login/logout
 LOGIN_REDIRECT_URL = '/'
