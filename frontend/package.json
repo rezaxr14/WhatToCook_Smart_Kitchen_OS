@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "check:bundle": "node scripts/check-bundle.mjs",
+    "check:rtl": "node scripts/check-rtl-classes.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "test:e2e:csp": "playwright test -c playwright.csp.config.ts",

@@ -10,6 +10,7 @@ import { ServingScaler, scaleQuantity } from '../components/recipe/ServingScaler
 import { SubstitutionModal } from '../components/recipe/SubstitutionModal';
 import { LoadingChef } from '../components/common/LoadingChef';
 import { StyledButton } from '../components/common/StyledButton';
+import { SafeImage } from '../components/common/SafeImage';
 import { RecipeChatBox } from '../components/recipe/RecipeChatBox';
 import { getDishImageUrl } from '../utils/imageUtils';
 
@@ -102,19 +103,17 @@ export const AIRecipeDetailPage: React.FC = () => {
         to="/ai-chef"
         className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-900 font-semibold text-sm transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
         <span>Back to AI Chef Studio</span>
       </Link>
 
       {/* Hero Card */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-stone-900 text-white min-h-[380px] flex flex-col justify-end p-8 sm:p-12">
-        <img
+        <SafeImage
           src={getDishImageUrl(recipe.name, recipe.image)}
+          fallback={getDishImageUrl(recipe.name)}
           alt={recipe.name}
           className="absolute inset-0 w-full h-full object-cover opacity-60"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = getDishImageUrl(recipe.name);
-          }}
         />
         <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-950 via-stone-950/60 to-transparent" />
 
@@ -211,7 +210,7 @@ export const AIRecipeDetailPage: React.FC = () => {
                 return (
                   <div
                     key={idx}
-                    className={`w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl border text-start transition-all ${
  isChecked
  ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
  : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
@@ -219,7 +218,7 @@ export const AIRecipeDetailPage: React.FC = () => {
                   >
                     <button
                       onClick={() => toggleIngredient(ing.name)}
-                      className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+                      className="flex items-center gap-2.5 min-w-0 flex-1 text-start"
                     >
                       <div
                         className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
@@ -319,7 +318,7 @@ export const AIRecipeDetailPage: React.FC = () => {
 
                     {/* Master Chef Secret Tip */}
                     {chefTip && (
-                      <div className="ml-12 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2">
+                      <div className="ms-12 p-3 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2">
                         <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                         <div>
                           <strong className="font-bold">Chef's Secret: </strong>

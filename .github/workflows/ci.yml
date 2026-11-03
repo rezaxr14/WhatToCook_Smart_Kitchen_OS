@@ -140,6 +140,8 @@ jobs:
         run: npm run build
       - name: Bundle budget (no three.js in the entry graph, size limits)
         run: npm run check:bundle
+      - name: RTL guard (no physical direction utilities)
+        run: npm run check:rtl
 
   deploy-config:
     name: Compose + Kubernetes manifests

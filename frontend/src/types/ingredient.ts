@@ -1,9 +1,11 @@
 export interface Ingredient {
   id: number;
   name: string;
+  display_name?: string;
   calories_per_100g: number | null;
   category: string;
   image_url?: string;
+  image_fallback?: string | null;
 }
 
 export interface RecipeIngredient {

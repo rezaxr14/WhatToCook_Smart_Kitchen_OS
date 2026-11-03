@@ -2,6 +2,12 @@
  * Unified API Client for WhatToCook
  */
 
+import i18n from '../i18n';
+
+function currentLanguage(): string {
+  return i18n.resolvedLanguage || i18n.language || 'en';
+}
+
 function getCookie(name: string): string | null {
   let cookieValue = null;
   if (document.cookie && document.cookie !== '') {
@@ -58,6 +64,9 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    // The API returns `display_*` fields for this language; the canonical
+    // English fields stay in place for matching and Telegram.
+    'Accept-Language': currentLanguage(),
     ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
     ...(options.headers || {}),
   };

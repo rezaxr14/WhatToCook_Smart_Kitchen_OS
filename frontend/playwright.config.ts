@@ -14,6 +14,19 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /rtl\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      // The RTL suite seeds the language itself; these projects only control
+      // which language each spec asserts.
+      name: 'rtl-fa',
+      testMatch: /rtl\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'rtl-ar',
+      testMatch: /rtl\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],

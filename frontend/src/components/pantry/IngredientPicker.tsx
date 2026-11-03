@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Search, Plus, Check, Sparkles, Wand2, Apple } from 'lucide-react';
 import { Ingredient } from '../../types/ingredient';
 import { StyledButton } from '../common/StyledButton';
+import { SafeImage } from '../common/SafeImage';
+import { useUiDir, inputDir } from '../../hooks/useUiDir';
 
 interface IngredientPickerProps {
   availableIngredients: Ingredient[];
@@ -38,13 +40,16 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
   onAdd,
   onAddMultiple,
 }) => {
+  const uiDir = useUiDir();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Filtered ingredients
   const filtered = useMemo(() => {
     return availableIngredients.filter((ing) => {
-      const matchesSearch = ing.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        ing.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (ing.display_name ?? '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || ing.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -119,7 +124,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
       {/* Search Input & Custom Add */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+          <Search className="w-4 h-4 absolute start-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input
             type="text"
             value={searchTerm}
@@ -128,7 +133,8 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
               if (e.key === 'Enter') handleCustomAdd();
             }}
             placeholder="Search ingredients (e.g. Avocado, Ice Cream, Chicken, Mozzarella)..."
-            className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
+            dir={inputDir(searchTerm, uiDir)}
+            className="w-full ps-10 pe-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all"
           />
         </div>
 
@@ -150,7 +156,7 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
                 type="button"
                 onClick={() => onAdd(ing)}
                 style={{ height: '180px' }}
-                className="group relative flex flex-col justify-between w-full p-2.5 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white hover:border-brand-400 hover:shadow-md text-stone-800 text-left transition-all cursor-pointer overflow-hidden"
+                className="group relative flex flex-col justify-between w-full p-2.5 rounded-2xl border border-stone-200 bg-stone-50/70 hover:bg-white hover:border-brand-400 hover:shadow-md text-stone-800 text-start transition-all cursor-pointer overflow-hidden"
               >
                 {/* Photo Thumbnail with Exact Uniform Fixed Dimensions */}
                 <div
@@ -158,16 +164,13 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
                   className="relative w-full rounded-xl overflow-hidden bg-stone-100 shrink-0"
                 >
                   {ing.image_url ? (
-                    <img
+                    <SafeImage
                       src={ing.image_url}
-                      alt={ing.name}
+                      fallback={ing.image_fallback}
+                      alt={ing.display_name ?? ing.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                       className="w-full h-full object-cover transition-transform duration-300"
                       loading="lazy"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80';
-                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-stone-100 text-stone-400">
@@ -175,14 +178,14 @@ export const IngredientPicker: React.FC<IngredientPickerProps> = ({
                     </div>
                   )}
 
-                  <span className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg bg-white/90 group-hover:bg-brand-500 group-hover:text-white text-stone-700 flex items-center justify-center transition-colors">
+                  <span className="absolute bottom-1.5 end-1.5 w-6 h-6 rounded-lg bg-white/90 group-hover:bg-brand-500 group-hover:text-white text-stone-700 flex items-center justify-center transition-colors">
                     <Plus className="w-3.5 h-3.5" />
                   </span>
                 </div>
 
                 <div className="w-full min-w-0 pt-1.5 flex flex-col justify-end">
                   <div className="font-bold text-xs text-stone-900 truncate capitalize">
-                    {ing.name}
+                    {ing.display_name ?? ing.name}
                   </div>
                   <div className="text-[10px] text-stone-500 truncate mt-0.5">
                     {ing.category || 'General'}

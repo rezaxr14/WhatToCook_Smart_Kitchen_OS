@@ -10,10 +10,13 @@ import { StyledButton } from '../components/common/StyledButton';
 import { StyledCard } from '../components/common/StyledCard';
 import { LoadingChef } from '../components/common/LoadingChef';
 import { AIProviderSwitcher } from '../components/common/AIProviderSwitcher';
+import { SafeImage } from '../components/common/SafeImage';
 import { assignUniqueDishPhotos } from '../utils/imageUtils';
+import { useUiDir, inputDir } from '../hooks/useUiDir';
 
 export const AIChefPage: React.FC = () => {
   const { t } = useTranslation();
+  const uiDir = useUiDir();
   const navigate = useNavigate();
   const { pantryIngredients, activeAIProvider, activeModel, setActiveAIProvider } = usePantry();
   const { error, aiToast } = useToast();
@@ -102,7 +105,7 @@ export const AIChefPage: React.FC = () => {
     <div className="space-y-10 pb-16">
       {/* AI Studio Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-r/srgb from-stone-900 via-stone-800 to-stone-950 text-white p-8 sm:p-12 shadow-2xl border border-stone-800">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 end-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl space-y-4">
           <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -176,6 +179,7 @@ export const AIChefPage: React.FC = () => {
               if (e.key === 'Enter') handleAddCustom();
             }}
             placeholder={t('aiChefPage.customPlaceholder')}
+            dir={inputDir(customInput, uiDir)}
             className="flex-1 px-3.5 py-2 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
           />
           <StyledButton $variant="secondary" $size="sm" onClick={handleAddCustom}>
@@ -252,20 +256,15 @@ export const AIChefPage: React.FC = () => {
                 >
                   {/* Dish Photo — one unique photo per dish on the page */}
                   <div className="relative h-48 w-full overflow-hidden bg-stone-100">
-                    <img
+                    <SafeImage
                       src={dishPhotos[index]}
+                      fallback={dishPhotos[(index + 1) % dishPhotos.length]}
                       alt={dish.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      onError={(e) => {
-                        const fallback = dishPhotos[(index + 1) % dishPhotos.length];
-                        if (fallback && (e.target as HTMLImageElement).src !== fallback) {
-                          (e.target as HTMLImageElement).src = fallback;
-                        }
-                      }}
                     />
                     <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-900/70 via-transparent to-transparent opacity-80" />
 
-                    <div className="absolute top-3 left-3 flex gap-2">
+                    <div className="absolute top-3 start-3 flex gap-2">
                       <span className="bg-stone-900/80 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full">
                         {dish.cuisine || t('aiChefPage.gourmet')}
                       </span>
@@ -276,7 +275,7 @@ export const AIChefPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="absolute bottom-3 left-3 right-3">
+                    <div className="absolute bottom-3 start-3 end-3">
                       <h3 className="text-lg font-bold text-white leading-tight drop-shadow-xs group-hover:text-amber-200 transition-colors">
                         {dish.name}
                       </h3>
@@ -297,7 +296,7 @@ export const AIChefPage: React.FC = () => {
 
                       <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 group-hover:text-brand-700 group-hover:translate-x-1 transition-transform">
                         <span>{t('aiChefPage.cookFullRecipe')}</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                       </div>
                     </div>
                   </div>

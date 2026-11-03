@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, X, ArrowRight, Check, Search, ChefHat } from 'lucide-react';
+import { useUiDir, inputDir } from '../../hooks/useUiDir';
 
 interface SubstitutionModalProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
   onClose,
   initialIngredient = '',
 }) => {
+  const uiDir = useUiDir();
   const [searchTerm, setSearchTerm] = useState(initialIngredient);
 
   if (!isOpen) return null;
@@ -92,13 +94,14 @@ export const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
         <div className="p-6 space-y-6">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
             <input
               type="text"
               placeholder="Search missing item (e.g. Butter, Eggs, Heavy Cream, Garlic)..."
+              dir={inputDir(searchTerm, uiDir)}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-2xl border border-stone-200 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
+              className="w-full ps-11 pe-4 py-3 rounded-2xl border border-stone-200 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500"
             />
           </div>
 
@@ -140,7 +143,7 @@ export const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                         {sub.ratio}
                       </span>
                     </div>
-                    <p className="text-xs text-stone-600 pl-6">{sub.notes}</p>
+                    <p className="text-xs text-stone-600 ps-6">{sub.notes}</p>
                   </div>
                 ))}
               </div>

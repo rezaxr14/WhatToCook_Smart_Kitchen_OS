@@ -74,7 +74,7 @@ export const ServingScaler: React.FC<ServingScalerProps> = ({
       </div>
 
       {/* Quick multiplier pills with boundary wrap safety */}
-      <div className="flex items-center gap-1 border-l border-stone-200 pl-2">
+      <div className="flex items-center gap-1 border-s border-stone-200 ps-2">
         {options.map((opt) => (
           <button
             key={opt}

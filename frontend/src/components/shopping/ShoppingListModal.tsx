@@ -16,6 +16,7 @@ import {
   Send,
   Check,
 } from 'lucide-react';
+import { useUiDir, inputDir } from '../../hooks/useUiDir';
 import { useShoppingList } from '../../context/ShoppingListContext';
 
 interface ShoppingListModalProps {
@@ -24,6 +25,7 @@ interface ShoppingListModalProps {
 }
 
 export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, onClose }) => {
+  const uiDir = useUiDir();
   const {
     items,
     addItem,
@@ -134,6 +136,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
               placeholder="Add item (e.g. Olive Oil, Garlic, Parmesan)..."
+              dir={inputDir(newItemName, uiDir)}
               className="flex-1 px-4 py-2.5 rounded-2xl border border-stone-200 focus:outline-hidden focus:ring-2 focus:ring-brand-500 text-sm"
             />
             <input
@@ -141,6 +144,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
               value={newItemQuantity}
               onChange={(e) => setNewItemQuantity(e.target.value)}
               placeholder="Qty (e.g. 250ml)"
+              dir={inputDir(newItemQuantity, uiDir)}
               className="w-28 px-3 py-2.5 rounded-2xl border border-stone-200 focus:outline-hidden focus:ring-2 focus:ring-brand-500 text-sm hidden sm:block"
             />
             <button
@@ -164,7 +168,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
               </p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-72 overflow-y-auto pe-1">
               {items.map((item) => (
                 <div
                   key={item.id}
@@ -177,7 +181,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
                   <button
                     type="button"
                     onClick={() => toggleItem(item.id)}
-                    className="flex items-center gap-3 min-w-0 flex-1 text-left cursor-pointer"
+                    className="flex items-center gap-3 min-w-0 flex-1 text-start cursor-pointer"
                   >
                     {item.checked ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />

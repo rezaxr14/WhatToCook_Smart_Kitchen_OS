@@ -9,6 +9,7 @@ import { CookingTimer } from '../components/recipe/CookingTimer';
 import { ServingScaler, scaleQuantity } from '../components/recipe/ServingScaler';
 import { SubstitutionModal } from '../components/recipe/SubstitutionModal';
 import { StyledButton } from '../components/common/StyledButton';
+import { SafeImage } from '../components/common/SafeImage';
 import { RecipeChatBox } from '../components/recipe/RecipeChatBox';
 
 export const RecipeDetailPage: React.FC = () => {
@@ -105,8 +106,10 @@ export const RecipeDetailPage: React.FC = () => {
     );
   }
 
-  const instructionsList = recipe.instructions
-    ? recipe.instructions.split('\n').filter((s) => s.trim().length > 0)
+  const instructionsList = (recipe.display_instructions || recipe.instructions)
+    ? (recipe.display_instructions || recipe.instructions)
+        .split('\n')
+        .filter((s) => s.trim().length > 0)
     : [];
 
   const getImageUrl = () => {
@@ -127,23 +130,17 @@ export const RecipeDetailPage: React.FC = () => {
         to="/"
         className="inline-flex items-center gap-2 text-stone-600 hover:text-stone-900 font-semibold text-sm transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
         <span>Back to Recipes</span>
       </Link>
 
       {/* Hero Header Card */}
       <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-stone-900 text-white min-h-[380px] flex flex-col justify-end p-8 sm:p-12">
-        <img
+        <SafeImage
           src={getImageUrl()}
-          alt={recipe.name}
+          fallback={recipe.image_fallback ?? '/media/recipes/default.png'}
+          alt={recipe.display_name ?? recipe.name}
           className="absolute inset-0 w-full h-full object-cover opacity-60"
-          onError={(e) => {
-            // fall back to the recipe's own card photo when the hero fails
-            const t = e.target as HTMLImageElement;
-            const alt = `/media/${recipe.image ?? ''}`;
-            if (t.src !== alt && (recipe.image ?? '').length > 0) t.src = alt;
-            else if (t.src !== '/media/recipes/default.png') t.src = '/media/recipes/default.png';
-          }}
         />
         <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-950 via-stone-950/60 to-transparent" />
 
@@ -161,11 +158,11 @@ export const RecipeDetailPage: React.FC = () => {
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight drop-shadow-md">
-            {recipe.name}
+            {recipe.display_name ?? recipe.name}
           </h1>
 
           <p className="text-stone-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-            {recipe.description}
+            {recipe.display_description || recipe.description}
           </p>
         </div>
       </div>
@@ -215,7 +212,7 @@ export const RecipeDetailPage: React.FC = () => {
                   return (
                     <div
                       key={ri.id}
-                      className={`w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                      className={`w-full flex items-center justify-between p-3 rounded-2xl border text-start transition-all ${
  isChecked
  ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
  : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
@@ -223,7 +220,7 @@ export const RecipeDetailPage: React.FC = () => {
                     >
                       <button
                         onClick={() => toggleIngredientCheck(ri.ingredient.id)}
-                        className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+                        className="flex items-center gap-2.5 min-w-0 flex-1 text-start"
                       >
                         <div
                           className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
@@ -274,7 +271,7 @@ export const RecipeDetailPage: React.FC = () => {
                   return (
                     <div
                       key={ing.id}
-                      className={`w-full flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                      className={`w-full flex items-center justify-between p-3 rounded-2xl border text-start transition-all ${
  isChecked
  ? 'bg-emerald-50 border-emerald-200 text-emerald-950 opacity-70'
  : 'bg-stone-50/80 border-stone-200 hover:border-brand-300 text-stone-800'
@@ -282,7 +279,7 @@ export const RecipeDetailPage: React.FC = () => {
                     >
                       <button
                         onClick={() => toggleIngredientCheck(ing.id)}
-                        className="flex items-center gap-2.5 min-w-0 flex-1 text-left"
+                        className="flex items-center gap-2.5 min-w-0 flex-1 text-start"
                       >
                         <div
                           className={`w-5 h-5 rounded-lg flex items-center justify-center border ${
@@ -298,7 +295,7 @@ export const RecipeDetailPage: React.FC = () => {
  isChecked ? 'line-through' : ''
  }`}
                         >
-                          {ing.name}
+                          {ing.display_name ?? ing.name}
                         </span>
                       </button>
 
@@ -324,7 +321,7 @@ export const RecipeDetailPage: React.FC = () => {
             <div className="pt-4 border-t border-stone-100">
               <CookingTimer
                 initialMinutes={recipe.cooking_time || 15}
-                label={`${recipe.name} Cooking Timer`}
+                label={`${recipe.display_name ?? recipe.name} Cooking Timer`}
               />
             </div>
           </div>

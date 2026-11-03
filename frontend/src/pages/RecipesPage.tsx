@@ -48,9 +48,19 @@ export const RecipesPage: React.FC = () => {
   const filteredRecipes = useMemo(() => {
     return recipes.filter((recipe) => {
       const term = searchTerm.toLowerCase();
-      const matchesName = recipe.name.toLowerCase().includes(term);
-      const matchesDesc = recipe.description?.toLowerCase().includes(term);
-      const matchesIng = recipe.ingredients?.some((i) => i.name.toLowerCase().includes(term));
+      // Search both the canonical English text (so the same filters keep
+      // working for every language) and the localized display fields.
+      const matchesName =
+        recipe.name.toLowerCase().includes(term) ||
+        (recipe.display_name ?? '').toLowerCase().includes(term);
+      const matchesDesc =
+        recipe.description?.toLowerCase().includes(term) ||
+        (recipe.display_description ?? '').toLowerCase().includes(term);
+      const matchesIng = recipe.ingredients?.some(
+        (i) =>
+          i.name.toLowerCase().includes(term) ||
+          (i.display_name ?? '').toLowerCase().includes(term)
+      );
       const matchesSearch = !searchTerm || matchesName || matchesDesc || matchesIng;
 
       const matchesTime = maxCookTime >= 90 || (recipe.cooking_time ? recipe.cooking_time <= maxCookTime : true);
@@ -100,7 +110,7 @@ export const RecipesPage: React.FC = () => {
       {/* Authenticated Kitchen Dashboard Strip */}
       {isAuthenticated && (
         <section className="relative overflow-hidden rounded-3xl bg-linear-to-br/srgb from-stone-900 via-stone-900 to-stone-950 text-white p-8 sm:p-10 shadow-2xl border border-stone-800">
-          <div className="absolute -top-24 -right-24 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -end-24 w-80 h-80 bg-brand-500/15 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

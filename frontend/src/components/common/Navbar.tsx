@@ -108,7 +108,7 @@ export const Navbar: React.FC = () => {
                   </span>
                 )}
                 {link.glow && !active && (
-                  <span className="absolute top-1 right-1 flex h-2 w-2">
+                  <span className="absolute top-1 end-1 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                   </span>
@@ -126,7 +126,7 @@ export const Navbar: React.FC = () => {
 
           {/* User Auth Section */}
           {isAuthenticated ? (
-            <div className="flex items-center gap-2 pl-2 border-l border-stone-200">
+            <div className="flex items-center gap-2 ps-2 border-s border-stone-200">
               <div className="flex items-center gap-2 px-2 py-1 rounded-xl bg-stone-50 border border-stone-200/80 text-xs font-bold text-stone-800">
                 <div className="w-6 h-6 rounded-full bg-linear-to-tr/srgb from-brand-500 to-amber-500 text-white flex items-center justify-center font-extrabold text-[10px]">
                   {user?.username?.substring(0, 2).toUpperCase() || 'U'}
@@ -143,7 +143,7 @@ export const Navbar: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 pl-2 border-l border-stone-200">
+            <div className="flex items-center gap-1.5 ps-2 border-s border-stone-200">
               <button
                 onClick={() => demoLogin()}
                 className="hidden xl:block px-3 py-1.5 rounded-xl text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
