@@ -4,6 +4,8 @@ import { aiApi } from '../../api/aiApi';
 import { ChatMessage } from '../../types/ai';
 import { usePantry } from '../../context/PantryContext';
 import { useUiDir, inputDir } from '../../hooks/useUiDir';
+import i18n from '../../i18n';
+import { aiErrorMessage } from '../../lib/aiErrors';
 
 interface RecipeChatBoxProps {
   recipeName: string;
@@ -41,14 +43,17 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const hasInteractedRef = useRef(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // Scroll only the chat message list after the user starts chatting. Using the
+  // container's own scrollTop (instead of scrollIntoView) keeps the page from
+  // jumping down to the chat when a recipe is first opened.
   useEffect(() => {
-    scrollToBottom();
+    if (!hasInteractedRef.current) return;
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
   }, [messages, isLoading]);
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -56,6 +61,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
     if (!text || isLoading) return;
 
     setChatError(null);
+    hasInteractedRef.current = true;
     const userMsg: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -98,7 +104,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
 
       setMessages((prev) => [...prev, botMsg]);
     } catch (err: any) {
-      setChatError('Failed to get answer from chef. Please try again.');
+      setChatError(aiErrorMessage(err, i18n.t.bind(i18n)));
       const fallbackMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
         role: 'assistant',
@@ -201,7 +207,11 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
         <div className="flex items-center gap-2">
           <span className="hidden sm:inline-flex items-center gap-1 text-xs text-stone-400 bg-stone-800/80 px-2.5 py-1 rounded-xl border border-stone-700 font-mono text-[11px]">
             <Bot className="w-3 h-3 text-amber-400" />
-            {activeAIProvider === 'gemini' ? activeModel : 'LM Studio Local'}
+            {activeAIProvider === 'gemini'
+              ? activeModel
+              : activeAIProvider === 'supabase_gateway'
+                ? 'Cloud Gateway'
+                : 'LM Studio Local'}
           </span>
           <button
             type="button"
@@ -235,7 +245,10 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="p-6 max-h-[420px] min-h-[220px] overflow-y-auto space-y-4 bg-stone-50/30">
+      <div
+        ref={messagesContainerRef}
+        className="p-6 max-h-[420px] min-h-[220px] overflow-y-auto space-y-4 bg-stone-50/30"
+      >
         {messages.map((m) => {
           const isUser = m.role === 'user';
           return (
@@ -299,8 +312,6 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Error alert */}

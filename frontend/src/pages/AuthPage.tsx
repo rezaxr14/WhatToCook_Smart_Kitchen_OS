@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ChefHat, LogIn, UserPlus, Zap } from 'lucide-react';
@@ -6,6 +6,8 @@ import { useAuth } from '../context/AuthContext';
 import { StyledButton } from '../components/common/StyledButton';
 import { StyledCard } from '../components/common/StyledCard';
 import { useUiDir, inputDir } from '../hooks/useUiDir';
+import { TurnstileWidget } from '../components/common/TurnstileWidget';
+import { authApi, ChallengeConfig } from '../api/authApi';
 
 export const AuthPage: React.FC = () => {
   const { t } = useTranslation();
@@ -18,29 +20,58 @@ export const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [challenge, setChallenge] = useState<ChallengeConfig | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [widgetKey, setWidgetKey] = useState(0);
+
+  useEffect(() => {
+    authApi
+      .getChallenge()
+      .then((config) => setChallenge(config))
+      .catch(() => setChallenge(null)); // older backend or offline: keep the plain form
+  }, []);
+
+  const gateEnabled = Boolean(challenge?.enabled && challenge.site_key);
+
+  const resetToken = () => {
+    setTurnstileToken('');
+    setWidgetKey((key) => key + 1);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    const token = gateEnabled ? turnstileToken : undefined;
+    if (gateEnabled && !token) {
+      setErrorMessage(t('challenge.required'));
+      return;
+    }
 
     try {
       if (mode === 'login') {
-        await login({ username, password });
+        await login({ username, password }, token);
       } else {
-        await signup({ username, password, email });
+        await signup({ username, password, email }, token);
       }
       navigate('/');
     } catch (err: any) {
       setErrorMessage(err.message || t('auth.authFailed'));
+      resetToken();
     }
   };
 
   const handleDemo = async () => {
+    const token = gateEnabled ? turnstileToken : undefined;
+    if (gateEnabled && !token) {
+      setErrorMessage(t('challenge.required'));
+      return;
+    }
     try {
-      await demoLogin();
+      await demoLogin(token);
       navigate('/');
     } catch (err: any) {
       setErrorMessage(t('auth.demoFailed'));
+      resetToken();
     }
   };
 
@@ -105,6 +136,19 @@ export const AuthPage: React.FC = () => {
         {errorMessage && (
           <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
             {errorMessage}
+          </div>
+        )}
+
+        {gateEnabled && (
+          <div className="space-y-2">
+            <p className="text-[11px] text-stone-500 text-center">{t('challenge.authHint')}</p>
+            <TurnstileWidget
+              siteKey={challenge!.site_key}
+              action={challenge!.action || 'ai_gate'}
+              resetKey={widgetKey}
+              onToken={setTurnstileToken}
+              onExpire={() => setTurnstileToken('')}
+            />
           </div>
         )}
 

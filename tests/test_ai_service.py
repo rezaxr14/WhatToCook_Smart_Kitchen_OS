@@ -580,6 +580,12 @@ class StreamTests(NoNetworkMixin, SimpleTestCase):
         self.assertIn("Gourmet Soup", "".join(f["chunk"] for f in frames))
         self.assertTrue(frames[-1]["done"])
 
+    def test_offline_streamer_escapes_markup_in_the_recipe_name(self):
+        frames = _chunks(stream_recipe_generation("<script>Soup</script>", provider="gemini"))
+        text = "".join(f["chunk"] for f in frames)
+        self.assertNotIn("<script>", text)
+        self.assertIn("&lt;script&gt;", text)
+
     def test_no_api_key_or_other_provider_never_calls_google(self):
         with patch("GetFood.ai_service.GEMINI_API_KEY", ""), patch.dict(os.environ, {}, clear=False):
             os.environ.pop("GEMINI_API_KEY", None)

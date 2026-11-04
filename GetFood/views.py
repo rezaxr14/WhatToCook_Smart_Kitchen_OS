@@ -95,7 +95,36 @@ from .serializers import (
     UserSerializer,
 )
 from . import ai_cache
+from . import ai_guard
+from . import gateway_client
 from .tasks import generate_ai_suggestions_task
+
+
+def _ai_principal(request) -> tuple[str, str]:
+    """Gateway principal class and stable end-user reference for this caller."""
+    principal = "registered" if ai_guard.is_registered(request) else "anonymous"
+    return principal, ai_guard.challenge_identity(request)
+
+
+def _verify_challenge_token(request) -> None:
+    """Require a valid Turnstile token when the gate is configured.
+
+    Raises ``ChallengeRequired`` (handled by the DRF exception handler) with the
+    verification reason attached; the reason is diagnostic, not sensitive.
+    """
+    if not ai_guard.turnstile_enabled():
+        return
+    token = (
+        request.data.get("turnstile_token")
+        or request.data.get("cf_turnstile_response")
+        or request.data.get("captcha")
+    )
+    ok, reason = ai_guard.verify_turnstile(token, ai_guard.client_ip(request))
+    if not ok:
+        raise ai_guard.ChallengeRequired(
+            "Please complete the human verification before continuing.",
+            reason=reason,
+        )
 
 
 # ==========================================
@@ -213,9 +242,12 @@ def api_auth_login(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    _verify_challenge_token(request)
+
     user = authenticate(request, username=username, password=password)
     if user is not None:
         login(request, user)
+        ai_guard.reset_challenge(request)
         pantry, _ = UserPantry.objects.get_or_create(user=user)
         return Response({
             "message": "Login successful",
@@ -244,6 +276,8 @@ def api_auth_signup(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    _verify_challenge_token(request)
+
     if User.objects.filter(username=username).exists():
         return Response(
             {"error": f"Username '{username}' is already taken."},
@@ -253,6 +287,7 @@ def api_auth_signup(request):
     user = User.objects.create_user(username=username, password=password, email=email)
     pantry = UserPantry.objects.create(user=user)
     login(request, user)
+    ai_guard.reset_challenge(request)
 
     return Response({
         "message": "Account created successfully",
@@ -295,6 +330,8 @@ def api_auth_me(request):
 @scoped("demo")
 def api_auth_demo(request):
     """1-Click Guest Demo Login with pre-stocked kitchen pantry."""
+    _verify_challenge_token(request)
+
     demo_user, created = User.objects.get_or_create(
         username=DEMO_USERNAME,
         defaults={"email": "chef@whattocook.local"}
@@ -314,11 +351,37 @@ def api_auth_demo(request):
                 pantry.ingredients.add(ing)
 
     login(request, demo_user)
+    ai_guard.reset_challenge(request)
     return Response({
         "message": "Logged in as ChefDemo",
         "user": UserSerializer(demo_user).data,
         "pantry": UserPantrySerializer(pantry).data,
     })
+
+
+@extend_schema(tags=["Auth"], summary="AI human-verification challenge (GET settings, POST a token)", request=None, responses={200: OpenApiTypes.OBJECT, 403: ErrorSerializer})
+@api_view(["GET", "POST"])
+@permission_classes([AllowAny])
+@scoped("auth")
+def api_auth_challenge(request):
+    """Describe the challenge gate and accept a step-up verification token.
+
+    The SPA reads the site key from GET, renders Turnstile, then POSTs the token
+    here; a success resets this caller's adaptive counter. When no Turnstile
+    secret is configured the gate is disabled and GET says so.
+    """
+    if request.method == "GET":
+        return Response({
+            "enabled": ai_guard.turnstile_enabled(),
+            "site_key": ai_guard.turnstile_site_key(),
+            "action": getattr(settings, "TURNSTILE_ACTION", "ai_gate"),
+            "every_n": ai_guard.challenge_every_n(),
+            "calls_since_verified": ai_guard.challenge_state(request),
+        })
+
+    _verify_challenge_token(request)
+    ai_guard.reset_challenge(request)
+    return Response({"verified": True})
 
 
 # ==========================================
@@ -492,7 +555,23 @@ def api_pantry_scan_image(request):
         else:
             image_bytes = base64.b64decode(image_base64)
 
-    detected_items = scan_fridge_image(image_bytes, mime_type=mime_type, provider=provider, language=language)
+    if not image_bytes:
+        return Response(
+            {"error": "Could not read the uploaded image. Please try another photo."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    principal_class, end_user_ref = _ai_principal(request)
+    ai_guard.begin_ai_call(request, "scan")
+
+    detected_items = scan_fridge_image(
+        image_bytes,
+        mime_type=mime_type,
+        provider=provider,
+        language=language,
+        principal_class=principal_class,
+        end_user_ref=end_user_ref,
+    )
 
     added_names = []
     pantry_data = None
@@ -643,31 +722,50 @@ def api_ai_providers(request):
     current_gemini_model = getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash") or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
     lm_health = _check_lmstudio_health()
+    gateway_ready = gateway_client.gateway_configured()
+
+    cloud_providers = []
+    if gateway_ready:
+        cloud_providers.append({
+            "id": "supabase_gateway",
+            "name": "Cloud Gateway (pooled, rate-limited)",
+            "active": True,
+            "online": True,
+            "badge": "Shared free-tier pool",
+            "group": "cloud",
+        })
+    cloud_providers.append({
+        "id": "gemini",
+        "name": f"Cloud AI ({current_gemini_model})",
+        "active": has_gemini,
+        "online": has_gemini,
+        "badge": "Ultra-Fast & Smart",
+        "group": "cloud",
+    })
+    local_providers = [{
+        "id": "lmstudio",
+        "name": f"Local AI ({lm_health['model']})",
+        "active": lm_health["online"],
+        "online": lm_health["online"],
+        "badge": "Offline Ready" if lm_health["online"] else "Offline (Not Running)",
+        "group": "local",
+    }]
 
     return Response({
-        "default_provider": DEFAULT_AI_PROVIDER,
+        "default_provider": "supabase_gateway" if gateway_ready else DEFAULT_AI_PROVIDER,
         "has_gemini": has_gemini,
+        "has_gateway": gateway_ready,
+        "gateway_configured": gateway_ready,
         "gemini_model": current_gemini_model,
         "has_lmstudio": lm_health["online"],
         "lmstudio_online": lm_health["online"],
         "lmstudio_model": lm_health["model"],
         "lmstudio_error": lm_health.get("error"),
-        "providers": [
-            {
-                "id": "gemini",
-                "name": f"Cloud AI ({current_gemini_model})",
-                "active": has_gemini,
-                "online": has_gemini,
-                "badge": "Ultra-Fast & Smart",
-            },
-            {
-                "id": "lmstudio",
-                "name": f"Local AI ({lm_health['model']})",
-                "active": lm_health["online"],
-                "online": lm_health["online"],
-                "badge": "Offline Ready" if lm_health["online"] else "Offline (Not Running)",
-            }
-        ]
+        "providers": [*cloud_providers, *local_providers],
+        "groups": [
+            {"id": "cloud", "label": "Cloud AI", "providers": cloud_providers},
+            {"id": "local", "label": "Local AI", "providers": local_providers},
+        ],
     })
 
 
@@ -680,18 +778,33 @@ def api_ai_models(request):
     api_key = getattr(settings, "GEMINI_API_KEY", "") or os.getenv("GEMINI_API_KEY", "")
     default_model = getattr(settings, "GEMINI_MODEL", "gemini-3.5-flash-lite") or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
+    gateway_ready = gateway_client.gateway_configured()
+
+    def _with_gateway(models: list[dict]) -> list[dict]:
+        if not gateway_ready:
+            return models
+        return [
+            *models,
+            {
+                "id": "openrouter/free",
+                "displayName": "OpenRouter Free (via gateway)",
+                "description": "Free model routed through the pooled Supabase gateway",
+                "group": "cloud",
+            },
+        ]
+
     curated_fallback_models = [
-        {"id": "gemini-3.5-flash-lite", "displayName": "Gemini 3.5 Flash Lite (Max Free Quota - Default)"},
-        {"id": "gemini-3.6-flash", "displayName": "Gemini 3.6 Flash (High Performance & Fast)"},
-        {"id": "gemini-3.5-flash", "displayName": "Gemini 3.5 Flash"},
-        {"id": "gemini-2.5-flash-lite", "displayName": "Gemini 2.5 Flash Lite"},
-        {"id": "gemini-2.5-flash", "displayName": "Gemini 2.5 Flash"},
-        {"id": "gemini-2.0-flash", "displayName": "Gemini 2.0 Flash"},
+        {"id": "gemini-3.5-flash-lite", "displayName": "Gemini 3.5 Flash Lite (Max Free Quota - Default)", "group": "cloud"},
+        {"id": "gemini-3.6-flash", "displayName": "Gemini 3.6 Flash (High Performance & Fast)", "group": "cloud"},
+        {"id": "gemini-3.5-flash", "displayName": "Gemini 3.5 Flash", "group": "cloud"},
+        {"id": "gemini-2.5-flash-lite", "displayName": "Gemini 2.5 Flash Lite", "group": "cloud"},
+        {"id": "gemini-2.5-flash", "displayName": "Gemini 2.5 Flash", "group": "cloud"},
+        {"id": "gemini-2.0-flash", "displayName": "Gemini 2.0 Flash", "group": "cloud"},
     ]
 
     if not api_key:
         return Response({
-            "models": curated_fallback_models,
+            "models": _with_gateway(curated_fallback_models),
             "current_model": default_model,
             "is_live": False,
         })
@@ -759,7 +872,7 @@ def api_ai_models(request):
                     seen_ids.add(name)
 
             return Response({
-                "models": models if models else curated_fallback_models,
+                "models": _with_gateway(models if models else curated_fallback_models),
                 "current_model": default_model,
                 "is_live": True,
             })
@@ -767,7 +880,7 @@ def api_ai_models(request):
         logger.warning("Failed to query Gemini models API: %s", e)
 
     return Response({
-        "models": curated_fallback_models,
+        "models": _with_gateway(curated_fallback_models),
         "current_model": default_model,
         "is_live": False,
     })
@@ -858,8 +971,17 @@ def ai_suggestions_api(request):
             return _cached_response(cache_entry.ai_response)
 
     # Generate suggestions directly with metadata
+    principal_class, end_user_ref = _ai_principal(request)
+    ai_guard.begin_ai_call(request, "ai")
     try:
-        recipes, model_used, rate_limited_models = generate_recipe_suggestions_meta(ingredients, provider=provider, model=model, language=language)
+        recipes, model_used, rate_limited_models = generate_recipe_suggestions_meta(
+            ingredients,
+            provider=provider,
+            model=model,
+            language=language,
+            principal_class=principal_class,
+            end_user_ref=end_user_ref,
+        )
         # Store in cache
         if not ai_cache.is_degraded(recipes):  # never cache the AI-offline fallback
             AISuggestionCache.objects.update_or_create(
@@ -876,6 +998,8 @@ def ai_suggestions_api(request):
             "model_used": model_used,
             "rate_limited_models": rate_limited_models,
         })
+    except ai_guard.AiError:
+        raise
     except Exception:
         # Fallback to Celery background task if direct call is slow or fails
         try:
@@ -903,9 +1027,29 @@ def ai_recipe_detail_api(request, recipe_name):
     provider = request.GET.get("provider")
     model = request.GET.get("model")
     language = request.GET.get("language")
+
+    # A cache hit is free: it neither spends a provider call nor a challenge slot.
+    effective_provider = provider or DEFAULT_AI_PROVIDER
+    cached = ai_cache.get_detail(
+        ai_cache.detail_key(recipe_name, effective_provider, model, normalize_language(language))
+    )
+    if cached:
+        return Response(cached)
+
     try:
-        recipe_data, model_used, rate_limited_models = generate_recipe_detail_meta(recipe_name, provider=provider, model=model, language=language)
+        principal_class, end_user_ref = _ai_principal(request)
+        ai_guard.begin_ai_call(request, "ai")
+        recipe_data, model_used, rate_limited_models = generate_recipe_detail_meta(
+            recipe_name,
+            provider=provider,
+            model=model,
+            language=language,
+            principal_class=principal_class,
+            end_user_ref=end_user_ref,
+        )
         return Response(recipe_data)
+    except ai_guard.AiError:
+        raise
     except Exception as e:
         # Log the cause server-side; never echo exception text (hosts, keys, paths) to anonymous callers.
         logger.warning("Recipe detail failed for %r: %s", recipe_name, e)
@@ -935,6 +1079,8 @@ def api_recipe_chat(request):
         return Response({"error": "Message is required."}, status=400)
 
     try:
+        principal_class, end_user_ref = _ai_principal(request)
+        ai_guard.begin_ai_call(request, "ai")
         result = ask_recipe_chat(
             recipe_name=recipe_name,
             ingredients=ingredients,
@@ -944,8 +1090,12 @@ def api_recipe_chat(request):
             provider=provider,
             model=model,
             language=language,
+            principal_class=principal_class,
+            end_user_ref=end_user_ref,
         )
         return Response(result)
+    except ai_guard.AiError:
+        raise
     except Exception as e:
         logger.warning(f"Error in api_recipe_chat: {e}")
         return Response({
@@ -1338,12 +1488,22 @@ def api_ai_stream_recipe(request):
     provider = request.GET.get("provider", DEFAULT_AI_PROVIDER)
     language = request.GET.get("language")
 
+    principal_class, end_user_ref = _ai_principal(request)
+    ai_guard.begin_ai_call(request, "ai")
+
     response = StreamingHttpResponse(
-        stream_recipe_generation(recipe_name, provider=provider, language=language),
+        stream_recipe_generation(
+            recipe_name,
+            provider=provider,
+            language=language,
+            principal_class=principal_class,
+            end_user_ref=end_user_ref,
+        ),
         content_type="text/event-stream"
     )
     response["Cache-Control"] = "no-cache"
     response["X-Accel-Buffering"] = "no"
+    response["X-Content-Type-Options"] = "nosniff"
     return response
 
 

@@ -5,7 +5,10 @@ import os
 import re
 import requests
 from django.conf import settings
-from . import ai_cache
+from django.utils.html import escape as html_escape
+
+from . import ai_cache, gateway_client
+from .gateway_client import GATEWAY_PROVIDER_IDS, GatewayError
 from .utils import find_best_image
 
 logger = logging.getLogger(__name__)
@@ -397,7 +400,15 @@ def _fallback_recipe_suggestions(ingredients: list[str]) -> list[dict]:
     return presets
 
 
-def generate_recipe_suggestions_meta(ingredients: list[str], provider: str = None, model: str = None, language: str = None) -> tuple[list[dict], str, list[str]]:
+def generate_recipe_suggestions_meta(
+    ingredients: list[str],
+    provider: str = None,
+    model: str = None,
+    language: str = None,
+    *,
+    principal_class: str = "anonymous",
+    end_user_ref: str | None = None,
+) -> tuple[list[dict], str, list[str]]:
     """Generate 4-6 recipe ideas from pantry ingredients with model usage metadata."""
     if not provider:
         provider = DEFAULT_AI_PROVIDER
@@ -418,9 +429,18 @@ def generate_recipe_suggestions_meta(ingredients: list[str], provider: str = Non
     model_used = model or (GEMINI_MODEL if provider == "gemini" else MODEL_NAME)
     rate_limited_models = []
     error_note = None
+    recipes: list[dict] = []
 
     try:
-        if provider == "gemini":
+        if provider in GATEWAY_PROVIDER_IDS:
+            recipes, model_used, rate_limited_models = gateway_client.generate_suggestions(
+                ingredients,
+                model=model,
+                language=language,
+                principal_class=principal_class,
+                end_user_ref=end_user_ref,
+            )
+        elif provider == "gemini":
             content, model_used, rate_limited_models = _call_gemini_with_meta(prompt, system_instruction, model=model)
         elif provider == "lmstudio":
             content = _call_lmstudio(prompt, system_instruction)
@@ -432,12 +452,17 @@ def generate_recipe_suggestions_meta(ingredients: list[str], provider: str = Non
             except Exception:
                 content = _call_lmstudio(prompt, system_instruction)
                 model_used = MODEL_NAME
+    except GatewayError as exc:
+        mapped = gateway_client.to_api_exception(exc)
+        if mapped is not None:
+            raise mapped from exc
+        logger.warning("AI gateway suggestions failed: %s. Using fallback culinary recipes.", exc)
+        error_note = str(exc)
     except Exception as e:
         logger.warning(f"AI Provider ({provider}) failed: {e}. Using fallback culinary recipes.")
         error_note = str(e)
 
-    recipes = []
-    if content:
+    if content and provider not in GATEWAY_PROVIDER_IDS:
         cleaned = _clean_json_str(content)
         try:
             parsed = json.loads(cleaned)
@@ -478,7 +503,60 @@ def generate_recipe_suggestions(ingredients: list[str], provider: str = None, mo
     return recipes
 
 
-def generate_recipe_detail_meta(recipe_name: str, provider: str = None, model: str = None, language: str = None) -> tuple[dict, str, list[str]]:
+def _fallback_recipe_detail(recipe_name: str) -> dict:
+    return {
+        "name": recipe_name,
+        "description": f"A delightful and flavorful chef-crafted recipe for {recipe_name}, balanced with fresh aromatics and rich seasonings.",
+        "cuisine": "Gourmet",
+        "difficulty": "Medium",
+        "time_minutes": 30,
+        "ingredients": [
+            {"name": "Main Ingredients (Pantry Blend)", "amount": "300", "unit": "g"},
+            {"name": "Olive Oil or Butter", "amount": "2", "unit": "tbsp"},
+            {"name": "Garlic / Aromatics", "amount": "2", "unit": "cloves"},
+            {"name": "Sea Salt & Black Pepper", "amount": "1", "unit": "pinch"},
+            {"name": "Fresh Herbs for Garnish", "amount": "1", "unit": "handful"},
+        ],
+        "instructions": [
+            {
+                "step": "Prep and clean all ingredients. Dice aromatics finely and season proteins/vegetables lightly.",
+                "time_minutes": 5,
+                "chef_tip": "Mise en place ensures everything cooks evenly without burning.",
+            },
+            {
+                "step": "Warm pan with oil over medium heat. Sauté aromatics for 1-2 minutes until fragrance blooms.",
+                "time_minutes": 3,
+                "chef_tip": "Keep heat controlled to prevent burning garlic.",
+            },
+            {
+                "step": "Add core ingredients and cook thoroughly until nicely browned and caramelized.",
+                "time_minutes": 15,
+                "chef_tip": "Do not overcrowd the pan for better browning.",
+            },
+            {
+                "step": "Garnish with fresh chopped herbs, finish with flaky sea salt and serve immediately.",
+                "time_minutes": 2,
+                "chef_tip": "A squeeze of fresh lemon brings all flavors together.",
+            },
+        ],
+        "nutrition": {
+            "calories": "380 kcal",
+            "protein": "22g",
+            "carbs": "35g",
+            "fat": "14g",
+        },
+    }
+
+
+def generate_recipe_detail_meta(
+    recipe_name: str,
+    provider: str = None,
+    model: str = None,
+    language: str = None,
+    *,
+    principal_class: str = "anonymous",
+    end_user_ref: str | None = None,
+) -> tuple[dict, str, list[str]]:
     """Generate detailed step-by-step cooking guide with ingredients, instructions, and model metadata."""
     if not provider:
         provider = DEFAULT_AI_PROVIDER
@@ -509,79 +587,56 @@ def generate_recipe_detail_meta(recipe_name: str, provider: str = None, model: s
     content = ""
     model_used = model or (GEMINI_MODEL if provider == "gemini" else MODEL_NAME)
     rate_limited_models = []
+    recipe_data = None
+    used_fallback = False
 
-    try:
-        if provider == "gemini":
-            content, model_used, rate_limited_models = _call_gemini_with_meta(prompt, system_instruction, model=model)
-        elif provider == "lmstudio":
-            content = _call_lmstudio(prompt, system_instruction)
-            model_used = MODEL_NAME
-        else:
-            try:
+    if provider in GATEWAY_PROVIDER_IDS:
+        try:
+            recipe_data, model_used, rate_limited_models = gateway_client.generate_detail(
+                recipe_name,
+                model=model,
+                language=language,
+                principal_class=principal_class,
+                end_user_ref=end_user_ref,
+            )
+        except GatewayError as exc:
+            mapped = gateway_client.to_api_exception(exc)
+            if mapped is not None:
+                raise mapped from exc
+            logger.warning("AI gateway detail failed for '%s': %s", recipe_name, exc)
+            recipe_data = None
+        if not isinstance(recipe_data, dict) or "ingredients" not in recipe_data:
+            used_fallback = True
+            recipe_data = _fallback_recipe_detail(recipe_name)
+    else:
+        try:
+            if provider == "gemini":
                 content, model_used, rate_limited_models = _call_gemini_with_meta(prompt, system_instruction, model=model)
-            except Exception:
+            elif provider == "lmstudio":
                 content = _call_lmstudio(prompt, system_instruction)
                 model_used = MODEL_NAME
-    except Exception as e:
-        logger.warning(f"AI Detail fetch failed for '{recipe_name}': {e}")
+            else:
+                try:
+                    content, model_used, rate_limited_models = _call_gemini_with_meta(prompt, system_instruction, model=model)
+                except Exception:
+                    content = _call_lmstudio(prompt, system_instruction)
+                    model_used = MODEL_NAME
+        except Exception as e:
+            logger.warning(f"AI Detail fetch failed for '{recipe_name}': {e}")
 
-    recipe_data = None
-    if content:
-        cleaned = _clean_json_str(content)
-        try:
-            recipe_data = json.loads(cleaned)
-        except json.JSONDecodeError:
+        if content:
+            cleaned = _clean_json_str(content)
             try:
-                recipe_data = json.loads(cleaned.encode('utf-8').decode('unicode_escape'))
-            except Exception:
-                recipe_data = None
+                recipe_data = json.loads(cleaned)
+            except json.JSONDecodeError:
+                try:
+                    recipe_data = json.loads(cleaned.encode('utf-8').decode('unicode_escape'))
+                except Exception:
+                    recipe_data = None
 
-    used_fallback = False
-    if not recipe_data or not isinstance(recipe_data, dict) or "ingredients" not in recipe_data:
-        # Fallback recipe detail
-        used_fallback = True
-        recipe_data = {
-            "name": recipe_name,
-            "description": f"A delightful and flavorful chef-crafted recipe for {recipe_name}, balanced with fresh aromatics and rich seasonings.",
-            "cuisine": "Gourmet",
-            "difficulty": "Medium",
-            "time_minutes": 30,
-            "ingredients": [
-                {"name": "Main Ingredients (Pantry Blend)", "amount": "300", "unit": "g"},
-                {"name": "Olive Oil or Butter", "amount": "2", "unit": "tbsp"},
-                {"name": "Garlic / Aromatics", "amount": "2", "unit": "cloves"},
-                {"name": "Sea Salt & Black Pepper", "amount": "1", "unit": "pinch"},
-                {"name": "Fresh Herbs for Garnish", "amount": "1", "unit": "handful"}
-            ],
-            "instructions": [
-                {
-                    "step": "Prep and clean all ingredients. Dice aromatics finely and season proteins/vegetables lightly.",
-                    "time_minutes": 5,
-                    "chef_tip": "Mise en place ensures everything cooks evenly without burning."
-                },
-                {
-                    "step": "Warm pan with oil over medium heat. Sauté aromatics for 1-2 minutes until fragrance blooms.",
-                    "time_minutes": 3,
-                    "chef_tip": "Keep heat controlled to prevent burning garlic."
-                },
-                {
-                    "step": "Add core ingredients and cook thoroughly until nicely browned and caramelized.",
-                    "time_minutes": 15,
-                    "chef_tip": "Do not overcrowd the pan for better browning."
-                },
-                {
-                    "step": "Garnish with fresh chopped herbs, finish with flaky sea salt and serve immediately.",
-                    "time_minutes": 2,
-                    "chef_tip": "A squeeze of fresh lemon brings all flavors together."
-                }
-            ],
-            "nutrition": {
-                "calories": "380 kcal",
-                "protein": "22g",
-                "carbs": "35g",
-                "fat": "14g"
-            }
-        }
+        if not recipe_data or not isinstance(recipe_data, dict) or "ingredients" not in recipe_data:
+            used_fallback = True
+            recipe_data = _fallback_recipe_detail(recipe_name)
 
     recipe_data["image"] = find_best_image(recipe_name)
     recipe_data["provider"] = provider
@@ -613,7 +668,15 @@ def _fallback_fridge_scan() -> list[dict]:
     ]
 
 
-def scan_fridge_image(image_bytes: bytes, mime_type: str = "image/jpeg", provider: str = None, language: str = None) -> list[dict]:
+def scan_fridge_image(
+    image_bytes: bytes,
+    mime_type: str = "image/jpeg",
+    provider: str = None,
+    language: str = None,
+    *,
+    principal_class: str = "anonymous",
+    end_user_ref: str | None = None,
+) -> list[dict]:
     """
     Analyze image of a fridge/pantry/groceries using Gemini Vision.
     Returns structured list of detected ingredients.
@@ -651,14 +714,27 @@ def scan_fridge_image(image_bytes: bytes, mime_type: str = "image/jpeg", provide
     detected_items = []
     content = ""
 
-    try:
-        if provider == "gemini":
+    if provider in GATEWAY_PROVIDER_IDS:
+        try:
+            detected_items = gateway_client.scan_image(
+                image_bytes,
+                mime_type,
+                language=language,
+                principal_class=principal_class,
+                end_user_ref=end_user_ref,
+            )
+        except GatewayError as exc:
+            mapped = gateway_client.to_api_exception(exc)
+            if mapped is not None:
+                raise mapped from exc
+            logger.warning("AI gateway scan failed: %s. Utilizing culinary vision fallback.", exc)
+    else:
+        try:
+            # The gateway is the only provider with a vision route; direct Gemini
+            # remains the local path when the gateway is not selected.
             content = _call_gemini_vision(prompt, image_bytes, mime_type=mime_type, system_instruction=system_instruction)
-        else:
-            # If provider is not gemini, attempt gemini vision or fallback
-            content = _call_gemini_vision(prompt, image_bytes, mime_type=mime_type, system_instruction=system_instruction)
-    except Exception as e:
-        logger.warning(f"Gemini Vision scan encountered issue: {e}. Utilizing culinary vision fallback.")
+        except Exception as e:
+            logger.warning(f"Gemini Vision scan encountered issue: {e}. Utilizing culinary vision fallback.")
 
     if content:
         cleaned = _clean_json_str(content)
@@ -702,13 +778,44 @@ def scan_fridge_image(image_bytes: bytes, mime_type: str = "image/jpeg", provide
     return sanitized
 
 
-def stream_recipe_generation(recipe_name: str, provider: str = None, language: str = None):
+def stream_recipe_generation(
+    recipe_name: str,
+    provider: str = None,
+    language: str = None,
+    *,
+    principal_class: str = "anonymous",
+    end_user_ref: str | None = None,
+):
     """
     Stream live recipe generation token-by-token using Server-Sent Events (SSE).
     Yields SSE formatted chunks: 'data: {"chunk": "..."}\n\n'
     """
     if not provider:
         provider = DEFAULT_AI_PROVIDER
+
+    if provider in GATEWAY_PROVIDER_IDS:
+        try:
+            yield from gateway_client.stream_recipe(
+                recipe_name,
+                model=None,
+                language=language,
+                principal_class=principal_class,
+                end_user_ref=end_user_ref,
+            )
+        except GatewayError as exc:
+            # The response has already started, so a blocking gateway error is
+            # emitted as an SSE event instead of an HTTP status.
+            logger.info("AI gateway stream failed for '%s': %s", recipe_name, exc)
+            yield "data: " + json.dumps({
+                "chunk": "",
+                "done": False,
+                "error": exc.code,
+                "message": exc.message,
+                "retry_after": exc.retry_after,
+                "resets_at": exc.resets_at,
+            }) + "\n\n"
+            yield f"data: {json.dumps({'chunk': '', 'done': True})}\n\n"
+        return
 
     prompt = (
         f"You are a Michelin-star master chef. Provide a step-by-step gourmet recipe for '{recipe_name}'. "
@@ -758,8 +865,13 @@ def stream_recipe_generation(recipe_name: str, provider: str = None, language: s
             logger.warning(f"Live Gemini stream failed: {e}. Switching to culinary fallback streamer.")
 
     # Graceful fallback live streaming simulation
+    # The SSE body is plain text, not HTML, but the recipe name comes straight
+    # from the query string and a consumer may embed the chunk. Escape it so
+    # the stream can never carry markup (also what CodeQL's reflective-XSS
+    # query expects); ordinary names are unchanged.
+    safe_recipe_name = html_escape(recipe_name)
     fallback_text = (
-        f"# Gourmet {recipe_name}\n\n"
+        f"# Gourmet {safe_recipe_name}\n\n"
         f"**Preparation Time:** 25 mins | **Difficulty:** Medium | **Servings:** 4\n\n"
         f"### 🌿 Ingredients\n"
         f"- 400g Fresh Main Ingredients (Pantry Selection)\n"
@@ -787,6 +899,15 @@ def stream_recipe_generation(recipe_name: str, provider: str = None, language: s
     yield f"data: {json.dumps({'chunk': '', 'done': True})}\n\n"
 
 
+def _fallback_chat_reply(recipe_name: str) -> str:
+    return (
+        f"As your sous-chef for **{recipe_name}**, here are some top tips:\n\n"
+        f"- **Substitutions:** If missing an ingredient, swap with similar flavor profiles (e.g., butter for olive oil, Greek yogurt for sour cream).\n"
+        f"- **Flavor Boost:** A splash of fresh lemon juice, a pinch of sea salt, or fresh cracked black pepper right before serving will brighten the dish.\n"
+        f"- **Storage:** Store leftovers in an airtight container in the fridge for up to 3 days. Reheat gently to preserve texture."
+    )
+
+
 def ask_recipe_chat(
     recipe_name: str,
     ingredients: list | str = None,
@@ -796,6 +917,9 @@ def ask_recipe_chat(
     provider: str = "gemini",
     model: str = None,
     language: str = None,
+    *,
+    principal_class: str = "anonymous",
+    end_user_ref: str | None = None,
 ) -> dict:
     """
     Interactive AI Sous-Chef Chat Q&A tailored specifically to a dish.
@@ -806,6 +930,31 @@ def ask_recipe_chat(
 
     ing_str = json.dumps(ingredients) if isinstance(ingredients, (list, dict)) else str(ingredients or "")
     inst_str = json.dumps(instructions) if isinstance(instructions, (list, dict)) else str(instructions or "")
+
+    if provider in GATEWAY_PROVIDER_IDS:
+        try:
+            return gateway_client.generate_chat(
+                recipe_name=recipe_name,
+                ingredients=ingredients,
+                instructions=instructions,
+                message=user_question,
+                history=history,
+                model=model,
+                language=language,
+                principal_class=principal_class,
+                end_user_ref=end_user_ref,
+            )
+        except GatewayError as exc:
+            mapped = gateway_client.to_api_exception(exc)
+            if mapped is not None:
+                raise mapped from exc
+            logger.warning("AI gateway chat failed for '%s': %s", recipe_name, exc)
+            return {
+                "reply": _fallback_chat_reply(recipe_name),
+                "model_used": model or "",
+                "rate_limited_models": [],
+                "recipe_name": recipe_name,
+            }
 
     system_instruction = _apply_language(
         f"You are the AI Executive Sous-Chef for the recipe '{recipe_name}'.\n"
@@ -856,13 +1005,7 @@ def ask_recipe_chat(
                 model_used = MODEL_NAME
     except Exception as e:
         logger.warning(f"Recipe Chat AI failed for '{recipe_name}': {e}")
-        # Friendly fallback answer
-        reply = (
-            f"As your sous-chef for **{recipe_name}**, here are some top tips:\n\n"
-            f"- **Substitutions:** If missing an ingredient, swap with similar flavor profiles (e.g., butter for olive oil, Greek yogurt for sour cream).\n"
-            f"- **Flavor Boost:** A splash of fresh lemon juice, a pinch of sea salt, or fresh cracked black pepper right before serving will brighten the dish.\n"
-            f"- **Storage:** Store leftovers in an airtight container in the fridge for up to 3 days. Reheat gently to preserve texture."
-        )
+        reply = _fallback_chat_reply(recipe_name)
 
     return {
         "reply": reply.strip(),
