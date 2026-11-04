@@ -5,6 +5,7 @@ import os
 import re
 import requests
 from django.conf import settings
+from django.utils.html import escape as html_escape
 
 from . import ai_cache, gateway_client
 from .gateway_client import GATEWAY_PROVIDER_IDS, GatewayError
@@ -864,8 +865,13 @@ def stream_recipe_generation(
             logger.warning(f"Live Gemini stream failed: {e}. Switching to culinary fallback streamer.")
 
     # Graceful fallback live streaming simulation
+    # The SSE body is plain text, not HTML, but the recipe name comes straight
+    # from the query string and a consumer may embed the chunk. Escape it so
+    # the stream can never carry markup (also what CodeQL's reflective-XSS
+    # query expects); ordinary names are unchanged.
+    safe_recipe_name = html_escape(recipe_name)
     fallback_text = (
-        f"# Gourmet {recipe_name}\n\n"
+        f"# Gourmet {safe_recipe_name}\n\n"
         f"**Preparation Time:** 25 mins | **Difficulty:** Medium | **Servings:** 4\n\n"
         f"### 🌿 Ingredients\n"
         f"- 400g Fresh Main Ingredients (Pantry Selection)\n"

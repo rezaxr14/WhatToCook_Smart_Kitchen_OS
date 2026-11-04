@@ -368,6 +368,7 @@ class StreamEndpointTests(ApiTestCase):
         self.assertEqual(r["Content-Type"], "text/event-stream")
         self.assertEqual(r["Cache-Control"], "no-cache")
         self.assertEqual(r["X-Accel-Buffering"], "no")
+        self.assertEqual(r["X-Content-Type-Options"], "nosniff")
         self.assertEqual(body, "".join(frames))
         self.assertEqual(stream.call_args.args[0], "Soup")
         kwargs = stream.call_args.kwargs

@@ -1503,6 +1503,7 @@ def api_ai_stream_recipe(request):
     )
     response["Cache-Control"] = "no-cache"
     response["X-Accel-Buffering"] = "no"
+    response["X-Content-Type-Options"] = "nosniff"
     return response
 
 
