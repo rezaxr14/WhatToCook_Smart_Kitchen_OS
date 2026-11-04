@@ -4,10 +4,10 @@ import { authApi } from '../api/authApi';
 import { useToast } from './ToastContext';
 
 interface AuthContextValue extends AuthState {
-  login: (credentials: { username: string; password: string }) => Promise<void>;
-  signup: (payload: { username: string; password: string; email?: string }) => Promise<void>;
+  login: (credentials: { username: string; password: string }, turnstileToken?: string) => Promise<void>;
+  signup: (payload: { username: string; password: string; email?: string }, turnstileToken?: string) => Promise<void>;
   logout: () => Promise<void>;
-  demoLogin: () => Promise<void>;
+  demoLogin: (turnstileToken?: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -41,10 +41,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     refreshUser();
   }, [refreshUser]);
 
-  const login = useCallback(async (credentials: { username: string; password: string }) => {
+  const login = useCallback(async (credentials: { username: string; password: string }, turnstileToken?: string) => {
     setIsLoading(true);
     try {
-      const res = await authApi.login(credentials);
+      const res = await authApi.login(
+        turnstileToken ? { ...credentials, turnstile_token: turnstileToken } : credentials
+      );
       setUser(res.user);
       setIsAuthenticated(true);
       success(`Welcome back, ${res.user.username}!`, 'Login Successful');
@@ -56,10 +58,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [success, error]);
 
-  const signup = useCallback(async (payload: { username: string; password: string; email?: string }) => {
+  const signup = useCallback(async (payload: { username: string; password: string; email?: string }, turnstileToken?: string) => {
     setIsLoading(true);
     try {
-      const res = await authApi.signup(payload);
+      const res = await authApi.signup(
+        turnstileToken ? { ...payload, turnstile_token: turnstileToken } : payload
+      );
       setUser(res.user);
       setIsAuthenticated(true);
       success(`Account created for ${res.user.username}!`, 'Welcome to WhatToCook');
@@ -71,10 +75,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [success, error]);
 
-  const demoLogin = useCallback(async () => {
+  const demoLogin = useCallback(async (turnstileToken?: string) => {
     setIsLoading(true);
     try {
-      const res = await authApi.demoLogin();
+      const res = await authApi.demoLogin(turnstileToken);
       setUser(res.user);
       setIsAuthenticated(true);
       success('Logged in with pre-stocked Chef pantry!', 'Demo Ready 🍳');

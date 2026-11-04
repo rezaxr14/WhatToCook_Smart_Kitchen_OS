@@ -1,4 +1,4 @@
-export type AIProvider = 'gemini' | 'lmstudio';
+export type AIProvider = 'gemini' | 'lmstudio' | 'supabase_gateway';
 
 export interface AISuggestedDish {
   name: string;
@@ -47,23 +47,34 @@ export interface AIProviderInfo {
   active: boolean;
   online?: boolean;
   badge: string;
+  group?: 'cloud' | 'local';
+}
+
+export interface AIProviderGroup {
+  id: string;
+  label: string;
+  providers: AIProviderInfo[];
 }
 
 export interface AIProvidersResponse {
   default_provider: AIProvider;
   has_gemini: boolean;
+  has_gateway?: boolean;
+  gateway_configured?: boolean;
   gemini_model: string;
   has_lmstudio: boolean;
   lmstudio_online: boolean;
   lmstudio_model: string;
   lmstudio_error?: string;
   providers: AIProviderInfo[];
+  groups?: AIProviderGroup[];
 }
 
 export interface AIModelInfo {
   id: string;
   displayName: string;
   description?: string;
+  group?: 'cloud' | 'local';
 }
 
 export interface AIModelsResponse {

@@ -17,6 +17,7 @@ import { ShoppingListModal } from './components/shopping/ShoppingListModal';
 import { TelegramConnectModal } from './components/settings/TelegramConnectModal';
 import { FridgeScannerModal } from './components/pantry/FridgeScannerModal';
 import { LanguageProvider } from './components/common/LanguageModal';
+import { ChallengeGate } from './components/common/ChallengeGate';
 import { useShoppingList } from './context/ShoppingListContext';
 import { usePantry } from './context/PantryContext';
 
@@ -111,6 +112,7 @@ export const App: React.FC = () => {
             <ShoppingListProvider>
               <LanguageProvider>
                 <AppContent />
+                <ChallengeGate />
               </LanguageProvider>
             </ShoppingListProvider>
           </PantryProvider>

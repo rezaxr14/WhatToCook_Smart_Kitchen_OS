@@ -57,7 +57,7 @@ async function violations(page: Page): Promise<string[]> {
 test('the preview enforces the policy from nginx/csp-spa.conf', async ({ page }) => {
   const response = await page.goto('/');
   expect(response!.headers()['content-security-policy']).toBe(csp);
-  expect(csp).toMatch(/script-src 'self'(;|$)/); // no 'unsafe-inline' / 'unsafe-eval' for scripts
+  expect(csp).toMatch(/script-src 'self'( https:\/\/challenges\.cloudflare\.com)?(;|$)/); // no 'unsafe-inline' / 'unsafe-eval' for scripts
   expect(csp).toContain("frame-ancestors 'none'");
 });
 

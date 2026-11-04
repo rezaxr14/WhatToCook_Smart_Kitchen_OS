@@ -70,20 +70,26 @@ export const useAIStream = (options?: UseAIStreamOptions) => {
               const jsonStr = line.replace('data: ', '').trim();
               if (!jsonStr) continue;
 
+              let parsed: { chunk?: string; done?: boolean; error?: string; message?: string } | null = null;
               try {
-                const parsed = JSON.parse(jsonStr);
-                if (parsed.chunk) {
-                  accumulated += parsed.chunk;
-                  setStreamedText(accumulated);
-                  options?.onChunk?.(parsed.chunk, accumulated);
-                }
-                if (parsed.done) {
-                  break;
-                }
+                parsed = JSON.parse(jsonStr);
               } catch {
                 // If not JSON, treat raw
                 accumulated += jsonStr;
                 setStreamedText(accumulated);
+                continue;
+              }
+
+              if (parsed?.error) {
+                throw new Error(parsed.message || 'Stream generation failed');
+              }
+              if (parsed?.chunk) {
+                accumulated += parsed.chunk;
+                setStreamedText(accumulated);
+                options?.onChunk?.(parsed.chunk, accumulated);
+              }
+              if (parsed?.done) {
+                break;
               }
             }
           }
