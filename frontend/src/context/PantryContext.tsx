@@ -7,6 +7,12 @@ import { aiApi } from '../api/aiApi';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
+export interface ScanSummary {
+  names: string[];
+  count: number;
+  at: number;
+}
+
 interface PantryContextValue {
   pantryIngredients: Ingredient[];
   availableIngredients: Ingredient[];
@@ -30,6 +36,9 @@ interface PantryContextValue {
   isScannerOpen: boolean;
   openScanner: () => void;
   closeScanner: () => void;
+  lastScanResult: ScanSummary | null;
+  setLastScanResult: (summary: ScanSummary | null) => void;
+  dismissScanResult: () => void;
 }
 
 const PantryContext = createContext<PantryContextValue | undefined>(undefined);
@@ -53,9 +62,11 @@ export const PantryProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   });
   const [aiProvidersInfo, setAIProvidersInfo] = useState<AIProvidersResponse | null>(null);
   const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
+  const [lastScanResult, setLastScanResult] = useState<ScanSummary | null>(null);
 
   const openScanner = useCallback(() => setIsScannerOpen(true), []);
   const closeScanner = useCallback(() => setIsScannerOpen(false), []);
+  const dismissScanResult = useCallback(() => setLastScanResult(null), []);
 
   const { isAuthenticated } = useAuth();
   const { success, error, info } = useToast();
@@ -264,6 +275,9 @@ export const PantryProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       isScannerOpen,
       openScanner,
       closeScanner,
+      lastScanResult,
+      setLastScanResult,
+      dismissScanResult,
     }),
     [
       pantryIngredients,
@@ -286,6 +300,8 @@ export const PantryProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       isScannerOpen,
       openScanner,
       closeScanner,
+      lastScanResult,
+      dismissScanResult,
     ]
   );
 
