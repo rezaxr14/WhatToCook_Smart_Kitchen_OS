@@ -49,13 +49,12 @@ export const SafeImage: React.FC<SafeImageProps> = ({
 
   const active = sources[Math.min(stage, sources.length - 1)] ?? PLACEHOLDER;
 
+  // The URL is restricted by safeSource() above.
   return (
     <img
       {...rest}
       alt={alt}
       // codeql[js/xss-through-dom]
-      // safeSource() only admits relative, http(s), data:image and blob URLs
-      // before this point, so the value cannot be a script URL.
       src={active}
       onError={(event) => {
         if (stage < sources.length - 1) {
