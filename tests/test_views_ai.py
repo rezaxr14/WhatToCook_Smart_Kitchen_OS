@@ -236,7 +236,9 @@ class SuggestionsApiTests(ApiTestCase):
         gen = self._gen()
         data = self.client.get(self.url, {"provider": "gemini", "model": "m1", "language": "fa"}).data
         self.assertEqual(gen.call_args.args[0], ["Tomato"])
-        self.assertEqual(gen.call_args.kwargs, {"provider": "gemini", "model": "m1", "language": "fa"})
+        kwargs = gen.call_args.kwargs
+        self.assertEqual((kwargs["provider"], kwargs["model"], kwargs["language"]), ("gemini", "m1", "fa"))
+        self.assertEqual(kwargs["principal_class"], "anonymous")
         self.assertEqual((data["status"], data["cached"], data["model_used"]), ("done", False, "gemini-x"))
         self.assertEqual(data["rate_limited_models"], ["gemini-y"])
 
@@ -368,7 +370,9 @@ class StreamEndpointTests(ApiTestCase):
         self.assertEqual(r["X-Accel-Buffering"], "no")
         self.assertEqual(body, "".join(frames))
         self.assertEqual(stream.call_args.args[0], "Soup")
-        self.assertEqual(stream.call_args.kwargs, {"provider": "gemini", "language": "es"})
+        kwargs = stream.call_args.kwargs
+        self.assertEqual((kwargs["provider"], kwargs["language"]), ("gemini", "es"))
+        self.assertEqual(kwargs["principal_class"], "anonymous")
 
     def test_missing_recipe_param_has_a_default_dish_name(self):
         with patch("GetFood.views.stream_recipe_generation", return_value=iter([])) as stream:

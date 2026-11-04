@@ -330,12 +330,47 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # AI Configuration (Google AI Studio Gemini + LM Studio)
-AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini")  # "gemini" or "lmstudio"
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini")  # "gemini", "lmstudio" or "supabase_gateway"
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 
 LMSTUDIO_URL = os.getenv("LMSTUDIO_URL", "http://host.docker.internal:1234/v1/chat/completions")
 MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.2-3b-instruct")
+
+# Supabase AI gateway (plan 4.3). Cloud calls leave main through this adapter;
+# LM Studio stays local. MAIN_SERVICE_KEY must match the Supabase function
+# secret and be at least 32 characters, or the adapter stays disabled.
+SUPABASE_GATEWAY_URL = os.getenv("SUPABASE_GATEWAY_URL", "")
+MAIN_SERVICE_KEY = os.getenv("MAIN_SERVICE_KEY", "")
+AI_GATEWAY_TIMEOUT = float(os.getenv("AI_GATEWAY_TIMEOUT", "90") or 90)
+
+# Cloudflare Turnstile (plan H1). When no secret is configured the gates are
+# off, so local development and CI keep working; production must set both keys.
+TURNSTILE_SITE_KEY = os.getenv("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+TURNSTILE_ACTION = os.getenv("TURNSTILE_ACTION", "ai_gate")
+TURNSTILE_ALLOWED_HOSTNAMES = [
+    host.strip()
+    for host in os.getenv("TURNSTILE_ALLOWED_HOSTNAMES", "").split(",")
+    if host.strip()
+]
+TURNSTILE_SITEVERIFY_URL = os.getenv(
+    "TURNSTILE_SITEVERIFY_URL",
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+)
+
+# Adaptive challenge: after a successful sign-in verification the counter
+# starts at 0, so the next N provider-bound AI calls pass and the following one
+# asks for a fresh Turnstile token (plan 0 defaults).
+AI_CHALLENGE_EVERY_N = int(os.getenv("AI_CHALLENGE_EVERY_N", "3") or 3)
+
+# Per-identity daily request caps (plan 4.2). Demo and anonymous visitors share
+# the anonymous numbers; registered accounts get the larger allowance. Cache
+# hits do not consume either counter.
+AI_ANON_DAILY_AI = int(os.getenv("AI_ANON_DAILY_AI", "20") or 20)
+AI_ANON_DAILY_SCAN = int(os.getenv("AI_ANON_DAILY_SCAN", "5") or 5)
+AI_USER_DAILY_AI = int(os.getenv("AI_USER_DAILY_AI", "60") or 60)
+AI_USER_DAILY_SCAN = int(os.getenv("AI_USER_DAILY_SCAN", "15") or 15)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
