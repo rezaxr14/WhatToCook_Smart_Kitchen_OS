@@ -5,11 +5,13 @@ import { ChefHat, LogIn, UserPlus, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { StyledButton } from '../components/common/StyledButton';
 import { StyledCard } from '../components/common/StyledCard';
+import { useUiDir, inputDir } from '../hooks/useUiDir';
 import { TurnstileWidget } from '../components/common/TurnstileWidget';
 import { authApi, ChallengeConfig } from '../api/authApi';
 
 export const AuthPage: React.FC = () => {
   const { t } = useTranslation();
+  const uiDir = useUiDir();
   const navigate = useNavigate();
   const { login, signup, demoLogin, isLoading } = useAuth();
 
@@ -160,6 +162,7 @@ export const AuthPage: React.FC = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder={t('auth.usernamePlaceholder')}
+              dir={inputDir(username, uiDir)}
               className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>
@@ -174,6 +177,7 @@ export const AuthPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="chef@example.com"
+                dir="ltr"
                 className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
@@ -187,6 +191,7 @@ export const AuthPage: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              dir="ltr"
               className="w-full px-3.5 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
             />
           </div>

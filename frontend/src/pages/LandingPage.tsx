@@ -474,7 +474,7 @@ export const LandingPage: React.FC = () => {
 
       {/* During the guided tour an exit affordance floats under the app navbar */}
       {(tourStatus === 'playing' || tourStatus === 'paused') && (
-        <div className="fixed right-4 top-[76px] z-30">
+        <div className="fixed end-4 top-[76px] z-30">
           <button
             onClick={exitTour}
             data-cursor="EXIT"
@@ -582,14 +582,14 @@ export const LandingPage: React.FC = () => {
 
       {/* ---------- Chapter III — AI vision ---------- */}
       <Chapter k="ai" register={registerChapter} className="items-center justify-center sm:justify-end">
-        <div className="max-w-md px-6 text-center sm:text-right sm:pr-24 lg:pr-32">
+        <div className="max-w-md px-6 text-center sm:text-end sm:pe-24 lg:pe-32">
           <div className="text-[10px] font-black tracking-[0.4em] text-amber-300/90" style={DISPLAY_FONT}>
             02 — AI
           </div>
           <h2 className="mt-3 text-2xl font-black leading-tight tracking-tight text-stone-50 sm:text-4xl" style={DISPLAY_FONT}>
             {t('story.aiTitle')}
           </h2>
-          <p className="mt-3 max-w-xs text-sm font-medium leading-relaxed text-stone-300/90 mx-auto sm:ml-auto sm:mr-0">{t('story.aiSub')}</p>
+          <p className="mt-3 max-w-xs text-sm font-medium leading-relaxed text-stone-300/90 mx-auto sm:ms-auto sm:me-0">{t('story.aiSub')}</p>
         </div>
       </Chapter>
 
@@ -637,7 +637,7 @@ export const LandingPage: React.FC = () => {
         {/* Desktop 3 Red Circles (hidden md:block): Positioned in the 3 circled zones, well away from edges & rail */}
 
         {/* 1. Left Circle Card (mid-left) */}
-        <div className="hidden md:block absolute left-8 lg:left-14 top-[48%] -translate-y-1/2 w-60 pointer-events-auto">
+        <div className="hidden md:block absolute start-8 lg:start-14 top-[48%] -translate-y-1/2 w-60 pointer-events-auto">
           <div className="rounded-3xl border border-sky-400/30 bg-stone-950/80 p-4 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-sky-400/60 transition-all duration-300 hover:scale-[1.03]">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-400/30 bg-sky-400/15 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-sky-300 uppercase">
@@ -681,7 +681,7 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* 3. Right Circle Card (lower-right, safely inset from right rail & buttons!) */}
-        <div className="hidden md:block absolute right-16 lg:right-24 w-60 pointer-events-auto">
+        <div className="hidden md:block absolute end-16 lg:end-24 w-60 pointer-events-auto">
           <div className="rounded-3xl border border-emerald-400/30 bg-stone-950/80 p-4 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.6)] hover:border-emerald-400/60 transition-all duration-300 hover:scale-[1.03]">
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-emerald-300 uppercase">
@@ -734,7 +734,7 @@ export const LandingPage: React.FC = () => {
             </h2>
             <p className="mt-4 max-w-md text-sm font-medium text-stone-300/90 sm:text-base">{t('story.finalSub')}</p>
           </div>
-          <div className="pointer-events-auto ml-auto w-full max-w-xs rounded-3xl border border-stone-100/15 bg-stone-950/60 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+          <div className="pointer-events-auto ms-auto w-full max-w-xs rounded-3xl border border-stone-100/15 bg-stone-950/60 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-black tracking-widest text-amber-300">
                 94% {t('story.match')}
@@ -765,7 +765,7 @@ export const LandingPage: React.FC = () => {
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-linear-to-r/srgb from-amber-400 to-orange-500 py-3 text-sm font-extrabold text-stone-950 transition-transform hover:scale-[1.03]"
             >
               {t('story.makeThis')}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </button>
           </div>
         </div>
@@ -793,7 +793,7 @@ export const LandingPage: React.FC = () => {
               className="inline-flex items-center gap-2 rounded-full border border-stone-100/25 bg-stone-100/5 px-8 py-3.5 text-sm font-bold text-stone-100 backdrop-blur-md transition-colors hover:border-amber-200/60"
             >
               {t('landing.exploreRecipes')}
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </button>
             {tourStatus === 'ended' && canTour && (
               <button
@@ -830,7 +830,7 @@ export const LandingPage: React.FC = () => {
       {canTour && (
         <>
           {/* Chapter rail (desktop) */}
-          <div className="fixed right-3 sm:right-4 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-center gap-1 rounded-full border border-stone-800/70 bg-stone-950/70 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl md:flex">
+          <div className="fixed end-3 sm:end-4 top-1/2 z-30 hidden -translate-y-1/2 flex-col items-center gap-1 rounded-full border border-stone-800/70 bg-stone-950/70 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl md:flex">
             {TOUR_STOPS.map((stop, i) => {
               const active = tourStopIdx === i;
               return (
@@ -850,7 +850,7 @@ export const LandingPage: React.FC = () => {
  }`}
                   />
                   <span
-                    className="pointer-events-none absolute right-11 whitespace-nowrap rounded-full border border-stone-200/20 bg-stone-950/90 px-3.5 py-1.5 text-xs font-black tracking-wide text-amber-100 opacity-0 shadow-2xl backdrop-blur-md transition-all duration-200 group-hover:opacity-100 group-hover:-translate-x-1"
+                    className="pointer-events-none absolute end-11 whitespace-nowrap rounded-full border border-stone-200/20 bg-stone-950/90 px-3.5 py-1.5 text-xs font-black tracking-wide text-amber-100 opacity-0 shadow-2xl backdrop-blur-md transition-all duration-200 group-hover:opacity-100 group-hover:-translate-x-1"
                     style={DISPLAY_FONT}
                   >
                     {t(stop.key)}
@@ -863,7 +863,7 @@ export const LandingPage: React.FC = () => {
           {/* Bottom control pill */}
           {(tourStatus === 'playing' || tourStatus === 'paused' || tourStatus === 'ended') && (
             <div className="fixed inset-x-0 bottom-5 z-30 flex justify-center px-4">
-              <div className="pointer-events-auto flex items-center gap-3 rounded-full border bg-stone-950/70 py-1.5 pl-2 pr-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+              <div className="pointer-events-auto flex items-center gap-3 rounded-full border bg-stone-950/70 py-1.5 ps-2 pe-4 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl">
                 {tourStatus === 'ended' ? (
                   <button
                     onClick={startTour}
@@ -883,7 +883,7 @@ export const LandingPage: React.FC = () => {
                     {tourStatus === 'playing' ? (
                       <Pause className="h-4 w-4 fill-stone-950" />
                     ) : (
-                      <Play className="ml-0.5 h-4 w-4 fill-stone-950" />
+                      <Play className="ms-0.5 h-4 w-4 fill-stone-950" />
                     )}
                   </button>
                 )}
@@ -895,7 +895,7 @@ export const LandingPage: React.FC = () => {
                   {stopLabel.toUpperCase()}
                 </span>
                 {tourStatus !== 'ended' && (
-                  <span className="hidden items-center gap-1.5 pl-2 text-[10px] font-semibold text-stone-500 sm:flex">
+                  <span className="hidden items-center gap-1.5 ps-2 text-[10px] font-semibold text-stone-500 sm:flex">
                     <span className="h-3 w-px bg-stone-700" />
                     {tourStatus === 'playing' ? t('tour.hintPause') : t('tour.hintResume')}
                   </span>

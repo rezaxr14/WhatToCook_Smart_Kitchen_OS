@@ -3,6 +3,7 @@ import { Send, Sparkles, ChefHat, RotateCcw, MessageSquare, Bot, AlertCircle } f
 import { aiApi } from '../../api/aiApi';
 import { ChatMessage } from '../../types/ai';
 import { usePantry } from '../../context/PantryContext';
+import { useUiDir, inputDir } from '../../hooks/useUiDir';
 import i18n from '../../i18n';
 import { aiErrorMessage } from '../../lib/aiErrors';
 
@@ -27,6 +28,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
   instructions,
 }) => {
   const { activeAIProvider, activeModel, handleRateLimitedModels } = usePantry();
+  const uiDir = useUiDir();
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => [
     {
@@ -140,7 +142,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
           if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
             const textPart = trimmed.substring(2);
             return (
-              <div key={idx} className="flex items-start gap-2 pl-2">
+              <div key={idx} className="flex items-start gap-2 ps-2">
                 <span className="text-amber-500 font-bold mt-0.5">•</span>
                 <span>{renderInlineStyles(textPart)}</span>
               </div>
@@ -151,7 +153,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
           const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
           if (numMatch) {
             return (
-              <div key={idx} className="flex items-start gap-2 pl-2">
+              <div key={idx} className="flex items-start gap-2 ps-2">
                 <span className="text-amber-600 font-bold text-xs mt-0.5">{numMatch[1]}.</span>
                 <span>{renderInlineStyles(numMatch[2])}</span>
               </div>
@@ -304,7 +306,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
               <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse delay-150" />
               <div className="w-2 h-2 rounded-full bg-stone-700 animate-pulse delay-300" />
-              <span className="text-xs font-semibold text-stone-500 ml-2">
+              <span className="text-xs font-semibold text-stone-500 ms-2">
                 Chef is preparing your culinary answer...
               </span>
             </div>
@@ -333,6 +335,7 @@ export const RecipeChatBox: React.FC<RecipeChatBoxProps> = ({
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder={`Ask anything about ${recipeName} (e.g., 'What can I substitute for garlic?')...`}
+          dir={inputDir(inputMessage, uiDir)}
           className="flex-1 bg-stone-100/80 hover:bg-stone-100 focus:bg-white text-stone-900 text-sm rounded-2xl px-4 py-3 border border-stone-200 focus:border-stone-400 focus:outline-hidden transition-all placeholder:text-stone-400"
           disabled={isLoading}
         />

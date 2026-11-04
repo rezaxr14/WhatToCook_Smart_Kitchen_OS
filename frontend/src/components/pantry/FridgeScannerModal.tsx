@@ -20,6 +20,7 @@ import { pantryApi } from '../../api/pantryApi';
 import { usePantry } from '../../context/PantryContext';
 import { useToast } from '../../context/ToastContext';
 import { StyledButton } from '../common/StyledButton';
+import { SafeImage } from '../common/SafeImage';
 import i18n from '../../i18n';
 import { aiErrorMessage } from '../../lib/aiErrors';
 
@@ -28,10 +29,8 @@ interface FridgeScannerModalProps {
   onClose: () => void;
 }
 
-const SAMPLE_FRIDGE_URL =
-  'https://images.unsplash.com/photo-1584473457406-6240486418e9?auto=format&fit=crop&w=800&q=80';
-const SAMPLE_COUNTER_URL =
-  'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
+const SAMPLE_FRIDGE_URL = '/samples/fridge.webp';
+const SAMPLE_COUNTER_URL = '/samples/counter.webp';
 
 export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, onClose }) => {
   const { refreshPantry, activeAIProvider, setLastScanResult } = usePantry();
@@ -275,9 +274,9 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                   <button
                     type="button"
                     onClick={() => handleUseSample(SAMPLE_FRIDGE_URL)}
-                    className="flex items-center gap-3 p-3 rounded-2xl border border-stone-200 hover:border-brand-400 bg-white hover:bg-stone-50 text-left transition-all group"
+                    className="flex items-center gap-3 p-3 rounded-2xl border border-stone-200 hover:border-brand-400 bg-white hover:bg-stone-50 text-start transition-all group"
                   >
-                    <img
+                    <SafeImage
                       src={SAMPLE_FRIDGE_URL}
                       alt="Sample Fridge"
                       className="w-12 h-12 rounded-xl object-cover"
@@ -293,9 +292,9 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                   <button
                     type="button"
                     onClick={() => handleUseSample(SAMPLE_COUNTER_URL)}
-                    className="flex items-center gap-3 p-3 rounded-2xl border border-stone-200 hover:border-brand-400 bg-white hover:bg-stone-50 text-left transition-all group"
+                    className="flex items-center gap-3 p-3 rounded-2xl border border-stone-200 hover:border-brand-400 bg-white hover:bg-stone-50 text-start transition-all group"
                   >
-                    <img
+                    <SafeImage
                       src={SAMPLE_COUNTER_URL}
                       alt="Sample Veggies"
                       className="w-12 h-12 rounded-xl object-cover"
@@ -315,7 +314,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
             <div className="space-y-6">
               {/* Photo Card with Scanning Laser */}
               <div className="relative rounded-2xl overflow-hidden h-64 bg-stone-900 border border-stone-200 shadow-inner">
-                <img
+                <SafeImage
                   src={previewUrl}
                   alt="Scanned item"
                   className={`w-full h-full object-cover transition-opacity duration-300 ${
@@ -329,12 +328,12 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                     initial={{ top: '0%' }}
                     animate={{ top: ['0%', '95%', '0%'] }}
                     transition={{ repeat: Infinity, duration: 2.2, ease: 'easeInOut' }}
-                    className="absolute left-0 right-0 h-1 bg-linear-to-r/srgb from-brand-500 via-amber-400 to-brand-500 shadow-[0_0_15px_#f97316] z-20 pointer-events-none"
+                    className="absolute inset-x-0 h-1 bg-linear-to-r/srgb from-brand-500 via-amber-400 to-brand-500 shadow-[0_0_15px_#f97316] z-20 pointer-events-none"
                   />
                 )}
 
                 {/* Status Overlay */}
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-20">
+                <div className="absolute bottom-3 inset-x-3 flex items-center justify-between z-20">
                   <span className="bg-stone-900/80 backdrop-blur-md text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5">
                     {isScanning ? (
                       <>
@@ -405,7 +404,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
                   </div>
 
                   {/* Ingredients Checkbox Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pe-1">
                     {detectedItems.map((item, idx) => {
                       const isChecked = selectedNames.includes(item.name);
                       return (

@@ -50,21 +50,21 @@ export const LoadingChef: React.FC<LoadingChefProps> = ({ message, provider = 'g
           <motion.div
             animate={{ y: [-10, -30], opacity: [0.8, 0], scale: [0.8, 1.4] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeOut', delay: 0.2 }}
-            className="absolute -top-2 left-4 text-orange-400 font-bold text-xs pointer-events-none"
+            className="absolute -top-2 start-4 text-orange-400 font-bold text-xs pointer-events-none"
           >
             ✨
           </motion.div>
           <motion.div
             animate={{ y: [-10, -35], opacity: [0.8, 0], scale: [0.8, 1.6] }}
             transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut', delay: 0.7 }}
-            className="absolute -top-4 right-4 text-amber-500 font-bold text-sm pointer-events-none"
+            className="absolute -top-4 end-4 text-amber-500 font-bold text-sm pointer-events-none"
           >
             🌿
           </motion.div>
           <motion.div
             animate={{ y: [-10, -28], opacity: [0.8, 0], scale: [0.8, 1.3] }}
             transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut', delay: 1.1 }}
-            className="absolute -top-6 left-10 text-orange-400 font-bold text-xs pointer-events-none"
+            className="absolute -top-6 start-10 text-orange-400 font-bold text-xs pointer-events-none"
           >
             🍳
           </motion.div>

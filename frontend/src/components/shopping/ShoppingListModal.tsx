@@ -19,6 +19,7 @@ import {
   AlertCircle,
   Tag,
 } from 'lucide-react';
+import { useUiDir, inputDir } from '../../hooks/useUiDir';
 import { useShoppingList } from '../../context/ShoppingListContext';
 import { usePantry } from '../../context/PantryContext';
 
@@ -43,6 +44,7 @@ const POPULAR_ITEMS = [
 const UNITS = ['pcs', 'g', 'kg', 'ml', 'l', 'pack', 'bunch', 'can'];
 
 export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, onClose }) => {
+  const uiDir = useUiDir();
   const {
     items,
     addItem,
@@ -246,6 +248,7 @@ export const ShoppingListModal: React.FC<ShoppingListModalProps> = ({ isOpen, on
                 onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
                 onKeyDown={handleNameKeyDown}
                 placeholder="Add an item — type to search the catalog..."
+                dir={inputDir(newItemName, uiDir)}
                 aria-label="Grocery item name"
                 autoComplete="off"
                 className="w-full rounded-xl border border-stone-200 bg-white py-2.5 ps-9 pe-3 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-brand-500"

@@ -10,11 +10,19 @@ from django.utils import timezone
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    # Display-only translations keyed by language code (fa/ar/tr/es). `name`
+    # stays the canonical English value used for matching and Telegram.
+    name_i18n = models.JSONField(default=dict, blank=True)
     calories_per_100g = models.FloatField(null=True, blank=True)
     category = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return self.name
+
+    def display_name(self, language: str) -> str:
+        from .i18n import translated
+
+        return translated(self.name_i18n, language, self.name)
 
 
 class Recipe(models.Model):
@@ -22,11 +30,34 @@ class Recipe(models.Model):
     description = models.TextField(blank=True)
     cooking_time = models.IntegerField(help_text="Time in minutes", null=True, blank=True)
     instructions = models.TextField(blank=True)
+    # Display-only translations: {locale: {name, description, instructions}}.
+    # The three canonical fields above remain English.
+    translations = models.JSONField(default=dict, blank=True)
     image = models.ImageField(upload_to="recipes/", blank=True, null=True)
     ingredients = models.ManyToManyField(Ingredient, through='RecipeIngredient')
 
     def __str__(self):
         return self.name
+
+    def display_name(self, language: str) -> str:
+        return self.display_field("name", language)
+
+    def display_description(self, language: str) -> str:
+        return self.display_field("description", language)
+
+    def display_instructions(self, language: str) -> str:
+        return self.display_field("instructions", language)
+
+    def display_field(self, field: str, language: str) -> str:
+        fallback = getattr(self, field) or ""
+        if language == "en":
+            return fallback
+        locale_values = (self.translations or {}).get(language) or {}
+        if isinstance(locale_values, dict):
+            value = locale_values.get(field)
+            if isinstance(value, str) and value.strip():
+                return value
+        return fallback
 
     @property
     def resolved_image(self) -> str:

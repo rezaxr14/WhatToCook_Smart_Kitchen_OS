@@ -3,11 +3,15 @@ import { Ingredient, RecipeIngredient } from './ingredient';
 export interface Recipe {
   id: number;
   name: string;
+  display_name?: string;
   description: string;
+  display_description?: string;
   cooking_time: number | null;
   instructions: string;
+  display_instructions?: string;
   image: string | null;
   image_url?: string;
+  image_fallback?: string | null;
   ingredients: Ingredient[];
   recipe_ingredients?: RecipeIngredient[];
 }

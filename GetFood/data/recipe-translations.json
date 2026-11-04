@@ -1,0 +1,266 @@
+{
+  "Artisan Garlic Butter Grilled Cheese": {
+    "fa": {
+      "name": "ساندویچ گریل‌شده پنیر با کره و سیر دست‌ساز",
+      "description": "پوسته‌ی طلایی و ترد نان خمیرترش، آغشته به کره‌ی سیر و سبزیجات له‌شده، با مغز پنیر چدار تند و آب‌شده.",
+      "instructions": "1. کره‌ی سیر را سخاوتمندانه روی سطح بیرونی برش‌های نان خمیرترش بمالید.\n2. برش‌های ضخیم پنیر چدار تند را لای نان بچینید.\n3. در تابه‌ی سنگین روی حرارت ملایم تا متوسط تفت دهید تا پوسته‌ی طلایی تیره و ترد شود و پنیر به‌خوبی کش بیاید.\n4. به‌صورت مورب برش بزنید و داغ داغ سرو کنید."
+    },
+    "ar": {
+      "name": "ساندويتش جبن مشوي بزبدة الثوم على طريقة الحرفيين",
+      "description": "قشرة مقرمشة ذهبية من خبز العجين المخمر المشبع بزبدة الثوم والأعشاب، مع قلب من جبن الشيدر الحاد الذائب.",
+      "instructions": "1. ادهن زبدة الثوم بسخاء على الوجه الخارجي لشرائح الخبز المخمر.\n2. رتب شرائح سميكة من جبن الشيدر الحاد في الداخل.\n3. حمّص في مقلاة ثقيلة على نار متوسطة منخفضة حتى تصبح مقرمشة بلون كهرماني غامق ويتمدد الجبن بشكل جميل.\n4. قطع قطريًا وقدم ساخنًا متصاعد البخار."
+    },
+    "tr": {
+      "name": "Zanaatkâr Sarımsaklı Tereyağlı Izgara Peynirli Sandviç",
+      "description": "Çıtır altın rengi ekşi mayalı ekmek kabuğu, ezilmiş sarımsak ve otlu tereyağıyla harmanlanmış, içinde erimiş keskin cheddar.",
+      "instructions": "1. Sarımsaklı tereyağını ekşi mayalı ekmeğin dış yüzeyine bolca sürün.\n2. İçine kalın keskin cheddar dilimlerini yerleştirin.\n3. Ağır bir tavada kısık-orta ateşte, koyu kehribar renginde çıtır olana ve peynir güzelce uzayana kadar kızartın.\n4. Çapraz olarak dilimleyin ve dumanı üstünde sıcak servis yapın."
+    },
+    "es": {
+      "name": "Sándwich de Queso a la Plancha con Mantequilla de Ajo Artesanal",
+      "description": "Corteza crujiente y dorada de pan de masa madre infusionada con mantequilla de ajo y hierbas, con un corazón fundido de cheddar curado.",
+      "instructions": "1. Unta generosamente mantequilla de ajo en la cara exterior de las rebanadas de masa madre.\n2. Coloca capas de gruesas lonchas de cheddar curado dentro.\n3. Tuesta en una sartén pesada a fuego medio-bajo hasta que esté bien crujiente y dorado y el queso se estire de maravilla.\n4. Corta en diagonal y sirve bien caliente."
+    }
+  },
+  "Golden French Cheesy Omelette": {
+    "fa": {
+      "name": "املت پنیری فرانسوی طلایی",
+      "description": "تخم‌مرغ‌های لطیف و تاشده به سبک فرانسوی، پر از چدار کهنه‌ی آب‌شده، کره‌ی معطر و فلفل تازه‌کوبیده.",
+      "instructions": "1. تخم‌مرغ‌ها را همراه نمک دریایی و فلفل سیاه تازه‌کوبیده بزنید تا یکدست شود.\n2. کره را در تابه‌ی نچسب روی حرارت متوسط آب کنید تا کف کند.\n3. تخم‌مرغ‌ها را بریزید و با حرکت دایره‌ای آرام هم بزنید تا دلمه‌های نرم و ابریشمی شکل بگیرد.\n4. چدار را وسط املت بپاشید، با دقت تا بزنید و روی بشقاب گرم بکشید."
+    },
+    "ar": {
+      "name": "عجة فرنسية ذهبية بالجبن",
+      "description": "بيض مطوي على الطريقة الفرنسية بقوام مخملي، محشو بجبن الشيدر المعتق الذائب، وزبدة عطرية، وفلفل مجروش.",
+      "instructions": "1. اخفق البيض مع ملح البحر والفلفل الأسود المجروش حتى يصبح ناعمًا.\n2. أذب الزبدة في مقلاة غير لاصقة على نار متوسطة حتى ترغي.\n3. اسكب البيض وحرّك بلطف بحركات دائرية لتتشكل خثارة ناعمة حريرية.\n4. انثر الشيدر في المنتصف، واطوِ العجة بعناية، ثم انزلقها إلى طبق دافئ."
+    },
+    "tr": {
+      "name": "Altın Rengi Fransız Peynirli Omlet",
+      "description": "Eriyik olgun cheddar, kokulu tereyağı ve taze çekilmiş karabiberle doldurulmuş, kadife gibi katlanmış Fransız usulü yumurta.",
+      "instructions": "1. Yumurtaları deniz tuzu ve taze çekilmiş karabiberle pürüzsüz olana kadar çırpın.\n2. Tereyağını yapışmaz tavada orta ateşte köpürene kadar eritin.\n3. Yumurtaları dökün, ipeksi ve yumuşak kesecikler oluşana kadar hafif dairesel hareketlerle karıştırın.\n4. Cheddar'ı ortasına serpin, dikkatlice katlayın ve sıcak bir tabağa kaydırın."
+    },
+    "es": {
+      "name": "Tortilla Francesa Dorada con Queso",
+      "description": "Huevos batidos con estilo francés, sedosos y plegados, rellenos de cheddar curado fundido, mantequilla aromática y pimienta recién molida.",
+      "instructions": "1. Bate los huevos con sal marina y pimienta negra recién molida hasta que estén homogéneos.\n2. Derrite la mantequilla en una sartén antiadherente a fuego medio hasta que forme espuma.\n3. Vierte los huevos y remueve suavemente en círculos para formar cuajos sedosos y tiernos.\n4. Esparce el cheddar por el centro, dobla con cuidado y desliza sobre un plato templado."
+    }
+  },
+  "Tuscan Garlic Herb Chicken Skillet": {
+    "fa": {
+      "name": "مرغ سرخ‌شده با سیر و سبزیجات توسکانی",
+      "description": "سینه‌ی مرغ لطیف و سرخ‌شده که در روغن زیتون سیر، رزماری، فلفل تازه‌کوبیده و سس پارمزان آرام پخته می‌شود.",
+      "instructions": "1. سینه‌های مرغ را با نمک دریایی، فلفل سیاه و سبزیجات خشک ایتالیایی طعم‌دار کنید.\n2. روغن زیتون و کره را در تابه‌ی چدنی روی حرارت متوسط تا زیاد گرم کنید.\n3. مرغ را هر طرف ۶ تا ۷ دقیقه سرخ کنید تا کاملاً طلایی شود.\n4. در ۲ دقیقه‌ی آخر، حبه‌های سیر رنده‌شده را اضافه کنید تا سس تابه معطر شود. پیش از برش، ۵ دقیقه استراحت دهید."
+    },
+    "ar": {
+      "name": "صينية دجاج بالأعشاب والثوم على الطريقة التوسكانية",
+      "description": "صدور دجاج طرية مشوية في المقلاة، تُطهى على نار هادئة في زيت زيتون بالثوم وإكليل الجبل والفلفل المجروش مع لمسة بارميزان.",
+      "instructions": "1. تبّل صدور الدجاج بملح البحر والفلفل الأسود والأعشاب الإيطالية المجففة.\n2. سخّن زيت الزيتون والزبدة في مقلاة حديدية على نار متوسطة إلى عالية.\n3. اشوِ الدجاج من 6 إلى 7 دقائق لكل جانب حتى يكتسب لونًا ذهبيًا غامقًا.\n4. أضف فصوص الثوم المفرومة في آخر دقيقتين لتحضير صلصة مقلاة عطرية. اترك الدجاج يرتاح 5 دقائق قبل تقطيعه."
+    },
+    "tr": {
+      "name": "Toskana Usulü Sarımsaklı Otlu Tavada Tavuk",
+      "description": "Tavada mühürlenmiş yumuşacık tavuk göğsü, sarımsaklı zeytinyağı, biberiye, taze çekilmiş karabiber ve parmesan sosunda ağır ağır pişirilir.",
+      "instructions": "1. Tavuk göğüslerini deniz tuzu, karabiber ve kurutulmuş İtalyan otlarıyla tatlandırın.\n2. Zeytinyağı ve tereyağını döküm tavada orta-yüksek ateşte ısıtın.\n3. Tavuğu her yüzü 6-7 dakika, iyice altın rengi olana kadar mühürleyin.\n4. Son 2 dakikada kıyılmış sarımsakları ekleyerek tavada aromatik bir sos hazırlayın. Dilimlemeden önce 5 dakika dinlendirin."
+    },
+    "es": {
+      "name": "Pollo a la Sartén con Ajo y Hierbas al Estilo Toscano",
+      "description": "Pechuga de pollo tierna sellada en la sartén y cocinada a fuego lento en aceite de oliva con ajo, romero, pimienta recién molida y un glaseado de parmesano.",
+      "instructions": "1. Sazona las pechugas de pollo con sal marina, pimienta negra y hierbas italianas secas.\n2. Calienta el aceite de oliva y la mantequilla en una sartén de hierro fundido a fuego medio-alto.\n3. Sella el pollo 6-7 minutos por cada lado hasta que esté bien dorado.\n4. Añade los dientes de ajo picados en los últimos 2 minutos para crear una salsa aromática. Deja reposar 5 minutos antes de cortar."
+    }
+  },
+  "Classic Italian Creamy Carbonara": {
+    "fa": {
+      "name": "کاربونارای کلاسیک ایتالیایی",
+      "description": "پاستای آل دنته که در امولسیونی مجلل از زرده‌ی تخم‌مرغ، بیکن ترد، پارمزان و فلفل تازه‌کوبیده غلتانده می‌شود.",
+      "instructions": "1. پاستا را در آب نمک بجوشانید تا آل دنته شود؛ نصف پیمانه از آب پخت پاستا را کنار بگذارید.\n2. زرده‌های تخم‌مرغ را با پارمزان ریزریز و فلفل سیاه تازه‌کوبیده در کاسه‌ای بزنید.\n3. بیکن را در تابه تا ترد شدن بپزید.\n4. پاستای داغ را مستقیم به تابه بریزید، از روی حرارت بردارید و به‌سرعت مخلوط تخم‌مرغ و پنیر را با کمی آب پاستا هم بزنید تا براق و مخملی شود."
+    },
+    "ar": {
+      "name": "كاربونارا إيطالية كلاسيكية كريمية",
+      "description": "معكرونة أل دينتي تُقلّب في مستحلب فاخر من صفار البيض والبيكون المعتق المقرمش والبارميزان والفلفل المجروش.",
+      "instructions": "1. اسلق المعكرونة في ماء مملح حتى تصل إلى أل دينتي؛ واحتفظ بنصف كوب من ماء السلق.\n2. اخفق صفار البيض مع البارميزان المبشور ناعمًا والفلفل الأسود المجروش في وعاء.\n3. اطبخ البيكون في مقلاة حتى يصبح مقرمشًا.\n4. أضف المعكرونة الساخنة مباشرة إلى المقلاة، وارفعها عن النار، وقلّب بسرعة خليط البيض والجبن مع رشة من ماء المعكرونة حتى يصبح لامعًا ومخمليًا."
+    },
+    "tr": {
+      "name": "Klasik İtalyan Kremalı Carbonara",
+      "description": "Yumurta sarısı, çıtır kurutulmuş pastırma, parmesan ve taze çekilmiş karabiberle hazırlanan lüks bir emülsiyonda harmanlanmış al dente makarna.",
+      "instructions": "1. Makarnayı tuzlu suda al dente olana kadar haşlayın; 1/2 su bardağı haşlama suyunu ayırın.\n2. Yumurta sarılarını ince rendelenmiş parmesan ve taze çekilmiş karabiberle bir kapta çırpın.\n3. Pastırmayı tavada çıtır olana kadar pişirin.\n4. Sıcak makarnayı doğrudan tavaya alın, ocaktan indirin ve birkaç kaşık makarna suyuyla birlikte yumurta-peynir karışımını hızla karıştırarak parlak ve kadifemsi bir kıvam elde edin."
+    },
+    "es": {
+      "name": "Carbonara Cremosa Italiana Clásica",
+      "description": "Pasta al dente mezclada en una lujosa emulsión de yemas de huevo, beicon crujiente, parmesano y pimienta recién molida.",
+      "instructions": "1. Cuece la pasta en agua con sal hasta que esté al dente; reserva 1/2 taza del agua de cocción.\n2. Bate las yemas de huevo con parmesano finamente rallado y pimienta negra recién molida en un bol.\n3. Cocina el beicon en una sartén hasta que esté crujiente.\n4. Pasa la pasta caliente directamente a la sartén, retira del fuego y remueve rápidamente la mezcla de huevo y queso con un chorrito del agua de la pasta hasta que quede brillante y sedosa."
+    }
+  },
+  "Rustic Pomodoro Penne Pasta": {
+    "fa": {
+      "name": "پنه‌ی روستایی پومودورو",
+      "description": "سس گوجه‌ی غلیظ و آرام‌پخته با ریحان شیرین، سیر سرخ‌شده، روغن زیتون بکر و پارمزان کهنه.",
+      "instructions": "1. سیر له‌شده را در روغن زیتون داغ تفت دهید تا عطرش بلند شود.\n2. سس گوجه‌ی له‌شده را بریزید، با نمک و فلفل طعم‌دار کنید و ۱۲ دقیقه بجوشانید.\n3. پاستا را آل دنته بپزید و مستقیم در سس در حال جوش بریزید.\n4. با پارمزان تازه‌رنده‌شده و برگ‌های ریحان تازه تمام کنید."
+    },
+    "ar": {
+      "name": "بيني بصلصة بومودورو الريفية",
+      "description": "صلصة طماطم غنية مطهوة ببطء مع الريحان الحلو والثوم المقلي وزيت الزيتون البكر الممتاز والبارميزان المعتق.",
+      "instructions": "1. قلّب الثوم المهروس في زيت زيتون ساخن حتى تفوح رائحته العطرية.\n2. اسكب صلصة الطماطم المهروسة، وتبّلها بالملح والفلفل، واتركها تنضج على نار هادئة 12 دقيقة.\n3. اسلق المعكرونة أل دينتي وقلّبها مباشرة في الصلصة المغلية.\n4. أنهِ الطبق بالبارميزان المبشور طازجًا وأوراق الريحان الطازجة."
+    },
+    "tr": {
+      "name": "Rustik Pomodoro Penne Makarna",
+      "description": "Tatlı fesleğen, sotelenmiş sarımsak, sızma zeytinyağı ve olgun parmesanla ağır ağır kaynatılmış zengin domates sosu.",
+      "instructions": "1. Ezilmiş sarımsağı parıldayan zeytinyağında kokusu çıkana kadar soteleyin.\n2. Ezilmiş domates sosunu ekleyin, tuz ve karabiberle tatlandırın ve 12 dakika kısık ateşte pişirin.\n3. Makarnayı al dente haşlayın ve doğrudan kaynamakta olan sosa karıştırın.\n4. Taze rendelenmiş parmesan ve taze fesleğen yapraklarıyla tamamlayın."
+    },
+    "es": {
+      "name": "Penne al Pomodoro Rústica",
+      "description": "Rica salsa de tomate cocida a fuego lento con albahaca dulce, ajo salteado, aceite de oliva virgen extra y parmesano curado.",
+      "instructions": "1. Sofríe el ajo machacado en aceite de oliva bien caliente hasta que suelte su aroma.\n2. Vierte la salsa de tomate triturado, sazona con sal y pimienta y cuece a fuego lento 12 minutos.\n3. Cuece la pasta al dente y échala directamente en la salsa hirviendo.\n4. Termina con parmesano recién rallado y hojas de albahaca fresca."
+    }
+  },
+  "Mediterranean Sautéed Garlic Shrimp": {
+    "fa": {
+      "name": "میگو سرخ‌شده با سیر به سبک مدیترانه‌ای",
+      "description": "میگوهای چاق و آبدار که در روغن زیتون بکر، فلفل قرمز خردشده، سیر رنده‌شده، لیمو و کره جیغ می‌زنند.",
+      "instructions": "1. روغن زیتون و کره را در تابه‌ی بزرگ روی حرارت متوسط تا زیاد گرم کنید.\n2. سیر و فلفل قرمز خردشده را اضافه کنید و ۳۰ ثانیه تفت دهید تا عطرش بلند شود.\n3. میگوها را یک‌لایه بچینید؛ هر طرف ۲ دقیقه بپزید تا صورتی و مات شوند.\n4. با نمک دریایی طعم‌دار کنید و آب لیموی تازه بگیرید. با نان ترد سرو کنید."
+    },
+    "ar": {
+      "name": "روبيان سوتيه بالثوم على الطريقة المتوسطية",
+      "description": "روبيان ممتلئ وطري يُشوّح في زيت الزيتون البكر الممتاز مع رقائق الفلفل الحار والثوم المفروم والليمون والزبدة.",
+      "instructions": "1. سخّن زيت الزيتون والزبدة في مقلاة كبيرة على نار متوسطة إلى عالية.\n2. أضف الثوم ورقائق الفلفل الأحمر الحار واتركهما يزخران لمدة 30 ثانية حتى تفوح الرائحة.\n3. رتب الروبيان في طبقة واحدة؛ واطهُ دقيقتين لكل جانب حتى يصبح ورديًا ومعتمًا.\n4. تبّله بملح البحر واعصر عليه عصير ليمون طازجًا. قدمه مع خبز مقرمش."
+    },
+    "tr": {
+      "name": "Akdeniz Usulü Sotelenmiş Sarımsaklı Karides",
+      "description": "Sızma zeytinyağı, pul biber, kıyılmış sarımsak, limon ve tereyağında cızırdayan dolgun ve sulu karidesler.",
+      "instructions": "1. Zeytinyağı ve tereyağını geniş bir tavada orta-yüksek ateşte ısıtın.\n2. Sarımsak ve pul biberi ekleyip 30 saniye, kokusu çıkana kadar cızırdatın.\n3. Karidesleri tek sıra halinde dizin; her yüzünü 2 dakika, pembe ve opak olana kadar pişirin.\n4. Deniz tuzuyla tatlandırın ve taze limon suyu sıkın. Çıtır ekmekle servis yapın."
+    },
+    "es": {
+      "name": "Gambas Salteadas con Ajo al Estilo Mediterráneo",
+      "description": "Gambas gorditas y jugosas chisporroteando en aceite de oliva virgen extra con copos de guindilla, ajo picado, limón y mantequilla.",
+      "instructions": "1. Calienta el aceite de oliva y la mantequilla en una sartén grande a fuego medio-alto.\n2. Añade el ajo y los copos de guindilla y sofríe 30 segundos hasta que desprendan aroma.\n3. Coloca las gambas en una sola capa; cocina 2 minutos por cada lado hasta que estén rosadas y opacas.\n4. Sazona con sal marina y exprime jugo de limón fresco. Sirve con pan crujiente."
+    }
+  },
+  "Avocado & Poached Egg Sourdough Toast": {
+    "fa": {
+      "name": "تورست خمیرترش با آووکادو و تخم‌مرغ آب‌پز",
+      "description": "آووکادوی کرمی و نرم روی نان خمیرترش تست‌شده، با تخم‌مرغ آب‌پز لطیف و روان، فلفل قرمز خردشده و نمک دریایی.",
+      "instructions": "1. برش‌های نان خمیرترش را تا طلایی و محکم شدن تست کنید.\n2. آووکادوی رسیده را با کمی نمک دریایی و آب لیمو له کنید.\n3. تخم‌مرغ‌های تازه را ۳ دقیقه در آب آرام در حال جوش آب‌پز کنید.\n4. آووکادوی له‌شده را سخاوتمندانه روی نان بمالید، تخم‌مرغ آب‌پز را روی آن بگذارید و فلفل سیاه بپاشید."
+    },
+    "ar": {
+      "name": "توست خبز العجين المخمر مع الأفوكادو والبيض المسلوق",
+      "description": "أفوكادو مخفوق كريمي على خبز عجين مخمر محمص، يعلوه بيض مسلوق ناعم ذو صفار سائل، ورقائق فلفل حار، وملح البحر.",
+      "instructions": "1. حمّص شرائح الخبز المخمر حتى تصبح ذهبية ومتماسكة.\n2. اهروس أفوكادو ناضجًا مع رشة ملح بحر وعصير ليمون.\n3. اسلق البيض الطازج في ماء يغلي على نار هادئة لمدة 3 دقائق.\n4. ادهن الأفوكادو المهروس بسخاء على التوست، وضع فوقه البيض المسلوق، وانثر عليه الفلفل الأسود."
+    },
+    "tr": {
+      "name": "Avokado ve Poşe Yumurtalı Ekşi Mayalı Tost",
+      "description": "Kızarmış ekşi mayalı ekmek üzerinde kremamsı ezilmiş avokado, üzerinde narin ve akışkan sarılı poşe yumurta, pul biber ve deniz tuzu.",
+      "instructions": "1. Ekşi mayalı ekmek dilimlerini altın rengi ve diri olana kadar kızartın.\n2. Olgun avokadoyu bir tutam deniz tuzu ve limon suyuyla ezin.\n3. Taze yumurtaları hafifçe kaynayan suda 3 dakika poşe edin.\n4. Ezilmiş avokadoyu tostun üzerine bolca sürün, üzerine poşe yumurtayı yerleştirin ve karabiber serpin."
+    },
+    "es": {
+      "name": "Tostada de Masa Madre con Aguacate y Huevo Pochado",
+      "description": "Aguacate batido y cremoso sobre masa madre tostada, coronado con un delicado huevo poché de yema líquida, copos de guindilla y sal marina.",
+      "instructions": "1. Tuesta las rebanadas de masa madre hasta que estén doradas y firmes.\n2. Aplasta un aguacate maduro con una pizca de sal marina y jugo de limón.\n3. Escalfa los huevos frescos en agua que hierva suavemente durante 3 minutos.\n4. Unta el aguacate generosamente sobre la tostada, corona con el huevo poché y espolvorea pimienta negra."
+    }
+  },
+  "Savory Garlic Fried Rice with Egg": {
+    "fa": {
+      "name": "برنج سرخ‌شده با سیر و تخم‌مرغ",
+      "description": "برنج یاسمین معطر که در وک تفت داده شده و با چیپس‌های طلایی سیر، رشته‌های تخم‌مرغ و کره‌ی سویا آغشته شده است.",
+      "instructions": "1. سیر نازک‌بریده را در روغن زیتون و کره تا طلایی و ترد شدن تفت دهید؛ نصفش را برای تزیین کنار بگذارید.\n2. سیر را به کناری بزنید و تخم‌مرغ‌ها را به‌صورت دلمه‌های نرم هم بزنید.\n3. برنج پخته و سرد را اضافه کنید، روی حرارت زیاد با سس سویا، فلفل سیاه و کمی کره تفت دهید.\n4. با چیپس‌های ترد سیر تزیین کنید و فوراً سرو کنید."
+    },
+    "ar": {
+      "name": "أرز مقلي بالثوم والبيض بنكهة غنية",
+      "description": "أرز ياسمين عطري يُقلّب في المقلاة مع رقائق الثوم الذهبية المحمصة وخيوط البيض المخفوق وزبدة الصويا.",
+      "instructions": "1. حمّر الثوم المقطع رقيقًا في زيت الزيتون والزبدة حتى يصبح رقائق ذهبية مقرمشة؛ احتفظ بنصفه للتزيين.\n2. أزح الثوم جانبًا واخفق البيض حتى يتشكل خثارة ناعمة.\n3. أضف الأرز المطبوخ البارد وقلّبه على نار عالية مع صلصة الصويا والفلفل الأسود ورشة زبدة.\n4. زيّنه برقائق الثوم المقرمشة وقدمه فورًا."
+    },
+    "tr": {
+      "name": "Yumurtalı Sarımsaklı Tuzlu Kızarmış Pilav",
+      "description": "Altın rengi kavrulmuş sarımsak cipsleri, yumurta şeritleri ve soya tereyağıyla harmanlanmış, wokta çevrilmiş kokulu yasemin pirinci.",
+      "instructions": "1. İnce dilimlenmiş sarımsağı zeytinyağı ve tereyağında çıtır altın cipsler olana kadar kızartın; yarısını süsleme için ayırın.\n2. Sarımsağı kenara çekin ve yumurtaları yumuşak kesecikler oluşana kadar karıştırın.\n3. Soğuk pişmiş pirinci ekleyin, yüksek ateşte soya sosu, karabiber ve bir damla tereyağıyla harmanlayın.\n4. Çıtır sarımsak cipsleriyle süsleyip hemen servis yapın."
+    },
+    "es": {
+      "name": "Arroz Frito Sabroso con Ajo y Huevo",
+      "description": "Arroz jazmín aromático salteado al wok con chips de ajo dorados y crujientes, tiras de huevo revuelto y mantequilla de soja.",
+      "instructions": "1. Dora el ajo en láminas finas en aceite de oliva y mantequilla hasta que queden chips crujientes y dorados; reserva la mitad para decorar.\n2. Aparta el ajo a un lado y revuelve los huevos hasta formar cuajos tiernos.\n3. Añade el arroz cocido y frío, saltea a fuego alto con salsa de soja, pimienta negra y un chorrito de mantequilla.\n4. Corona con los chips de ajo crujientes y sirve de inmediato."
+    }
+  },
+  "Gourmet Shakshuka with Feta & Crusty Bread": {
+    "fa": {
+      "name": "شاکشوکای مجلسی با پنیر فتا و نان ترد",
+      "description": "تخم‌مرغ‌های آب‌پز که در خوراک گوجه و فلفل ادویه‌دار مدیترانه‌ای جا گرفته‌اند، با پنیر خردشده‌ی کرمی و نان گرم.",
+      "instructions": "1. روغن زیتون را در تابه گرم کنید و سیر، پیاز و فلفل دلمه‌ای را تا نرم شدن تفت دهید.\n2. سس گوجه‌ی غلیظ را بریزید، با نمک و فلفل طعم‌دار کنید و تا غلیظ شدن بجوشانید.\n3. در سس چاله‌های کوچک ایجاد کنید و تخم‌مرغ‌ها را مستقیم در آن‌ها بشکنید.\n4. درپوش بگذارید و ۶ دقیقه آرام بپزید تا سفیده ببندد ولی زرده روان بماند. فتا را روی آن خرد کنید و با نان گرم و ترد سرو کنید."
+    },
+    "ar": {
+      "name": "شكشوكة فاخرة مع جبن الفيتا والخبز المقرمش",
+      "description": "بيض مسلوق يستقر في يخنة طماطم وفلفل متوسطية متبلة، يعلوها جبن مفتت كريمي وخبز دافئ.",
+      "instructions": "1. سخّن زيت الزيتون في مقلاة وقلّب الثوم والبصل والفلفل الحلو حتى يلين.\n2. اسكب صلصة الطماطم الغنية، وتبّلها بالملح والفلفل، واتركها تنضج حتى تتكاثف.\n3. اصنع حفرًا صغيرة في الصلصة واكسر البيض مباشرة داخلها.\n4. غطِّ المقلاة واطهُ على نار هادئة 6 دقائق حتى يتماسك بياض البيض ويبقى الصفار سائلًا. فتّت الفيتا فوقه وقدمه مع خبز دافئ مقرمش."
+    },
+    "tr": {
+      "name": "Beyaz Peynirli ve Çıtır Ekmekli Gurme Şakşuka",
+      "description": "Baharatlı Akdeniz domates-biber yahnisinde pişen poşe yumurtalar, üzerinde kremamsı ufalanmış peynir ve sıcak ekmek.",
+      "instructions": "1. Zeytinyağını tavada ısıtın; sarımsak, soğan ve kırmızı biberi yumuşayana kadar soteleyin.\n2. Zengin domates sosunu ekleyin, tuz ve karabiberle tatlandırın ve koyulaşana kadar pişirin.\n3. Sosta küçük çukurlar açın ve yumurtaları doğrudan içlerine kırın.\n4. Kapağını kapatın ve 6 dakika kısık ateşte pişirin; beyazı donmalı, sarısı akışkan kalmalı. Üzerine beyaz peynir ufalayın ve sıcak çıtır ekmekle servis yapın."
+    },
+    "es": {
+      "name": "Shakshuka Gourmet con Feta y Pan Crujiente",
+      "description": "Huevos escalfados en un guiso mediterráneo especiado de tomate y pimiento, coronado con queso cremoso desmenuzado y pan caliente.",
+      "instructions": "1. Calienta el aceite de oliva en una sartén y sofríe el ajo, la cebolla y los pimientos hasta que estén tiernos.\n2. Vierte la rica salsa de tomate, sazona con sal y pimienta y cuece hasta que espese.\n3. Haz pequeños huecos en la salsa y casca los huevos directamente dentro.\n4. Tapa y cocina suavemente 6 minutos, hasta que las claras cuajen pero las yemas queden líquidas. Desmenuza feta por encima y sirve con pan caliente y crujiente."
+    }
+  },
+  "Fluffy Buttermilk Breakfast Pancakes": {
+    "fa": {
+      "name": "پنکیک‌های پفکی صبحانه با دوغ",
+      "description": "پنکیک‌های طلایی و سبک مثل هوا که با کره‌ی آب‌شده و شربت افرای خالص سرو می‌شوند.",
+      "instructions": "1. تخم‌مرغ‌ها، شیر و کره‌ی آب‌شده را در کاسه‌ای بزنید.\n2. آرد و شکر را آرام اضافه کنید و فقط تا مخلوط شدن هم بزنید؛ بیش از حد مخلوط نکنید.\n3. مایه را با ملاقه روی صفحه‌ی داغ و کره‌اندود شده، روی حرارت متوسط بریزید.\n4. وقتی حباب‌ها روی سطح تشکیل شد (۲ تا ۳ دقیقه) برگردانید و تا طلایی شدن بپزید. با شربت افرا سرو کنید."
+    },
+    "ar": {
+      "name": "بان كيك الصباح الهش بالحليب الرائب",
+      "description": "بان كيك ذهبي خفيف كالهواء يُقدم مع زبدة ذائبة ورشة من شراب القيقب الصافي.",
+      "instructions": "1. اخفق البيض والحليب والزبدة الذائبة في وعاء.\n2. أضف الطحين والسكر بلطف وقلّب حتى يتجانسا دون إفراط في الخلط.\n3. اسكب الخليط بمغرفة على صاج ساخن مدهون بالزبدة على نار متوسطة.\n4. اقلبه عندما تتشكل فقاعات على السطح (2-3 دقائق) واطهُ حتى يذهب لونه. قدّمه مع رشة شراب القيقب."
+    },
+    "tr": {
+      "name": "Yumuşacık Ayranlı Kahvaltı Pankekleri",
+      "description": "Eriyen tereyağı ve saf akçaağaç şurubu eşliğinde servis edilen, altın rengi ve pamuk gibi hafif pankekler.",
+      "instructions": "1. Yumurtaları, sütü ve eritilmiş tereyağını bir kapta çırpın.\n2. Unu ve şekeri nazikçe ekleyip sadece karışana kadar katlayın, fazla karıştırmayın.\n3. Hamuru orta ateşteki yağlanmış sıcak tavaya kepçeyle dökün.\n4. Üzerinde kabarcıklar oluşunca (2-3 dakika) çevirin ve altın rengi olana kadar pişirin. Akçaağaç şurubu gezdirin."
+    },
+    "es": {
+      "name": "Tortitas Esponjosas de Buttermilk para el Desayuno",
+      "description": "Tortitas doradas y ligeras como el aire, servidas con mantequilla derretida y un chorrito de sirope de arce puro.",
+      "instructions": "1. Bate los huevos, la leche y la mantequilla derretida en un bol.\n2. Incorpora con suavidad la harina y el azúcar hasta que se integren, sin batir en exceso.\n3. Vierte la masa con un cucharón sobre una plancha caliente engrasada con mantequilla a fuego medio.\n4. Da la vuelta cuando aparezcan burbujas en la superficie (2-3 min) y cocina hasta que estén doradas. Rocía con sirope de arce."
+    }
+  },
+  "Classic Affogato al Caffe": {
+    "fa": {
+      "name": "آفوگاتوی کلاسیک",
+      "description": "یک اسکوپ بستنی وانیلی غنی و مخملی که در شات داغ اسپرسوی تیره غرق می‌شود، با شکلات تلخ رنده‌شده.",
+      "instructions": "1. یک اسکوپ بزرگ بستنی وانیلی دست‌ساز را در لیوان یا فنجان سرامیکی سردشده بگذارید.\n2. یک شات دوبل اسپرسوی تازه و داغ دم کنید.\n3. اسپرسوی داغ را فوراً روی بستنی سرد بریزید.\n4. با کمی پودر کاکائو تزیین کنید و بلافاصله نوش جان کنید."
+    },
+    "ar": {
+      "name": "أفوجاتو كلاسيكي بالقهوة",
+      "description": "كرة حريرية من آيس كريم الفانيليا الغني تغرق في جرعة ساخنة من الإسبريسو الداكن مع رقائق الشوكولاتة الداكنة.",
+      "instructions": "1. ضع كرة كبيرة من آيس كريم الفانيليا الحرفي في كوب زجاجي أو فنجان سيراميك مبرد.\n2. حضّر جرعة إسبريسو مزدوجة طازجة وساخنة جدًا.\n3. اسكب الإسبريسو الساخن فورًا فوق الآيس كريم البارد.\n4. زيّنه برشة من مسحوق الكاكاو واستمتع به على الفور."
+    },
+    "tr": {
+      "name": "Klasik Affogato al Caffè",
+      "description": "Sıcak bir double espresso shots içinde boğulan, üzerine rendelenmiş bitter çikolata serpilmiş ipeksi bir top vanilyalı dondurma.",
+      "instructions": "1. Büyük bir top zanaatkâr vanilyalı dondurmayı soğutulmuş cam veya seramik bir fincana koyun.\n2. Taze ve çok sıcak bir double espresso hazırlayın.\n3. Sıcak espresso'yu hemen soğuk dondurmanın üzerine dökün.\n4. Üzerine bir tutam kakao tozu serpip hemen afiyetle tüketin."
+    },
+    "es": {
+      "name": "Affogato al Caffè Clásico",
+      "description": "Una bola de helado de vainilla cremoso ahogada en un chorro caliente de espresso intenso, con chocolate negro rallado.",
+      "instructions": "1. Coloca una bola grande de helado de vainilla artesanal en un vaso o taza de cerámica fría.\n2. Prepara un espresso doble recién hecho y bien caliente.\n3. Vierte el espresso caliente inmediatamente sobre el helado frío.\n4. Decora con un poco de cacao en polvo y disfruta al momento."
+    }
+  },
+  "Warm Banana Rum Crepes a la Mode": {
+    "fa": {
+      "name": "کرپ با موز کاراملی و بستنی",
+      "description": "کرپ‌های نازک و طلایی که روی موزهای شیرین کاراملی تا شده‌اند و با بستنی وانیلی آب‌شده و عسل تزیین می‌شوند.",
+      "instructions": "1. آرد، شیر، تخم‌مرغ و کمی نمک را بزنید تا مایه‌ای نازک و مخملی به‌دست آید.\n2. کرپ‌ها را در تابه‌ی نچسب کره‌اندودشده هر طرف ۱ تا ۲ دقیقه بپزید تا طلایی شوند.\n3. موزهای برش‌خورده را در کره و عسل تا طلایی و کاراملی شدن تفت دهید.\n4. کرپ‌ها را با موز گرم تا بزنید و روی آن یک اسکوپ بستنی وانیلی بگذارید."
+    },
+    "ar": {
+      "name": "كريب بالموز والروم مع الآيس كريم",
+      "description": "كريب رقيق ذهبي مطوي على موز حلو مكرمل، يعلوه آيس كريم فانيليا ذائب وعسل.",
+      "instructions": "1. اخفق الطحين والحليب والبيض ورشة ملح حتى تحصل على خليط رقيق حريري.\n2. اطبخ الكريب في مقلاة غير لاصقة مدهونة بالزبدة لمدة 1-2 دقيقة لكل جانب حتى يصبح ذهبيًا.\n3. قلّب شرائح الموز في الزبدة والعسل حتى تصبح ذهبية ومكرملة.\n4. اطوِ الكريب مع الموز الدافئ وضع فوقه كرة من آيس كريم الفانيليا."
+    },
+    "tr": {
+      "name": "Sıcak Muzlu Romlu Dondurmalı Krep",
+      "description": "Karamelize tatlı muzlar üzerine katlanmış narin altın krepler, üzerinde eriyen vanilyalı dondurma ve bal.",
+      "instructions": "1. Un, süt, yumurta ve bir tutam tuzu ipeksi, ince bir hamur olana kadar çırpın.\n2. Krepleri yağlanmış yapışmaz tavada her yüzü 1-2 dakika, altın rengi olana kadar pişirin.\n3. Dilimlenmiş muzları tereyağı ve balda altın rengi ve karamelize olana kadar soteleyin.\n4. Krepleri sıcak muzlarla katlayın ve üzerine bir top vanilyalı dondurma ekleyin."
+    },
+    "es": {
+      "name": "Crepes con Plátano Caramelizado y Helado",
+      "description": "Crepes finos y dorados plegados sobre plátanos dulces caramelizados, coronados con helado de vainilla derretido y miel.",
+      "instructions": "1. Bate la harina, la leche, los huevos y una pizca de sal hasta obtener una masa fina y sedosa.\n2. Cocina los crepes en una sartén antiadherente engrasada con mantequilla 1-2 minutos por cada lado hasta que estén dorados.\n3. Saltea los plátanos en rodajas con mantequilla y miel hasta que estén dorados y caramelizados.\n4. Pliega los crepes con los plátanos calientes y corona con una bola de helado de vainilla."
+    }
+  }
+}

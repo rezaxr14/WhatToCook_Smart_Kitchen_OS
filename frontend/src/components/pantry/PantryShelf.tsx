@@ -4,6 +4,7 @@ import { Trash2, Plus, ShoppingBag, X, Camera, Apple } from 'lucide-react';
 import { Ingredient } from '../../types/ingredient';
 import { StyledCard } from '../common/StyledCard';
 import { StyledButton } from '../common/StyledButton';
+import { SafeImage } from '../common/SafeImage';
 
 interface PantryShelfProps {
   ingredients: Ingredient[];
@@ -104,16 +105,13 @@ export const PantryShelf: React.FC<PantryShelfProps> = ({
                 className="relative w-full rounded-xl overflow-hidden bg-stone-100 shrink-0"
               >
                 {ing.image_url ? (
-                  <img
+                  <SafeImage
                     src={ing.image_url}
-                    alt={ing.name}
+                    fallback={ing.image_fallback}
+                    alt={ing.display_name ?? ing.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     className="w-full h-full object-cover transition-transform duration-300"
                     loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80';
-                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-stone-100 text-stone-400">
@@ -128,7 +126,7 @@ export const PantryShelf: React.FC<PantryShelfProps> = ({
                     e.stopPropagation();
                     onRemove(ing.id);
                   }}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-stone-900/60 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer"
+                  className="absolute top-1.5 end-1.5 w-6 h-6 rounded-full bg-stone-900/60 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-xs cursor-pointer"
                   title="Remove from pantry"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -136,8 +134,8 @@ export const PantryShelf: React.FC<PantryShelfProps> = ({
               </div>
 
               <div className="w-full min-w-0 pt-1.5 flex flex-col justify-end">
-                <div className="font-bold text-stone-900 text-xs truncate capitalize" title={ing.name}>
-                  {ing.name}
+                <div className="font-bold text-stone-900 text-xs truncate capitalize" title={ing.display_name ?? ing.name}>
+                  {ing.display_name ?? ing.name}
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-stone-500 mt-0.5">
                   <span className="truncate text-stone-400">{ing.category || 'General'}</span>

@@ -119,7 +119,7 @@ class SecureDefaultsTests(TestCase):
 
     def _boot(self, **env):
         base = {k: v for k, v in os.environ.items() if k not in ("SECRET_KEY", "DEBUG", "POSTGRES_PASSWORD", "ALLOWED_HOSTS")}
-        base.update({"DJANGO_SETTINGS_MODULE": "WhatToCook.settings", "USE_POSTGRES": "false", **env})
+        base.update({"DJANGO_SETTINGS_MODULE": "WhatToCook.settings", "USE_POSTGRES": "false", "WHATTOCOOK_SKIP_ENV_FILE": "1", **env})
         return subprocess.run(
             [sys.executable, "-c", "import django; django.setup(); print('BOOT-OK')"],
             cwd=ROOT, env=base, capture_output=True, text=True, timeout=60,

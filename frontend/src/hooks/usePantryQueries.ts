@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { pantryApi } from '../api/pantryApi';
 import { Ingredient } from '../types/ingredient';
 
@@ -6,8 +7,10 @@ export const PANTRY_QUERY_KEY = ['pantry'] as const;
 export const CAN_COOK_QUERY_KEY = ['canCook'] as const;
 
 export const usePantryQuery = () => {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage || i18n.language || 'en';
   return useQuery({
-    queryKey: PANTRY_QUERY_KEY,
+    queryKey: [...PANTRY_QUERY_KEY, language],
     queryFn: async () => {
       const response = await pantryApi.getPantry();
       return response.ingredients;

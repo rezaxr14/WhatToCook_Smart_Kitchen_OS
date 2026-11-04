@@ -4,6 +4,7 @@ import { Clock, ChefHat, Check, AlertCircle, ArrowRight } from 'lucide-react';
 import { Recipe, MatchedRecipe } from '../../types/recipe';
 import { StyledCard } from '../common/StyledCard';
 import { Badge } from '../common/Badge';
+import { SafeImage } from '../common/SafeImage';
 
 interface RecipeCardProps {
   recipe: Recipe | MatchedRecipe;
@@ -48,19 +49,16 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
     <StyledCard $interactive $padded={false} className="group flex flex-col h-full bg-white">
       {/* Clickable Image Banner */}
       <Link to={`/recipe/${recipe.id}`} className="relative h-52 w-full overflow-hidden bg-stone-100 block cursor-pointer">
-        <img
+        <SafeImage
           src={getImageUrl()}
+          fallback={recipe.image_fallback ?? fallbackUrl}
           alt={recipe.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          onError={(e) => {
-            const t = e.target as HTMLImageElement;
-            if (t.src !== fallbackUrl) t.src = fallbackUrl;
-          }}
         />
         <div className="absolute inset-0 bg-linear-to-t/srgb from-stone-900/70 via-stone-900/20 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
 
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+        <div className="absolute top-3 start-3 end-3 flex items-center justify-between gap-2">
           {recipe.cooking_time ? (
             <span className="bg-stone-900/80 backdrop-blur-md text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1 shadow-xs">
               <Clock className="w-3.5 h-3.5 text-amber-300" />
@@ -92,9 +90,9 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
         </div>
 
         {/* Title overlay in image */}
-        <div className="absolute bottom-3 left-3 right-3">
+        <div className="absolute bottom-3 start-3 end-3">
           <h3 className="text-lg font-bold text-white leading-tight drop-shadow-xs group-hover:text-amber-200 transition-colors">
-            {recipe.name}
+            {recipe.display_name ?? recipe.name}
           </h3>
         </div>
       </Link>
@@ -103,7 +101,9 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           <p className="text-stone-600 text-sm line-clamp-2 mb-4 leading-relaxed">
-            {recipe.description || 'Delicious home-cooked recipe with vibrant fresh ingredients.'}
+            {recipe.display_description ||
+              recipe.description ||
+              'Delicious home-cooked recipe with vibrant fresh ingredients.'}
           </p>
 
           {/* Missing items warning if in CanCook mode */}
@@ -128,7 +128,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
                   key={ing.id}
                   className="text-xs px-2.5 py-0.5 rounded-lg bg-stone-100 text-stone-700 font-medium"
                 >
-                  {ing.name}
+                  {ing.display_name ?? ing.name}
                 </span>
               ))}
               {(recipe.ingredients?.length || 0) > 4 && (
@@ -148,7 +148,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, isMatched }) => 
           >
             <ChefHat className="w-4 h-4" />
             <span>View & Cook Recipe</span>
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
           </Link>
         </div>
       </div>

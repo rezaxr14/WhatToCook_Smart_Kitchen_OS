@@ -119,7 +119,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                 className="fixed inset-0 z-40"
                 onClick={() => setModelDropdownOpen(false)}
               />
-              <div className="fixed left-1/2 -translate-x-1/2 top-24 w-[min(18rem,calc(100vw-1.5rem))] max-h-96 overflow-y-auto bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl z-50 p-2 space-y-1 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:translate-x-0 sm:mt-1.5 sm:w-72">
+              <div className="fixed inset-x-0 mx-auto top-24 w-[min(18rem,calc(100vw-1.5rem))] max-h-96 overflow-y-auto bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl z-50 p-2 space-y-1 sm:absolute sm:inset-x-auto sm:mx-0 sm:end-0 sm:top-auto sm:mt-1.5 sm:w-72">
                 <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-stone-400 flex items-center justify-between">
                   <span>Cloud Models</span>
                   <span className="text-[9px] text-amber-400/80 lowercase">auto-fallback active</span>
@@ -140,7 +140,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                           setModelDropdownOpen(false);
                         }
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-all ${
+                      className={`w-full text-start px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-all ${
  isRateLimited
  ? 'opacity-40 bg-stone-800/40 text-stone-500 cursor-not-allowed border border-dashed border-stone-700/50'
  : isSelected
@@ -153,7 +153,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
                           : m.description || label
                       }
                     >
-                      <div className="min-w-0 pr-2">
+                      <div className="min-w-0 pe-2">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold truncate">{label}</span>
                           {isRateLimited && (

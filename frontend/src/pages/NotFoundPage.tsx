@@ -34,7 +34,7 @@ export const NotFoundPage: React.FC = () => {
           className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 transition-colors hover:border-stone-300 hover:text-stone-900"
         >
           {t('notFound.recipes')}
-          <ArrowRight className="h-4 w-4" />
+          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
         </Link>
       </div>
     </div>

@@ -1,69 +1,80 @@
 /**
- * Frontend culinary and gastronomy image resolution utilities.
- * Ensures all dishes, cuisines, and ingredients have distinct, high-definition photography
- * and prevents identical fallback images from being displayed.
+ * Dish photo helpers for AI-generated ideas.
+ *
+ * Everything here is served from the locally bundled `/media/` set: the
+ * deployment cannot reach Unsplash and the SPA CSP only allows `'self'` (plus
+ * the Supabase fallback host). The API usually supplies a resolved `image`;
+ * these helpers only cover a missing or duplicated one.
  */
 
 const DISH_PHOTO_MAP: Record<string, string> = {
-  // Desserts & Sweets
-  ice_cream: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=800&q=80',
-  gelato: 'https://images.unsplash.com/photo-1560008581-09826d1de69e?auto=format&fit=crop&w=800&q=80',
-  // NOTE: order matters — more specific names must precede generic ones,
-  // otherwise "cheesecake" would match the generic "cake" photo.
-  cheesecake: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=800&q=80',
-  cake: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
-  tiramisu: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?auto=format&fit=crop&w=800&q=80',
+  // Desserts & sweets
+  ice_cream: '/media/recipes/affogato.jpg',
+  gelato: '/media/recipes/affogato.jpg',
+  cheesecake: '/media/dishes/chocolate.12bef7db.webp',
+  cake: '/media/dishes/chocolate.12bef7db.webp',
+  tiramisu: '/media/dishes/chocolate.12bef7db.webp',
   crepe: '/media/recipes/banana_crepes.jpg',
-  waffle: 'https://images.unsplash.com/photo-1562376552-0d160a2f238d?auto=format&fit=crop&w=800&q=80',
-  pancake: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80',
+  waffle: '/media/recipes/pancakes.jpg',
+  pancake: '/media/recipes/pancakes.jpg',
 
-  // Sandwiches & Melts
+  // Sandwiches & melts
   grilled_cheese: '/media/recipes/grilled_cheese.jpg',
-  sandwich: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80',
-  burger: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80',
-  toast: 'https://images.unsplash.com/photo-1603046891726-36bfd957e0bf?auto=format&fit=crop&w=800&q=80',
+  sandwich: '/media/recipes/grilled_cheese.jpg',
+  burger: '/media/dishes/beef.d26da077.webp',
+  toast: '/media/recipes/avocado_toast.jpg',
 
-  // Eggs & Breakfast
+  // Eggs & breakfast
   omelette: '/media/recipes/omelette.jpg',
   shakshuka: '/media/recipes/shakshuka.jpg',
   eggs: '/media/recipes/omelette.jpg',
 
-  // Pasta & Pizza
-  pasta: 'https://images.unsplash.com/photo-1621996346565-e3d5d6281691?auto=format&fit=crop&w=800&q=80',
-  spaghetti: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?auto=format&fit=crop&w=800&q=80',
+  // Pasta & pizza
+  pasta: '/media/dishes/spaghetti.78861a40.webp',
+  spaghetti: '/media/dishes/spaghetti.78861a40.webp',
   carbonara: '/media/recipes/carbonara.jpg',
-  pizza: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
-  risotto: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&w=800&q=80',
+  pizza: '/media/dishes/pastitsio.caf30ef0.webp',
+  risotto: '/media/dishes/risotto.6ffa9ed3.webp',
 
-  // Poultry & Meat & Seafood
-  chicken: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80',
-  steak: 'https://images.unsplash.com/photo-1565299715199-866c917206bb?auto=format&fit=crop&w=800&q=80',
-  beef: 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&w=800&q=80',
-  salmon: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=800&q=80',
-  shrimp: 'https://images.unsplash.com/photo-1559737558-2f5a35f4523b?auto=format&fit=crop&w=800&q=80',
-  stew: 'https://images.unsplash.com/photo-1666819632298-fe15dc7d4c34?auto=format&fit=crop&w=800&q=80',
-  curry: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&w=800&q=80',
+  // Poultry, meat & seafood
+  chicken: '/media/recipes/chicken_skillet.jpg',
+  steak: '/media/dishes/beef.d26da077.webp',
+  beef: '/media/dishes/beef.d26da077.webp',
+  salmon: '/media/dishes/hamsi.702db228.webp',
+  shrimp: '/media/recipes/garlic_shrimp.jpg',
+  stew: '/media/dishes/ghormeh-sabzi.cacaffc6.webp',
+  curry: '/media/dishes/stir_fry.49bf429b.webp',
 
-  // Asian & Bowls & Salads
-  rice: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?auto=format&fit=crop&w=800&q=80',
-  ramen: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80',
-  noodles: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80',
-  taco: 'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=800&q=80',
-  salad: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80',
-  soup: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=800&q=80',
+  // Asian, bowls & salads
+  rice: '/media/recipes/garlic_fried_rice.jpg',
+  ramen: '/media/dishes/stir_fry.49bf429b.webp',
+  noodles: '/media/dishes/stir_fry.49bf429b.webp',
+  taco: '/media/dishes/fish_tacos.bf2e5862.webp',
+  salad: '/media/dishes/greek_salad.1415cf1d.webp',
+  soup: '/media/dishes/lentil_soup.8fa7b7f6.webp',
 };
 
 const DEFAULT_GOURMET_PHOTOS = [
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80',
+  '/media/recipes/carbonara.jpg',
+  '/media/dishes/grilled.d1de580f.webp',
+  '/media/dishes/beef.d26da077.webp',
+  '/media/dishes/greek_salad.1415cf1d.webp',
+  '/media/dishes/stir_fry.49bf429b.webp',
+  '/media/dishes/lentil_soup.8fa7b7f6.webp',
+  '/media/dishes/chicken.17808de0.webp',
+  '/media/dishes/potatoes.25aad58e.webp',
+  '/media/recipes/pancakes.jpg',
+  '/media/dishes/chocolate.12bef7db.webp',
+  '/media/dishes/kabab-koobideh.feaffc8f.webp',
+  '/media/dishes/turkish-breakfast.b6b34316.webp',
 ];
 
+const isLocalImage = (url?: string | null): url is string =>
+  Boolean(url && (url.startsWith('/media/') || url.startsWith('/placeholder.svg')));
+
 export function getDishImageUrl(dishName: string, existingUrl?: string): string {
-  if (existingUrl && existingUrl.startsWith('http') && !existingUrl.includes('default.png')) {
+  // The API resolves dishes against the same catalog, so its local path wins.
+  if (isLocalImage(existingUrl)) {
     return existingUrl;
   }
 
@@ -80,7 +91,7 @@ export function getDishImageUrl(dishName: string, existingUrl?: string): string 
     }
   }
 
-  // Consistent pseudo-hash index for varied fallbacks
+  // Consistent pseudo-hash index for varied fallbacks.
   let hash = 0;
   for (let i = 0; i < dishName.length; i++) {
     hash = (hash << 5) - hash + dishName.charCodeAt(i);
@@ -92,12 +103,12 @@ export function getDishImageUrl(dishName: string, existingUrl?: string): string 
 
 /**
  * Assign a photo URL to every dish in a list, guaranteeing that no two
- * DIFFERENT dishes on the same page share a photo — even when their names
- * collide on the same keyword (e.g. three "pasta…" suggestions) or their
- * keyword hashes hit the same fallback. Keeps a dish's natural photo when
- * it is unique; rotates through the full photo pool only for collisions.
+ * DIFFERENT dishes on the same page share a photo. Keeps a dish's natural
+ * photo when it is unique; rotates through the local pool only for collisions.
  */
-export function assignUniqueDishPhotos(dishes: Array<{ name: string; image?: string | null }>): string[] {
+export function assignUniqueDishPhotos(
+  dishes: Array<{ name: string; image?: string | null }>,
+): string[] {
   const pool: string[] = [];
   const poolSeen = new Set<string>();
   const absorb = (url: string) => {
