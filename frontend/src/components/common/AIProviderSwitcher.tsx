@@ -17,8 +17,10 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
 
   const isLMStudioOnline = Boolean(aiProvidersInfo?.lmstudio_online);
+  const gatewayAvailable = Boolean(aiProvidersInfo?.gateway_configured ?? aiProvidersInfo?.has_gateway);
   const geminiModel = activeModel || aiProvidersInfo?.gemini_model || 'gemini-3.5-flash-lite';
   const lmModel = aiProvidersInfo?.lmstudio_model || 'Local Model';
+  const isCloudActive = activeAIProvider === 'gemini' || activeAIProvider === 'supabase_gateway';
 
   const currentModelDisplay =
     availableModels.find((m) => m.id === activeModel)?.displayName ||
@@ -46,6 +48,23 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
           <Sparkles className="w-3.5 h-3.5 text-brand-500" />
           <span>Cloud AI</span>
         </button>
+
+        {/* Pooled gateway (shared free-tier budget) */}
+        {gatewayAvailable && (
+          <button
+            type="button"
+            onClick={() => setActiveAIProvider('supabase_gateway')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+ activeAIProvider === 'supabase_gateway'
+ ? 'bg-white text-stone-900'
+ : 'text-stone-500 hover:text-stone-900'
+ }`}
+            title="Pooled cloud AI through the shared Supabase gateway"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+            <span>Pooled</span>
+          </button>
+        )}
 
         {/* Local AI Button (LM Studio) */}
         <button
@@ -79,8 +98,8 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
         </button>
       </div>
 
-      {/* Model Selection Dropdown (Only when Cloud AI is active) */}
-      {activeAIProvider === 'gemini' && availableModels.length > 0 && (
+      {/* Model Selection Dropdown (Only when a cloud provider is active) */}
+      {isCloudActive && availableModels.length > 0 && (
         <div className="relative">
           <button
             type="button"
@@ -102,7 +121,7 @@ export const AIProviderSwitcher: React.FC<{ compact?: boolean }> = ({ compact })
               />
               <div className="fixed left-1/2 -translate-x-1/2 top-24 w-[min(18rem,calc(100vw-1.5rem))] max-h-96 overflow-y-auto bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl z-50 p-2 space-y-1 sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:translate-x-0 sm:mt-1.5 sm:w-72">
                 <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-stone-400 flex items-center justify-between">
-                  <span>Google Gemini Models</span>
+                  <span>Cloud Models</span>
                   <span className="text-[9px] text-amber-400/80 lowercase">auto-fallback active</span>
                 </div>
                 {availableModels.map((m) => {

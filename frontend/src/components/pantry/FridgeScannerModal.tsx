@@ -20,6 +20,8 @@ import { pantryApi } from '../../api/pantryApi';
 import { usePantry } from '../../context/PantryContext';
 import { useToast } from '../../context/ToastContext';
 import { StyledButton } from '../common/StyledButton';
+import i18n from '../../i18n';
+import { aiErrorMessage } from '../../lib/aiErrors';
 
 interface FridgeScannerModalProps {
   isOpen: boolean;
@@ -32,7 +34,7 @@ const SAMPLE_COUNTER_URL =
   'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
 
 export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, onClose }) => {
-  const { refreshPantry, activeAIProvider } = usePantry();
+  const { refreshPantry, activeAIProvider, setLastScanResult } = usePantry();
   const { success, error, aiToast } = useToast();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -99,7 +101,7 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
         error('No ingredients could be detected in this photo. Try another angle or sample image.');
       }
     } catch (err: any) {
-      error(err.message || 'Vision scan encountered an error.');
+      error(aiErrorMessage(err, i18n.t.bind(i18n)));
     } finally {
       setIsScanning(false);
     }
@@ -145,6 +147,11 @@ export const FridgeScannerModal: React.FC<FridgeScannerModalProps> = ({ isOpen, 
         `Added ${selectedNames.length} scanned ingredients into your kitchen pantry!`,
         'Pantry Updated 🛒'
       );
+      setLastScanResult({
+        names: [...selectedNames],
+        count: selectedNames.length,
+        at: Date.now(),
+      });
       handleReset();
       onClose();
     } catch (err: any) {

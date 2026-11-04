@@ -15,6 +15,7 @@ from .views import (
     api_ai_stream_recipe,
     api_recipe_chat,
     api_auth_demo,
+    api_auth_challenge,
     api_auth_login,
     api_auth_logout,
     api_auth_me,
@@ -56,6 +57,7 @@ urlpatterns = [
     path("api/auth/logout/", api_auth_logout, name="api_auth_logout"),
     path("api/auth/me/", api_auth_me, name="api_auth_me"),
     path("api/auth/demo/", api_auth_demo, name="api_auth_demo"),
+    path("api/auth/challenge/", api_auth_challenge, name="api_auth_challenge"),
 
     # Pantry REST APIs
     path("api/pantry/", api_pantry_get, name="api_pantry_get"),

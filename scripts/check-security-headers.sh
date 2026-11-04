@@ -33,11 +33,12 @@ for path in / /recipes /api/health/ /api/nonexistent/ /media/missing.png /legacy
 done
 
 spa=$(hdrs /)
-has "content-security-policy: .*script-src 'self'(;|$)" "$spa"  || fail "SPA CSP does not restrict script-src to 'self'"
+has "content-security-policy: .*script-src 'self'( https://challenges\.cloudflare\.com)?(;|$)" "$spa" \
+  || fail "SPA CSP does not restrict script-src to 'self' plus Turnstile"
 grep -qiE "^content-security-policy: .*script-src [^;]*'unsafe-(inline|eval)'" <<<"$spa" \
   && fail "SPA CSP allows unsafe script execution"
 has "content-security-policy: .*frame-ancestors 'none'" "$spa"  || fail "SPA CSP lacks frame-ancestors 'none'"
-ok "SPA CSP: script-src 'self' only, frame-ancestors 'none'"
+ok "SPA CSP: script-src 'self' plus Turnstile only, frame-ancestors 'none'"
 
 # Django-rendered pages (admin, legacy, Swagger UI) need inline scripts: only the baseline CSP applies.
 docs=$(hdrs /api/docs/)

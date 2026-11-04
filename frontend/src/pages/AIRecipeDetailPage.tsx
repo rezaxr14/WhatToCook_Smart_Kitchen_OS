@@ -12,6 +12,8 @@ import { LoadingChef } from '../components/common/LoadingChef';
 import { StyledButton } from '../components/common/StyledButton';
 import { RecipeChatBox } from '../components/recipe/RecipeChatBox';
 import { getDishImageUrl } from '../utils/imageUtils';
+import i18n from '../i18n';
+import { aiErrorMessage } from '../lib/aiErrors';
 
 export const AIRecipeDetailPage: React.FC = () => {
   const { name } = useParams<{ name: string }>();
@@ -25,28 +27,31 @@ export const AIRecipeDetailPage: React.FC = () => {
   const [servings, setServings] = useState<number>(4);
   const [substitutionModalOpen, setSubstitutionModalOpen] = useState(false);
   const [selectedSubIngredient, setSelectedSubIngredient] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { addMultipleItems } = useShoppingList();
   const { isInPantry, activeModel, handleRateLimitedModels } = usePantry();
+  const selectedModel = searchParams.get('model') || activeModel;
 
   useEffect(() => {
     const fetchDetail = async () => {
       if (!name) return;
       setIsLoading(true);
       try {
-        const data = await aiApi.getRecipeDetail(name, provider, activeModel);
+        const data = await aiApi.getRecipeDetail(name, provider, selectedModel);
         setRecipe(data);
         if (data.rate_limited_models && data.rate_limited_models.length > 0) {
           handleRateLimitedModels(data.rate_limited_models);
         }
       } catch (err) {
         console.error('Error fetching AI recipe detail:', err);
+        setErrorMessage(aiErrorMessage(err, i18n.t.bind(i18n)));
       } finally {
         setIsLoading(false);
       }
     };
     fetchDetail();
-  }, [name, provider, activeModel, handleRateLimitedModels]);
+  }, [name, provider, selectedModel, handleRateLimitedModels]);
 
   const toggleStep = (idx: number) => {
     setCompletedSteps((prev) =>
@@ -85,7 +90,9 @@ export const AIRecipeDetailPage: React.FC = () => {
   if (!recipe) {
     return (
       <div className="max-w-md mx-auto py-16 text-center">
-        <h2 className="text-2xl font-bold text-stone-900 mb-2">Recipe detail could not be generated</h2>
+        <h2 className="text-2xl font-bold text-stone-900 mb-2">
+          {errorMessage || 'Recipe detail could not be generated'}
+        </h2>
         <Link to="/ai-chef">
           <StyledButton $variant="primary">Back to AI Studio</StyledButton>
         </Link>

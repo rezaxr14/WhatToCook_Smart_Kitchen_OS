@@ -35,6 +35,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import exception_handler as drf_exception_handler
 
+from .ai_guard import AiError
+
 
 class WtcScopeThrottle(SimpleRateThrottle):
     """Rate bucket with a fixed ``scope``, keyed per user (auth'd) or IP.
@@ -106,6 +108,19 @@ def scoped(scope: str, scope2: str | None = None):
 
 def wtc_exception_handler(exc, context):
     """DRF exception handler: keep defaults, but shape 429s nicely."""
+    if isinstance(exc, AiError):
+        body = {
+            "error": exc.error_code,
+            "code": exc.error_code,
+            "detail": str(exc.detail),
+        }
+        body.update(exc.extra)
+        response = Response(body, status=exc.status_code)
+        retry_after = exc.extra.get("retry_after")
+        if retry_after:
+            response["Retry-After"] = str(max(1, int(retry_after)))
+        return response
+
     if isinstance(exc, Throttled):
         wait = max(1, int(getattr(exc, "wait", None) or 1))
         detail = (

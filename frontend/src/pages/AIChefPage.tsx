@@ -11,6 +11,7 @@ import { StyledCard } from '../components/common/StyledCard';
 import { LoadingChef } from '../components/common/LoadingChef';
 import { AIProviderSwitcher } from '../components/common/AIProviderSwitcher';
 import { assignUniqueDishPhotos } from '../utils/imageUtils';
+import { aiErrorMessage } from '../lib/aiErrors';
 
 export const AIChefPage: React.FC = () => {
   const { t } = useTranslation();
@@ -92,7 +93,7 @@ export const AIChefPage: React.FC = () => {
         }, 2000);
       }
     } catch (err: any) {
-      error(err.message || t('aiChefPage.errHiccup'), t('aiChefPage.errGenTitle'));
+      error(aiErrorMessage(err, t) || t('aiChefPage.errHiccup'), t('aiChefPage.errGenTitle'));
     } finally {
       setIsGenerating(false);
     }
@@ -189,7 +190,7 @@ export const AIChefPage: React.FC = () => {
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>
               {t('aiChefPage.engineLabel')}{' '}
-              <strong>{activeAIProvider === 'gemini' ? t('aiChefPage.engineGemini', { model: activeModel }) : t('aiChefPage.engineLocal')}</strong>
+              <strong>{activeAIProvider === 'gemini' ? t('aiChefPage.engineGemini', { model: activeModel }) : activeAIProvider === 'supabase_gateway' ? t('aiChefPage.engineGateway') : t('aiChefPage.engineLocal')}</strong>
             </span>
           </div>
 
