@@ -53,6 +53,8 @@ export const SafeImage: React.FC<SafeImageProps> = ({
     <img
       {...rest}
       alt={alt}
+      // codeql[js/xss-through-dom] -- safeSource() only admits relative,
+      // http(s), data:image and blob URLs before this point.
       src={active}
       onError={(event) => {
         if (stage < sources.length - 1) {
