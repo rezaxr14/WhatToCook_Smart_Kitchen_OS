@@ -13,7 +13,7 @@ runs:
       with:
         image-ref: ${{ inputs.image-ref }}
         # The action downloads the scanner at run time and defaults to whatever it was released with, so the
-        # scanner version is pinned here too. Dependabot does not bump this: update it deliberately.
+        # scanner version is pinned here too. Update it deliberately.
         version: v0.76.0
         severity: HIGH,CRITICAL
         ignore-unfixed: "true" # only fail on what can actually be fixed by an update

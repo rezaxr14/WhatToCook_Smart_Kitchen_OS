@@ -37,8 +37,7 @@ jobs:
       - name: Lowercase the registry namespace
         run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
       # Emulation for the arm64 build only (amd64 is native). The action runs this image with --privileged on the runner, so it is
-      # pinned by digest (the index digest of tonistiigi/binfmt:latest, resolved 2026-10-21). Dependabot does not read an action's
-      # `image:` input: bump it by hand with
+      # pinned by digest (the index digest of tonistiigi/binfmt:latest, resolved 2026-10-21). Bump it by hand with
       #   docker buildx imagetools inspect tonistiigi/binfmt:latest | awk '/^Digest:/ {print $2; exit}'
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:

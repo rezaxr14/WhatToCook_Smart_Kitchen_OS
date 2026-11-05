@@ -326,7 +326,7 @@ node scripts/recapture-journey.cjs && node scripts/recapture-landing.cjs
 **Safe concurrent boot.** `bootstrap_db` (migrate + seed) runs under a Postgres advisory lock, so any number of `web` replicas can start at once.
 
 `/api/health/` reports `database`, `cache` and `broker` (informational: a queue outage never fails the probe).
-RabbitMQ is pinned to **4.2** because 4.3+ rejects the transient non-exclusive queues Celery 5.5's kombu declares; bump it together with Celery (Dependabot ignores it on purpose).
+RabbitMQ is pinned to **4.2** because 4.3+ rejects the transient non-exclusive queues Celery 5.5's kombu declares; bump it together with Celery.
 
 ## 🔭 Observability
 
@@ -388,7 +388,7 @@ Notes:
 | [`load.yml`](.github/workflows/load.yml) | nightly / manual | **Load & soak**: the compose stack in production settings, k6 (`load/k6/main.js`) with p95 / error-rate / isolation thresholds, the `ai` queue drained under that load (`scripts/check_ai_queue.py`), then a `429` still returned through nginx (`load/k6/throttle.js`) |
 | [`release.yml`](.github/workflows/release.yml) | `v*.*.*` tag | Publishes `ghcr.io/<owner>/whattocook-{backend,frontend}` |
 
-Dependabot keeps pip, npm, GitHub Actions and Docker base images current.
+Dependency updates are deliberate: no bot opens them, and `security.yml` audits pip and npm on every push and weekly.
 
 **Developer tooling:** `make help` lists the common tasks (`make test`, `make cov`, `make smoke`, `make drill`, …); `pre-commit install` adds the same lint gate locally; [`AGENTS.md`](AGENTS.md) documents the invariants and what CI proves (read it before changing queues, compose, k8s or secrets); [`docs/ROADMAP.md`](docs/ROADMAP.md) lists what to build next.
 Container-image vulnerability scanning is intentionally not wired through a third-party action (the `trivy-action` tags were hijacked in March 2026); if you add one, pin it to a full commit SHA.
@@ -410,7 +410,7 @@ scripts, only Google Fonts and Unsplash as external origins); Django-rendered pa
 deployment with `bash scripts/check-security-headers.sh https://your-host`. HSTS is left to the TLS
 terminator (Django sends it when `SECURE_HSTS` is on behind HTTPS).
 
-**Supply chain**: every GitHub Action is pinned to a full commit SHA (`# vX.Y.Z` comment; Dependabot keeps both in sync). `release.yml` builds each image locally and scans it with a pinned Trivy before publishing (fixable HIGH/CRITICAL fails the release; the same scan runs on every PR and weekly in `security.yml`, defined once in `.github/actions/scan-image`), publishes with an SPDX SBOM and SLSA provenance, signs the digest keylessly with cosign and verifies the signature. Base images are pinned by digest (`python` and `nginx`; `node` follows its Node bump), and so is the QEMU helper image the release runs with `--privileged`, so a fixed base does not arrive on its own: take the update (Dependabot moves the Dockerfile digests, `apk upgrade` runs in the frontend's `serve` stage, `setuptools` is pinned in `requirements.txt`), do not add a `.trivyignore` entry. The release scan fails until you do. Verify a published image:
+**Supply chain**: every GitHub Action is pinned to a full commit SHA (`# vX.Y.Z` comment). `release.yml` builds each image locally and scans it with a pinned Trivy before publishing (fixable HIGH/CRITICAL fails the release; the same scan runs on every PR and weekly in `security.yml`, defined once in `.github/actions/scan-image`), publishes with an SPDX SBOM and SLSA provenance, signs the digest keylessly with cosign and verifies the signature. Base images are pinned by digest (`python` and `nginx`; `node` follows its Node bump), and so is the QEMU helper image the release runs with `--privileged`, so a fixed base does not arrive on its own: take the update (bump the Dockerfile digests, `apk upgrade` runs in the frontend's `serve` stage, `setuptools` is pinned in `requirements.txt`), do not add a `.trivyignore` entry. The release scan fails until you do. Verify a published image:
 
 ```bash
 cosign verify ghcr.io/rezaxr14/whattocook-backend:1.0.0 \
