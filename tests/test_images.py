@@ -2,7 +2,7 @@
 
 The base images are pinned by digest (name:tag@sha256:..., the multi-arch index), so a rebuild cannot change them silently;
 new fixable HIGH/CRITICAL findings still appear (Alpine publishes fixes before nginx rebuilds, and a pinned Python base
-only moves when Dependabot moves its digest). The answer is to take the fix (upgrade the package or the digest), not to
+only moves when its digest is updated by hand). The answer is to take the fix (upgrade the package or the digest), not to
 ignore it; these tests keep that answer from being edited away. The scan itself runs in CI (it needs Docker and the Trivy
 database).
 """
@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FRONTEND_DOCKERFILE = (ROOT / "frontend" / "Dockerfile").read_text(encoding="utf-8")
 DOCKERFILES = ("Dockerfile", "frontend/Dockerfile")
 FROM_LINE = re.compile(r"(?m)^FROM\s+(?:--platform=\S+\s+)?(?P<ref>\S+)(?:\s+AS\s+(?P<alias>\S+))?\s*$")
-# name:tag@sha256:<64 hex>. The tag is kept on purpose: Dependabot needs it to propose the next digest, and a reader needs it to know what this is.
+# name:tag@sha256:<64 hex>. The tag is kept on purpose: a reader needs it to know what this is, and the digest pins the exact bits.
 PINNED_REF = re.compile(r"^[a-z0-9][a-z0-9./_-]*:[\w][\w.-]*@sha256:[0-9a-f]{64}$")
 REQUIREMENTS = (ROOT / "requirements.txt").read_text(encoding="utf-8")
 

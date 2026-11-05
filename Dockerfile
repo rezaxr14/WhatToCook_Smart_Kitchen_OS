@@ -1,5 +1,5 @@
 # Pinned by digest (the multi-arch index, so amd64 and arm64 both resolve): the tag says what it is, the digest makes the build
-# repeatable. Dependabot (docker ecosystem) moves the digest; a fixable OS finding in this base fails the scan until it does.
+# repeatable. Bump the digest deliberately when the base is updated; a fixable OS finding in this base fails the scan until you do.
 FROM python:3.11-slim@sha256:cce12316475d7d56d605f76e1d811d0dc4e7227f2d4afd29951521264f504ff8
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

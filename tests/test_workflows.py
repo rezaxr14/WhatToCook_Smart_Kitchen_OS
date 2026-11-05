@@ -44,7 +44,7 @@ class PinnedActionTests(SimpleTestCase):
                 if not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", m["ref"]):
                     problems.append(f"{where}: {m['ref']} is not pinned to a 40-char commit SHA")
                 elif not re.fullmatch(r"\s+#\s+v\d+\.\d+\.\d+\s*", m["rest"]):
-                    problems.append(f"{where}: {m['ref']} needs a trailing '# vX.Y.Z' comment (Dependabot keeps it in sync)")
+                    problems.append(f"{where}: {m['ref']} needs a trailing '# vX.Y.Z' comment")
         self.assertEqual(problems, [], "\n".join(problems))
 
     def test_local_actions_that_are_referenced_exist(self):
@@ -53,22 +53,6 @@ class PinnedActionTests(SimpleTestCase):
                 m = USES.match(line)
                 if m and m["ref"].startswith("./"):
                     self.assertTrue((ROOT / m["ref"] / "action.yml").exists(), f"{path.name}: {m['ref']}")
-
-    def test_dependabot_leaves_node_majors_to_a_deliberate_bump(self):
-        updates = load(GH / "dependabot.yml")["updates"]
-        major = ["version-update:semver-major"]
-        docker = next(u for u in updates if u["package-ecosystem"] == "docker" and u["directory"] == "/frontend")
-        npm = next(u for u in updates if u["package-ecosystem"] == "npm")
-        self.assertIn({"dependency-name": "node", "update-types": major}, docker["ignore"])
-        self.assertIn({"dependency-name": "@types/node", "update-types": major}, npm["ignore"])
-        root_docker = next(u for u in updates if u["package-ecosystem"] == "docker" and u["directory"] == "/")
-        self.assertNotIn("node", [i["dependency-name"] for i in root_docker.get("ignore", [])], "the Python image is not Node")
-
-    def test_dependabot_watches_the_composite_action_directory(self):
-        updates = load(GH / "dependabot.yml")["updates"]
-        gha = next(u for u in updates if u["package-ecosystem"] == "github-actions")
-        self.assertIn("/.github/actions/*", gha["directories"])
-        self.assertIn("/", gha["directories"])
 
 
 class ScannerTests(SimpleTestCase):

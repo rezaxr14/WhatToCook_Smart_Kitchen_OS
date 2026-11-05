@@ -54,8 +54,8 @@ class MultiArchReleaseTests(SimpleTestCase):
         self.assertLess(i, find("publish", "docker/setup-buildx-action", key="uses")[0])
 
     def test_the_binfmt_image_that_runs_privileged_is_pinned_by_digest(self):
-        # setup-qemu-action runs this image with --privileged on the runner. Dependabot does not read an action's image: input,
-        # so the pin is ours to bump by hand (the command is in the comment above the step).
+        # setup-qemu-action runs this image with --privileged on the runner. An action's image: input is not covered by any
+        # updater, so the pin is ours to bump by hand (the command is in the comment above the step).
         text = RELEASE.read_text(encoding="utf-8")
         qemu = find("publish", "docker/setup-qemu-action", key="uses")[1]
         self.assertRegex(qemu.get("with", {}).get("image", ""), r"^docker\.io/tonistiigi/binfmt@sha256:[0-9a-f]{64}$")
