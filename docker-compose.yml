@@ -195,7 +195,7 @@ services:
     # The datasource and the "WhatToCook / Overview" dashboard are provisioned from ./monitoring/grafana (read-only):
     # change the JSON, not the UI.
     profiles: ["monitoring"]
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.0
     container_name: whattocook_grafana
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
