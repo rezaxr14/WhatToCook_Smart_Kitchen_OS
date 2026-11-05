@@ -9,6 +9,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Debian publishes fixes between base-image rebuilds. The pinned digest above
+# can therefore carry a fixable HIGH/CRITICAL finding (the scan fails on those),
+# so take the current OS packages before installing anything else.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # Run as an unprivileged user (uid 10001). Kubernetes pins the same uid and
 # sets fsGroup so mounted volumes stay writable.
 RUN useradd --system --uid 10001 --user-group --no-create-home --shell /usr/sbin/nologin app \
