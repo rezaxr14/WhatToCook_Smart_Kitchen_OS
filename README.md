@@ -142,6 +142,7 @@ cd WhatToCook_Smart_Kitchen_OS
 # 2. Configure environment variables
 cp .env.example .env
 # Edit .env and paste your GEMINI_API_KEY (from https://aistudio.google.com)
+# The AI gateway key is optional; leave it empty for local AI (see "AI gateway credentials").
 
 # (If your network requires an HTTP proxy for internet egress, add your overrides:
 #  docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d --build)
@@ -213,6 +214,55 @@ npm install
 # Start Vite development server
 npm run dev
 ```
+
+## 🔐 AI gateway credentials (optional)
+
+The backend can send cloud AI calls through the Supabase gateway
+(`GetFood/gateway_client.py`). Two settings control it:
+
+| Variable | Secret? | Value |
+| --- | --- | --- |
+| `SUPABASE_GATEWAY_URL` | No | `https://lderdvhteofqemiivosz.supabase.co/functions/v1` |
+| `MAIN_SERVICE_KEY` | **Yes** | 32+ random characters, identical to the Supabase function secret of the same name |
+
+Leave `MAIN_SERVICE_KEY` empty (the default) to use the local model and the built-in fallbacks;
+the gateway is only used when both variables are set.
+
+**Generating the key** (needed only when you run your own gateway or rotate it):
+
+```bash
+openssl rand -hex 48
+```
+
+```powershell
+$bytes = New-Object byte[] 48
+[System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+-join ($bytes | ForEach-Object { $_.ToString('x2') })
+```
+
+Set the same value in both places:
+
+1. Supabase function secrets:
+   `npx supabase secrets set MAIN_SERVICE_KEY=<value> --project-ref <ref>`
+2. Django: `MAIN_SERVICE_KEY=<value>` in `.env` (Docker Compose reads that file) or in the
+   `whattocook-secrets` Kubernetes Secret (`k8s/secret.example.yaml` lists the keys).
+
+**Where to keep it.** The canonical copy belongs in a password manager. GitHub Actions
+secrets are write-only: once saved, nobody can read the value back, so they are useful for
+injecting it into an automated deployment but they are **not a backup**. Nothing in CI reads
+this key today. If you later automate deployment, put it in a protected GitHub Environment
+(e.g. `production`) and pass it to the deploy step. `.env` and `k8s/secret.yaml` are
+git-ignored; never put the real key in `.env.example`, README or a workflow.
+
+**Owner vs. contributor.**
+
+- Owner: get the value from the password manager (or the cluster's Secret). If it is lost,
+  **rotate it**: generate a new one, update the Supabase function secret and every Django
+  deployment, then restart. The old value stops working immediately; there is nothing to
+  recover.
+- Contributor: leave `MAIN_SERVICE_KEY` empty to use local AI (clearing `SUPABASE_GATEWAY_URL`
+  is optional). A made-up key cannot work against the owner's project; ask for a staging
+  key/project if you need to exercise the gateway.
 
 ---
 
