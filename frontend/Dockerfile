@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build
 
 # ---------- Stage 2: serve with nginx ----------
-FROM nginx:alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d AS serve
+FROM nginx:alpine@sha256:785835ea65db4bba6f021acc0f3be91b0fef76a53fe41f8588c6698d2aed0606 AS serve
 
 # The base is pinned by digest (the multi-arch index), so a rebuild cannot silently change it. Alpine still publishes security
 # fixes (libexpat, libx11, ...) before nginx rebuilds its image: take them now.
