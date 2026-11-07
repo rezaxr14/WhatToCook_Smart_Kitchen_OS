@@ -329,21 +329,33 @@ def _contains_phrase(haystack: str, keyword: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(keyword)}(?!\w)", haystack, re.UNICODE) is not None
 
 
+@lru_cache(maxsize=1)
+def _compiled_keywords() -> tuple[tuple[re.Pattern, str, int], ...]:
+    """Whole-word patterns for every keyword, built once.
+
+    ``_best_match`` runs once per serializer field on list endpoints, so it
+    must not re-escape and re-compile 4k+ patterns per call (measured ~70 ms
+    each, the root cause of the nightly load soak stalling every endpoint).
+    """
+    return tuple(
+        (re.compile(rf"(?<!\w){re.escape(keyword)}(?!\w)", re.UNICODE), entry.file, len(keyword))
+        for entry in dish_photos()
+        for keyword in entry.keywords
+        if len(keyword) >= 3
+    )
+
+
+@lru_cache(maxsize=8192)
 def _best_match(field: str) -> str | None:
     haystack = normalize_text(field)
     if not haystack:
         return None
     best_file: str | None = None
     best_length = -1
-    for entry in dish_photos():
-        for keyword in entry.keywords:
-            if len(keyword) < 3:
-                continue
-            if not _contains_phrase(haystack, keyword):
-                continue
-            if len(keyword) > best_length:
-                best_file = entry.file
-                best_length = len(keyword)
+    for pattern, file, length in _compiled_keywords():
+        if pattern.search(haystack) and length > best_length:
+            best_file = file
+            best_length = length
     return best_file
 
 
@@ -369,27 +381,35 @@ def match_dish_photo(
     image_hint: str | None = None,
     cuisine: str | None = None,
 ) -> str | None:
-    """Best logical photo path for a dish, or ``None`` when nothing matches."""
-    hint = (image_hint or "").strip()
-    if hint:
-        match = _best_match(hint)
+    """Best logical photo path for a dish, or ``None`` when nothing matches.
+
+    Pure and deterministic over cached data, so answers are memoized: list
+    endpoints ask for the same dish names on every request.
+    """
+    cache_key = (name or "", (image_hint or "").strip() or None, (cuisine or "").strip() or None)
+    return _dish_photo_cached(cache_key)
+
+
+@lru_cache(maxsize=8192)
+def _dish_photo_cached(key: tuple[str, str | None, str | None]) -> str | None:
+    name, image_hint, cuisine = key
+    if image_hint:
+        match = _best_match(image_hint)
         if match:
             return match
 
-    clean_name = (name or "").strip()
-    if clean_name:
-        match = _best_match(clean_name)
+    if name:
+        match = _best_match(name)
         if match:
             return match
 
-    clean_cuisine = (cuisine or "").strip()
-    if clean_cuisine:
-        match = _best_match(clean_cuisine)
+    if cuisine:
+        match = _best_match(cuisine)
         if match:
             return match
-        normalized = normalize_text(clean_cuisine)
-        for key, photo in CUISINE_PHOTOS.items():
-            if key in normalized:
+        normalized = normalize_text(cuisine)
+        for cuisine_key, photo in CUISINE_PHOTOS.items():
+            if cuisine_key in normalized:
                 return photo
     return None
 
@@ -468,14 +488,19 @@ def _ingredient_images() -> dict[str, str]:
 
 
 def find_ingredient_image(ingredient_name: str) -> str:
-    """Best local photo for an ingredient name."""
+    """Best local photo for an ingredient name (memoized: list endpoints repeat names)."""
     if not ingredient_name:
         return PLACEHOLDER
+    return _ingredient_image_cached(ingredient_name.strip())
+
+
+@lru_cache(maxsize=4096)
+def _ingredient_image_cached(ingredient_name: str) -> str:
     images = _ingredient_images()
     if ingredient_name in images:
         return local_media_url(images[ingredient_name])
 
-    lowered = ingredient_name.strip().lower()
+    lowered = ingredient_name.lower()
     for name, path in images.items():
         if name.lower() == lowered:
             return local_media_url(path)
