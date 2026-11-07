@@ -169,10 +169,16 @@ def main():
         fail(f"datasource '{DATASOURCE_UID}' should be the default Prometheus datasource, got type={ds.get('type')} isDefault={ds.get('isDefault')}")
     ok(f"datasource '{ds.get('name')}' provisioned (default, {ds.get('url')})")
 
-    status, health_ds = g.get(f"/api/datasources/uid/{DATASOURCE_UID}/health")
-    state = str(health_ds.get("status", "OK")).upper() if isinstance(health_ds, dict) else "?"
-    if status != 200 or state != "OK":
-        fail(f"datasource health check failed (HTTP {status}): {health_ds}")
+    # Datasource health can briefly return 404 plugin.notRegistered while
+    # Grafana's Prometheus plugin backend finishes starting; poll it.
+    def ds_healthy():
+        status, health_ds = g.get(f"/api/datasources/uid/{DATASOURCE_UID}/health")
+        state = str(health_ds.get("status", "")).upper() if isinstance(health_ds, dict) else ""
+        return status == 200 and state == "OK"
+    def explain_ds():
+        status, health_ds = g.get(f"/api/datasources/uid/{DATASOURCE_UID}/health")
+        return f"datasource health check (HTTP {status}): {health_ds}"
+    poll("datasource health check not OK (Grafana Prometheus plugin still starting)", ds_healthy, args.wait, explain_ds)
     ok("datasource health check passes (Grafana can reach Prometheus)")
 
     with open(DASHBOARD_FILE, encoding="utf-8") as fh:
